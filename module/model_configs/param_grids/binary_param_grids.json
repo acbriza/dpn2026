@@ -1,0 +1,146 @@
+{
+    "xgb": {
+        "booster": [
+            "gbtree"
+        ],
+        "device": [
+            "cpu"
+        ],
+        "verbosity": [
+            1
+        ],
+        "validate_parameters": [
+            false
+        ],
+        "nthread": [
+            null
+        ],
+        "disable_default_eval_metric": [
+            false
+        ],
+        "objective": [
+            "binary:logistic"
+        ],
+        "eta": [
+            0.5,
+            1.0
+        ],
+        "gamma": [
+            0,
+            0.5,
+            5
+        ],
+        "max_depth": [
+            6,
+            3,
+            9
+        ],
+        "min_child_weight": [
+            1,
+            5
+        ],
+        "max_delta_step": [
+            0,
+            1,
+            5
+        ],
+        "subsample": [
+            1.0,
+            0,
+            0.01,
+            0.4,
+            0.8
+        ],
+        "sampling_method": [
+            "uniform"
+        ],
+        "colsample_bytree": [
+            0.5,
+            0,
+            1.0
+        ],
+        "colsample_bylevel": [
+            0.5,
+            0,
+            1.0
+        ],
+        "colsample_bynode": [
+            0.5,
+            0,
+            1.0
+        ],
+        "lambda": [
+            1,
+            0,
+            3,
+            5
+        ],
+        "alpha": [
+            0,
+            1,
+            3,
+            5
+        ],
+        "tree_method": [
+            "auto",
+            "exact"
+        ],
+        "scale_pos_weight": [
+            1,
+            5,
+            10
+        ],
+        "process_type": [
+            "default"
+        ],
+        "grow_policy": [
+            "depthwise",
+            "lossguide"
+        ],
+        "max_leaves": [
+            0,
+            8,
+            16
+        ],
+        "num_parallel_tree": [
+            1,
+            5,
+            10
+        ],
+        "max_bin": [
+            16,
+            64
+        ]
+    },
+    "random_forest":
+        {
+        "n_estimators": [100, 200, 500],
+        "criterion": ["gini", "entropy"],
+        "max_depth": [null, 10, 20, 30],
+        "min_samples_split": [2, 5, 10],
+        "min_samples_leaf": [1, 2, 4],
+        "max_features": ["sqrt", "log2", 0.8],
+        "bootstrap": [true, false],
+        "class_weight": [null, "balanced", "balanced_subsample"],
+        "random_state": [42]
+        },
+    "decision_tree":
+    {
+        "criterion": ["gini", "entropy"],
+        "max_depth": [null, 5, 10, 20],
+        "min_samples_split": [2, 5, 10],
+        "min_samples_leaf": [1, 2, 4],
+        "max_features": [null, "sqrt", "log2"],
+        "class_weight": [null, "balanced"],
+        "random_state": [42]
+    },
+    "logistic_regression":
+        {
+        "classifier__penalty": ["l1", "l2", "elasticnet", "none"],
+        "classifier__C": [0.01, 0.1, 1, 10, 100],
+        "classifier__solver": ["saga", "liblinear", "lbfgs"],
+        "classifier__max_iter": [100, 200, 500],
+        "classifier__class_weight": [null, "balanced"],
+        "classifier__random_state": [42]
+        } 
+}

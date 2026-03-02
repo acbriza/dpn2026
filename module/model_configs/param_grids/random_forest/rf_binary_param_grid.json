@@ -1,0 +1,11 @@
+{
+  "n_estimators": [100, 200, 500],
+  "criterion": ["gini", "entropy"],
+  "max_depth": [null, 10, 20, 30],
+  "min_samples_split": [2, 5, 10],
+  "min_samples_leaf": [1, 2, 4],
+  "max_features": ["sqrt", "log2", 0.8],
+  "bootstrap": [true, false],
+  "class_weight": [null, "balanced", "balanced_subsample"],
+  "random_state": [42]
+}

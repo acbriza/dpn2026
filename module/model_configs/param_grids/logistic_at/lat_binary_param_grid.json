@@ -1,0 +1,7 @@
+{
+  "alpha": [0.1, 1.0, 10.0],
+  "fit_intercept": [true, false],
+  "solver": ["lbfgs", "newton-cg", "sag", "saga"],
+  "max_iter": [100, 200, 500],
+  "verbose": [0]
+}

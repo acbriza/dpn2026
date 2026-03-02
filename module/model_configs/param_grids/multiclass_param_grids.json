@@ -1,0 +1,130 @@
+{
+    "logistic_regression": {
+        "Note": "For true ordinal classification, consider mord.LogisticAT. This grid is for standard multiclass LogisticRegression (e.g., One-vs-Rest or Multinomial, not inherently ordinal).",
+        "penalty": [
+            "l2",
+            "none"
+        ],
+        "C": [
+            0.01,
+            0.1,
+            1,
+            10,
+            100
+        ],
+        "solver": [
+            "lbfgs",
+            "saga"
+        ],
+        "multi_class": [
+            "multinomial"
+        ],
+        "max_iter": [
+            100,
+            200,
+            500
+        ],
+        "class_weight": [
+            null,
+            "balanced"
+        ],
+        "random_state": [
+            42
+        ]
+    },
+    "random_forest": {
+        "n_estimators": [
+            100,
+            200,
+            500
+        ],
+        "criterion": [
+            "gini",
+            "entropy"
+        ],
+        "max_depth": [
+            null,
+            10,
+            20,
+            30
+        ],
+        "min_samples_split": [
+            2,
+            5,
+            10
+        ],
+        "min_samples_leaf": [
+            1,
+            2,
+            4
+        ],
+        "max_features": [
+            "sqrt",
+            "log2",
+            0.8
+        ],
+        "bootstrap": [
+            true,
+            false
+        ],
+        "class_weight": [
+            null,
+            "balanced",
+            "balanced_subsample"
+        ],
+        "random_state": [
+            42
+        ]
+    },
+    "xgb": {
+        "booster": [
+            "gbtree",
+            "dart"
+        ],
+        "device": "cpu",
+        "verbosity": [
+            0,
+            1,
+            2,
+            3
+        ],
+        "validate_parameters": [
+            false,
+            true
+        ],
+        "nthread": [
+            1,
+            4,
+            8,
+            16
+        ],
+        "disable_default_eval_metric": [
+            false,
+            true
+        ],
+        "objective": [
+            "multi:softprob",
+            "multi:softmax"
+        ],
+        "num_class": 4,
+        "eta": 0.3,
+        "gamma": 0,
+        "max_depth": 6,
+        "min_child_weight": 1,
+        "max_delta_step": 0,
+        "subsample": 1,
+        "sampling_method": "uniform",
+        "colsample_bytree": 1,
+        "colsample_bylevel": 1,
+        "colsample_bynode": 1,
+        "lambda": 1,
+        "alpha": 0,
+        "tree_method": "auto",
+        "scale_pos_weight": 1,
+        "process_type": "default",
+        "grow_policy": "depthwise",
+        "max_leaves": 0,
+        "max_bin": 256,
+        "num_parallel_tree": 1
+    }
+}

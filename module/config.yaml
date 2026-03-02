@@ -1,0 +1,24 @@
+dataset:
+  path: "data/your_data.csv"
+  feature_set_1: ["SEX", "AGE", "DM DUR", "INSULIN", "HBA1C", "HPN", "PAOD", "DSLPDMIA", "CKD", "GBS", "DEC VS", "DEC PPS", "DEC LTS", "DEC AR", "MNSI", "Uv", "m/s", "Uv.1", "m/s.1", "MCV", "DL", "CMAP-ANK", "CMAP-KNE", "F WAVE", "Uv.2", "m/s.2", "Uv.3", "m/s.3", "MCV.1", "DL.1", "CMAP-ANK.1", "CMAP-KNE.1", "F WAVE.1", "FEET MEAN ESC", "FEET %ASSYM" ,"HANDS MEAN ESC", "HANDS %ASSYM"]
+  feature_set_2: []
+  target: "DPN_Status"
+
+cf_params_1:
+  features_to_vary: ["age", "weight", "nsc"]
+  continuous_features: ["AGE", "CMAP-ANK", "CMAP-ANK.1", "CMAP-KNE", "CMAP-KNE.1", "DL", "DL.1",
+                        "DM DUR", "F WAVE", "F WAVE.1", "FEET %ASSYM", "FEET MEAN ESC",
+                        "HANDS %ASSYM", "HANDS MEAN ESC", "HBA1C", "MCV", "MCV.1", "MNSI", "Uv",
+                        "Uv.1", "Uv.2", "Uv.3", "m/s", "m/s.1", "m/s.2", "m/s.3"]
+
+cf_params_2:
+  features_to_vary: []
+  continuous_features: []
+
+model_1:
+  type: "logisticat"
+  backend: "sklearn"
+
+model_2:
+  type: "randomforest"
+  backend: "sklearn"

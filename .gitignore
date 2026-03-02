@@ -1,0 +1,81 @@
+# -----------------------------------
+# Python
+# -----------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pyd
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.manifest
+*.spec
+
+module/outputs/
+module/catboost_info/
+
+# Pipenv / venv / Poetry
+.venv/
+venv/
+ENV/
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# pyenv
+.python-version
+
+# -----------------------------------
+# Jupyter Notebooks
+# -----------------------------------
+.ipynb_checkpoints
+*.nbconvert.ipynb
+
+# -----------------------------------
+# VS Code
+# -----------------------------------
+.vscode/
+
+# -----------------------------------
+# PyCharm
+# -----------------------------------
+.idea/
+*.iml
+
+# -----------------------------------
+# macOS & system files
+# -----------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# -----------------------------------
+# Logs
+# -----------------------------------
+*.log
+
+# -----------------------------------
+# Misc
+# -----------------------------------
+*.sqlite3
+*.db
+*.sqlite
+*.bak
+*.tmp
+*.swp
+*.swo
+
+# -----------------------------------
+# Data & outputs (optional!)
+# -----------------------------------
+# If you don’t want to version large CSVs, models, or output files:
+# data/
+# *.csv
+# *.xlsx
+# models/
+*.pkl

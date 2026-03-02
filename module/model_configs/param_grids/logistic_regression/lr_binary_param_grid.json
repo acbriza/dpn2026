@@ -1,0 +1,8 @@
+{
+  "penalty": ["l1", "l2", "elasticnet"],
+  "C": [0.01, 0.1, 1, 10, 100],
+  "solver": ["saga"],
+  "max_iter": [100, 200, 500],
+  "class_weight": [null, "balanced"],
+  "random_state": [42]
+}

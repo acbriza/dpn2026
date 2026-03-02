@@ -1,0 +1,10 @@
+{
+  "Note": "For true ordinal classification, consider mord.LogisticAT. This grid is for standard multiclass LogisticRegression (e.g., One-vs-Rest or Multinomial, not inherently ordinal).",
+  "penalty": ["l2", "none"],
+  "C": [0.01, 0.1, 1, 10, 100],
+  "solver": ["lbfgs", "saga"],
+  "multi_class": ["multinomial"],
+  "max_iter": [100, 200, 500],
+  "class_weight": [null, "balanced"],
+  "random_state": [42]
+}

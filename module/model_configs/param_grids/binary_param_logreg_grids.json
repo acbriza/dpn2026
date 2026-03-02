@@ -1,0 +1,11 @@
+{
+   "logistic_regression":
+        {
+        "classifier__penalty": ["l1", "l2", "elasticnet", "none"],
+        "classifier__C": [0.01, 0.1, 1, 10, 100],
+        "classifier__solver": ["saga", "liblinear", "lbfgs"],
+        "classifier__max_iter": [100, 200, 500],
+        "classifier__class_weight": [null, "balanced"],
+        "classifier__random_state": [42]
+        } 
+}

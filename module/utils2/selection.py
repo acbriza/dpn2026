@@ -190,3 +190,54 @@ def benchmark_models(X, y, cv_splits, n_repeats, random_state, verbosity):
 
     # sort by Youden Index instead of ROC-AUC
     return results
+
+def calculate_metric_statistics(experiment_metrics):
+    """
+    Calculate statistics (e.g. mean and standard deviation) of repeated cross validation runs for an experiment
+    Return: dictionary {
+                'mean' : mean/std of all metrics, sorted by  youden 
+                'std' : mean/std of all metrics, sorted by  youden
+            }
+    """
+    metric_stats = {}
+
+    metric_stats['mean'] = pd.concat(
+        [pd.DataFrame({algo['model']: algo['rcv_scores'].mean()}) for algo in experiment_metrics],
+        axis=1
+        ).T.sort_values(by="Youden Index", ascending=False)
+    
+    metric_stats['std'] = pd.concat(
+        [pd.DataFrame({algo['model']: algo['rcv_scores'].std()}) for algo in experiment_metrics],
+        axis=1
+        ).T.sort_values(by="Youden Index", ascending=False)    
+    
+    return metric_stats
+
+def get_youden_scores(experiment_metrics, exp_code, metrics_stats):
+    """
+        Get the list of youden scores only
+        exp_code : e.g. 'all', 'ncs'
+    """    
+    dfy = pd.concat(
+        [pd.DataFrame({algo['model']: algo['rcv_scores']['Youden Index']}) for algo in experiment_metrics[exp_code]],
+        axis=1
+        )    
+    # sort columns by youden means
+    column_order = metrics_stats[exp_code]['mean'].T.columns.tolist() 
+    return dfy[column_order] 
+
+# plot a violin plot
+def plot_youden_scores(yscores, exp_code, title, save_figure=True):
+    plt.figure(figsize=(8, 4))
+    sns.violinplot(data=yscores[exp_code])
+    plt.title(title)
+    plt.grid(True, axis='y', linestyle='--', alpha=0.7)
+    plt.xticks(rotation=75)
+    if save_figure:
+        plt.savefig(
+        figures_savedir / 'youden_violin.png',
+            bbox_inches='tight',
+            dpi=300
+        )
+    plt.show()
+    

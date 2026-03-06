@@ -166,7 +166,11 @@ def benchmark_models(X, y, cv_splits, n_repeats, random_state, verbosity):
     }
 
     results = []
-    for name, model in tqdm(models.items()):
+    if verbosity>0:
+        model_items=models.items()
+    else: # show progress bar
+        model_items=tqdm(models.items())
+    for name, model in model_items:
         pipe = build_smart_pipeline(name, model, X, verbosity)
         #scores = cross_validate(pipe, X, y, cv=cv, scoring=scoring, n_jobs=-1, error_score="raise")
         scores = cross_validate(pipe, X, y, cv=rcv, scoring=scoring, n_jobs=-1, error_score="raise")

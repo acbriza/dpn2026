@@ -1,0 +1,18 @@
+experiment:
+  tag: final
+  details: final binary classification - feature  and model selection
+  verbosity: 1
+  random_seed: 42
+
+data:
+  classification_type: binary
+  dataset_path: ../dataset/Sudoscan Working File with Stats.xlsx
+
+feature_selection:
+  cross_validation:
+    k_splits: 4 
+    n_repeats: 10
+    scoring : youden
+  vif_threshold: 5
+  figures:
+    youden_table_topk: 5

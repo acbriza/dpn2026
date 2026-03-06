@@ -1,10 +1,12 @@
+experiment:
+  details: binary classification - feature  and model selection
+  verbosity: 1
+  random_seed: 42
+
 data:
   classification_type: binary
   dataset_path: ../dataset/Sudoscan Working File with Stats.xlsx
 
-experiment:
-  verbosity: 1
-  random_seed: 42
 
 feature_selection:
   cross_validation:

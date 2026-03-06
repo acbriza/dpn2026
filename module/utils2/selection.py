@@ -4,6 +4,7 @@
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from tqdm import tqdm
 
 from sklearn.dummy import DummyClassifier
@@ -28,6 +29,10 @@ from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
 from catboost import CatBoostClassifier
 
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+
 import sys 
 sys.path.append('..')  
 
@@ -36,6 +41,11 @@ from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score, roc_auc_score,
     confusion_matrix, make_scorer
 )
+
+# variance inflation factor
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+from statsmodels.tools.tools import add_constant
+
 
 # Define Models
 models = {
@@ -122,7 +132,8 @@ def build_smart_pipeline(model_name, model_instance, X_train, verbosity):
             # remainder='drop' # safety: drop anything else not accounted for
         )
         steps = [('preprocessor', preprocessor), ('model', model_instance)]
-        print(f"⚙️ {model_name}: Scaling continuous cols with {scale_type}")
+        if (verbosity>0):
+            print(f"⚙️ {model_name}: Scaling continuous cols with {scale_type}")
     else:
         # If no scaling needed (e.g. Random Forest), skip preprocessor entirely
         steps = [('model', model_instance)]
@@ -148,7 +159,7 @@ def get_specificity_scorer():
     return make_scorer(specificity_score)
 
 
-def benchmark_models(X, y, cv_splits, n_repeats, random_state, verbosity):
+def benchmark_models(X, y, cv_splits, n_repeats, random_state, verbosity, experiment_tag):
     """
     Model benchmarking
     Uses repeated stratified k-fold 
@@ -187,6 +198,9 @@ def benchmark_models(X, y, cv_splits, n_repeats, random_state, verbosity):
             "model": name,
             "rcv_scores" : pd.DataFrame(algo_results)
         })
+        if experiment_tag in ['development', 'debug'] and name=="Logistic Regression":
+            # stop after second algorithm
+            break
 
     # sort by Youden Index instead of ROC-AUC
     return results
@@ -227,17 +241,35 @@ def get_youden_scores(experiment_metrics, exp_code, metrics_stats):
     return dfy[column_order] 
 
 # plot a violin plot
-def plot_youden_scores(yscores, exp_code, title, save_figure=True):
+def plot_youden_scores(yscores, exp_code, title, savedir, experiment_tag=True):
     plt.figure(figsize=(8, 4))
     sns.violinplot(data=yscores[exp_code])
     plt.title(title)
     plt.grid(True, axis='y', linestyle='--', alpha=0.7)
     plt.xticks(rotation=75)
-    if save_figure:
+    if experiment_tag not in ['debug']:
         plt.savefig(
-        figures_savedir / 'youden_violin.png',
+        savedir / 'youden_violin.png',
             bbox_inches='tight',
             dpi=300
         )
     plt.show()
     
+
+def get_high_vif(df, vif_threshold, verbosity):
+    # Example: df is your DataFrame with predictors
+    df2 = df.copy()
+
+    # Add constant term (intercept) for statsmodels
+    df2 = add_constant(df2)
+
+    # Compute VIF for each column
+    vif_data = pd.DataFrame()
+    vif_data["feature"] = df2.columns
+    vif_data["VIF"] = [variance_inflation_factor(df2.values, i) 
+                    for i in range(df2.shape[1])]
+    high_vif = vif_data[vif_data["VIF"]>vif_threshold]
+    if verbosity>0:
+        print(f'Features with VIF higher than {vif_threshold}')
+        print(high_vif)
+    return high_vif

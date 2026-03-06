@@ -1,11 +1,12 @@
 experiment:
+  summary: binary classification - feature  and model selection
+  classification_type: binary
+  phase: feature_model_selection # feature and model selection
   tag: final
-  details: final binary classification - feature  and model selection
-  verbosity: 1
+  verbosity: 0
   random_seed: 42
 
 data:
-  classification_type: binary
   dataset_path: ../dataset/Sudoscan Working File with Stats.xlsx
 
 feature_selection:

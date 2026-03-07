@@ -211,7 +211,7 @@ metric_fullname = {
     "recall": "Recall",
     "f1": "F1",
     "roc-auc": "ROC-AUC",
-    "youden": "Youden",
+    "youden": "Youden Index",
     "specificity": "Specificity"
 }
 
@@ -246,35 +246,37 @@ def calculate_metric_statistics(experiment_metrics, sorting_metric=None):
     
     return metric_stats
 
-def get_youden_scores(experiment_metrics, exp_code, metrics_stats):
+def get_metric_scores(experiment_metrics, exp_code, metrics_stats, target_metric):
     """
         Get the list of youden scores only
         exp_code : e.g. 'all', 'ncs'
+        target_metric : e.g. 'youden', 'roc-auc'
     """    
-    dfy = pd.concat(
-        [pd.DataFrame({algo['model']: algo['rcv_scores']['youden']}) for algo in experiment_metrics[exp_code]],
+    dfm = pd.concat(
+        [pd.DataFrame({algo['model']: algo['rcv_scores'][target_metric]}) for algo in experiment_metrics[exp_code]],
         axis=1
         )    
-    # sort columns by youden means
+    # sort columns by target_metric means
     column_order = metrics_stats[exp_code]['mean'].T.columns.tolist() 
-    return dfy[column_order] 
+    return dfm[column_order] 
+
 
 # plot a violin plot
-def plot_youden_scores(yscores, exp_code, sorted, title, experiment_tag, savedir):
+def plot_metric_scores(metric_scores, exp_code, sorted, experiment_tag, target_metric, savedir):
     plt.figure(figsize=(8, 4))
     if sorted:
-        yscores_sorted = yscores[exp_code].mean().to_frame(name="avg").sort_values(by='avg', ascending=False)
-        yscores_sorted_indices = yscores_sorted.index.to_list()
-        sns.violinplot(data=yscores[exp_code][yscores_sorted_indices])
+        metric_scores_sorted = metric_scores[exp_code].mean().to_frame(name="avg").sort_values(by='avg', ascending=False)
+        metric_scores_sorted_indices = metric_scores_sorted.index.to_list()
+        sns.violinplot(data=metric_scores[exp_code][metric_scores_sorted_indices])
     else:
-        sns.violinplot(data=yscores[exp_code])
-    plt.title(title)
-    plt.ylabel('Youden Index')
+        sns.violinplot(data=metric_scores[exp_code])
+    plt.title(f'Distribution of {metric_fullname[target_metric]} Across Multiple Runs')
+    plt.ylabel(metric_fullname[target_metric])
     plt.grid(True, axis='y', linestyle='--', alpha=0.7)
     plt.xticks(rotation=75)
     if experiment_tag not in ['debug']:
         plt.savefig(
-        savedir / 'youden_violin.png',
+        savedir / f'{target_metric}_violin.png',
             bbox_inches='tight',
             dpi=300
         )

@@ -181,7 +181,7 @@ def benchmark_models(X, y, cv_splits, n_repeats, random_state, verbosity, experi
         model_items=models.items()
     else: # show progress bar
         model_items=tqdm(models.items())
-    for name, model in model_items:
+    for i, (name, model) in enumerate(model_items):
         pipe = build_smart_pipeline(name, model, X, verbosity)
         #scores = cross_validate(pipe, X, y, cv=cv, scoring=scoring, n_jobs=-1, error_score="raise")
         scores = cross_validate(pipe, X, y, cv=rcv, scoring=scoring, n_jobs=-1, error_score="raise")
@@ -198,14 +198,24 @@ def benchmark_models(X, y, cv_splits, n_repeats, random_state, verbosity, experi
             "model": name,
             "rcv_scores" : pd.DataFrame(algo_results)
         })
-        if experiment_tag in ['development', 'debug'] and name=="Logistic Regression":
-            # stop after second algorithm
+        if experiment_tag in ['development', 'debug'] and i>1:
+            # stop after 3rd algorithm
             break
 
     # sort by Youden Index instead of ROC-AUC
     return results
 
-def calculate_metric_statistics(experiment_metrics):
+metric_fullname = {
+    "accuracy": "Accuracy",
+    "precision": "Precision",
+    "recall": "Recall",
+    "f1": "F1",
+    "roc-auc": "ROC-AUC",
+    "youden": "Youden",
+    "specificity": "Specificity"
+}
+
+def calculate_metric_statistics(experiment_metrics, sorting_metric=None):
     """
     scoring_list: list of metrics to calculate statistics (e.g. youden, roc-auc)
     Calculate statistics (e.g. mean and standard deviation) of repeated cross validation runs for an experiment
@@ -218,12 +228,21 @@ def calculate_metric_statistics(experiment_metrics):
     metric_stats['mean'] = pd.concat(
         [pd.DataFrame({algo['model']: algo['rcv_scores'].mean()}) for algo in experiment_metrics],
         axis=1
-        ).T   #.sort_values(by="Youden Index", ascending=False)
+        ).T   
+    
+    if sorting_metric:
+        metric_stats['mean'] = metric_stats['mean'].sort_values(by=sorting_metric, ascending=False)
+        column_order =  metric_stats['mean'].columns.to_list()
     
     metric_stats['std'] = pd.concat(
         [pd.DataFrame({algo['model']: algo['rcv_scores'].std()}) for algo in experiment_metrics],
         axis=1
-        ).T   #.sort_values(by="Youden Index", ascending=False)    
+        ).T   
+
+    # reorder according to sorting
+    if sorting_metric:
+        metric_stats['std'] = metric_stats['std'][column_order]
+        
     
     return metric_stats
 
@@ -241,10 +260,16 @@ def get_youden_scores(experiment_metrics, exp_code, metrics_stats):
     return dfy[column_order] 
 
 # plot a violin plot
-def plot_youden_scores(yscores, exp_code, title, savedir, experiment_tag):
+def plot_youden_scores(yscores, exp_code, sorted, title, experiment_tag, savedir):
     plt.figure(figsize=(8, 4))
-    sns.violinplot(data=yscores[exp_code])
+    if sorted:
+        yscores_sorted = yscores[exp_code].mean().to_frame(name="avg").sort_values(by='avg', ascending=False)
+        yscores_sorted_indices = yscores_sorted.index.to_list()
+        sns.violinplot(data=yscores[exp_code][yscores_sorted_indices])
+    else:
+        sns.violinplot(data=yscores[exp_code])
     plt.title(title)
+    plt.ylabel('Youden Index')
     plt.grid(True, axis='y', linestyle='--', alpha=0.7)
     plt.xticks(rotation=75)
     if experiment_tag not in ['debug']:
@@ -275,12 +300,13 @@ def get_high_vif(df, vif_threshold, verbosity):
         print(high_vif)
     return high_vif
 
-def create_model_summary_table(dataframes, savedir, target_metric, topk,  
+def create_model_summary_table(metrics_stats, savedir, target_metric, topk,  
                                exclude_features=[], include_mean=True, show_plot=True, save_fig=True, savename_suffix=""):
+    
     metric_table = pd.DataFrame()
-    for feature_set_name, df in dataframes.items():
+    for feature_set_name, df in metrics_stats.items():
         if feature_set_name not in exclude_features:
-            metric_table[feature_set_name] = df[target_metric]
+            metric_table[feature_set_name] = df['mean'][target_metric]
     if topk > 0:
         topk_avg = metric_table.apply(lambda col: col.nlargest(topk).mean())
         metric_table.loc[f"Top {topk} Avg"] = topk_avg
@@ -290,9 +316,9 @@ def create_model_summary_table(dataframes, savedir, target_metric, topk,
     # Plot heatmap
     plt.figure(figsize=(10, 6))
     sns.heatmap(metric_table, annot=True, cmap="coolwarm", center=0)
-    plt.title("Average Youden Index Across Models and Datasets")
+    plt.title(f"Average {metric_fullname[target_metric]} Across Models and Feature Sets")
     plt.ylabel("Model")
-    plt.xlabel("Dataset")
+    plt.xlabel("Feature Set")
     if save_fig:
         savename = f'{target_metric}_summary_table'
         if include_mean:

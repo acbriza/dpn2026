@@ -13,7 +13,9 @@ feature_selection:
   cross_validation:
     k_splits: 4 
     n_repeats: 10
-    scoring : youden
+    scoring: youden
   vif_threshold: 5
-  figures:
-    youden_table_topk: 5
+
+figures:
+  summary_metric: youden
+  summary_table_topk: 5

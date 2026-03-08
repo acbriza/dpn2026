@@ -246,3 +246,7 @@ def mean_confidence_interval(results, config):
             print(f"{metric} {confidence*100}% CI: {opt_results_ci[metric]}")
 
     return opt_results_ci
+
+def model_predict(X_new, model, threshold):
+    proba = model.predict_proba(X_new)[:, 1]
+    return (proba >= threshold).astype(int), proba

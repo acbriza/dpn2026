@@ -4,6 +4,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
 from sklearn.metrics import roc_curve, confusion_matrix, roc_auc_score
 from sklearn.datasets import load_breast_cancer
+from sklearn.ensemble import RandomForestClassifier
 from catboost import CatBoostClassifier
 
 import optuna

@@ -9,6 +9,7 @@ from catboost import CatBoostClassifier
 import optuna
 import optuna.visualization as vis
 optuna.logging.set_verbosity(optuna.logging.WARNING)
+from skopt import BayesSearchCV
 
 from scipy import stats
 
@@ -224,6 +225,42 @@ def mean_confidence_interval(results, config):
             print(f"{metric} {confidence*100}% CI: {opt_results_ci[metric]}")
 
     return opt_results_ci
+
+def train_final_model(X, y, model, param_space, n_splits_inner=3, n_iter=30, random_state=42, n_jobs=-1):
+    """
+    Train the final deployable model on ALL data:
+    1. BayesSearchCV to find best hyperparameters (inner CV on full dataset)
+    2. Refit on full dataset with best params
+    3. Threshold via Youden index on OOF predictions
+    """
+
+    inner_cv = StratifiedKFold(n_splits=n_splits_inner, shuffle=True, random_state=random_state)
+
+    # Step 1: Hyperparameter search on full data
+    opt = BayesSearchCV(
+        estimator=model,
+        search_spaces=param_space,
+        scoring="roc_auc",
+        cv=inner_cv,
+        n_iter=n_iter,
+        n_jobs=n_jobs,
+        random_state=random_state,
+        refit=True,  # fits final model on all data with best params
+    )
+    opt.fit(X, y)
+    final_model = opt.best_estimator_
+
+    # Step 2: Youden threshold via OOF probabilities on full dataset
+    oof_proba = np.zeros(len(y))
+    for inner_train_idx, inner_val_idx in inner_cv.split(X, y):
+        fold_model = opt.best_estimator_.__class__(**opt.best_params_)
+        fold_model.fit(X[inner_train_idx], y[inner_train_idx])
+        oof_proba[inner_val_idx] = fold_model.predict_proba(X[inner_val_idx])[:, 1]
+
+    fpr, tpr, thresholds = roc_curve(y, oof_proba)
+    best_threshold = float(thresholds[np.argmax(tpr - fpr)])
+
+    return final_model, best_threshold, opt.best_params_
 
 def model_predict(X_new, model, threshold):
     proba = model.predict_proba(X_new)[:, 1]

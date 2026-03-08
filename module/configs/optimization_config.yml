@@ -3,7 +3,7 @@ experiment:
   classification_type: binary
   stage: hyperparameter_optimization
   tag: final
-  verbosity: 1
+  verbosity: 0
   random_seed: 42
 
 data:
@@ -35,7 +35,7 @@ optimization:
 
 evaluation:
   confidence: 0.95
-  k_splits_outer: 4 
-  n_repeats_outer: 10
-  k_splits_inner: 3
-  n_iter: 30 
+
+final_training:
+  k_splits_inner: 4
+  n_iter: 5 

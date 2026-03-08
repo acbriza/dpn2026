@@ -1,8 +1,16 @@
-from sklearn.model_selection import StratifiedKFold, cross_val_score
+import numpy as np
+
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
+from sklearn.metrics import roc_curve, confusion_matrix, roc_auc_score
 from sklearn.datasets import load_breast_cancer
+from catboost import CatBoostClassifier
 
 import optuna
 import optuna.visualization as vis
+optuna.logging.set_verbosity(optuna.logging.WARNING)
+
+from scipy import stats
 
 import sys 
 sys.path.append('..')  
@@ -200,13 +208,6 @@ def nested_cv_youden(
     }
 
 
-import numpy as np
-import optuna
-from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
-from sklearn.metrics import roc_curve, confusion_matrix, roc_auc_score
-
-optuna.logging.set_verbosity(optuna.logging.WARNING)
-
 
 def nested_cv_youden_optuna(
     X,
@@ -379,3 +380,63 @@ def nested_cv_youden_optuna(
         # ── Per-fold detail ──
         "folds": fold_results,
     }
+
+model_class = {
+    'catboost': CatBoostClassifier,
+    'random_forest' : RandomForestClassifier,
+}
+
+#### OPTUNA OPTIMIZATION #######
+
+def param_space_fn(trial, config):
+    return  {
+        "iterations": trial.suggest_int(
+            "iterations", 
+            config.param_space.iterations.min, 
+            config.param_space.iterations.max),
+        "depth": trial.suggest_int(
+            "depth", 
+            config.param_space.depth.min, 
+            config.param_space.depth.max),
+        "learning_rate": trial.suggest_float(
+            "learning_rate", 
+            config.param_space.learning_rate.min, 
+            config.param_space.learning_rate.max, 
+            log=True),
+        "l2_leaf_reg": trial.suggest_int(
+            "l2_leaf_reg", 
+            config.param_space.l2_leaf_reg.min, 
+            config.param_space.l2_leaf_reg.max),
+    }
+
+
+def mean_confidence_interval(results, config):
+    confidence = config.evaluation.confidence
+    verbosity = config.experiment.verbosity
+
+    opt_results_ci = {}
+    for metric in ["youden", "roc_auc"]:
+        scores = [fold[metric] for fold in results['folds']]
+        
+        scores = np.array(scores)
+        n = len(scores)
+        mean = np.mean(scores)
+        std = np.std(scores, ddof=1)
+        stderr = std / np.sqrt(n)
+
+        # z = 1.96 confidence 0.95
+        z = stats.norm.ppf((1 + confidence) / 2.)  
+        margin = z * stderr
+
+        opt_results_ci[metric] =  {
+            "mean": mean,
+            "std": std,
+            "ci_lower": mean - margin,
+            "ci_upper": mean + margin,
+            "n_folds": n
+        } 
+
+        if verbosity > 0:
+            print(f"{metric} {confidence*100}% CI: {opt_results_ci[metric]}")
+
+    return opt_results_ci

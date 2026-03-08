@@ -68,7 +68,6 @@ def nested_cv_youden(
     n_splits_inner=3,
     n_iter=30,
     random_state=42,
-    n_jobs=-1,
 ):
     """
     Nested cross-validation with:
@@ -94,10 +93,14 @@ def nested_cv_youden(
         y_outer_train, y_outer_test = y[outer_train_idx], y[outer_test_idx]
 
         # ── Inner CV: hyperparameter search ──────────────────────────────────
+        
+        # Create a unique seed for this specific outer fold
+        current_seed = random_state + fold_idx
+        
         inner_cv = StratifiedKFold(
             n_splits=n_splits_inner,
             shuffle=True,
-            random_state=random_state,
+            random_state=current_seed, # Different for every outer fold
         )
 
         opt = BayesSearchCV(
@@ -106,8 +109,9 @@ def nested_cv_youden(
             scoring="roc_auc",
             cv=inner_cv,
             n_iter=n_iter,
-            n_jobs=n_jobs,
-            random_state=random_state,
+            n_jobs=1, # fix at 1; parallellization will be done at the model level (thread_count in model instantiation), not in the folds
+            random_state=current_seed, # Optimizer starts at different points
+            early_stopping_rounds=50,
             refit=True,  # refit on full outer_train after search
         )
         opt.fit(X_outer_train, y_outer_train)
@@ -126,6 +130,7 @@ def nested_cv_youden(
             fold_model.fit(
                 X_outer_train[inner_train_idx],
                 y_outer_train[inner_train_idx],
+                verbose=False,
             )
             oof_proba[inner_val_idx] = fold_model.predict_proba(
                 X_outer_train[inner_val_idx]

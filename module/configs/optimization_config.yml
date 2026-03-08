@@ -28,14 +28,14 @@ param_space:
 
 optimization:
   scoring: roc_auc # hardcoded  
-  k_splits_outer: 3 
-  n_repeats_outer: 2
+  k_splits_outer: 4
+  n_repeats_outer: 10
   k_splits_inner: 3
-  n_iter: 5 
+  n_iter: 30
 
 evaluation:
   confidence: 0.95
-  k_splits_outer: 3 
-  n_repeats_outer: 2
+  k_splits_outer: 4 
+  n_repeats_outer: 10
   k_splits_inner: 3
-  n_iter: 5 
+  n_iter: 30 

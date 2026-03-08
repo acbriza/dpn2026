@@ -1,0 +1,161 @@
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.datasets import load_breast_cancer
+
+import optuna
+import optuna.visualization as vis
+
+import sys 
+sys.path.append('..')  
+
+from utils2.selection import *
+
+def run_sample_optuna_optimization():
+    # 1. Load data (Breast Cancer dataset is a good example for binary classification)
+    data = load_breast_cancer()
+    Xcancer, ycancer = data.data, data.target
+
+    def objective(trial):
+        # 2. Define the search space
+        n_estimators = trial.suggest_int('n_estimators', 50, 300)
+        max_depth = trial.suggest_int('max_depth', 3, 20)
+        min_samples_split = trial.suggest_int('min_samples_split', 2, 10)
+        
+        # 3. Instantiate the Model
+        clf = RandomForestClassifier(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            n_jobs=-1,        # Use all CPU cores for the Random Forest training
+            random_state=42   # Fix seed for the Random Forest initialization
+        )
+        
+        # 4. Define StratifiedKFold
+        # IMPORTANT: shuffle=True with a fixed random_state ensures 
+        # the same folds are used for every single trial.
+        cv_strategy = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+        
+        # 5. Run Cross-Validation
+        # Pass the cv_strategy object to the cv argument
+        scores = cross_val_score(clf, Xcancer, ycancer, cv=cv_strategy, scoring='roc_auc')
+        
+        # 6. Return the mean accuracy
+        return scores.mean()
+
+    # 7. Run Optimization
+    study = optuna.create_study(direction='maximize')
+    study.optimize(objective, n_trials=3)
+
+    print(f"Best Performance: {study.best_value}")
+    print(f"Best Params: {study.best_params}")
+
+    fig = vis.plot_parallel_coordinate(study)
+    fig.show()
+
+
+import numpy as np
+from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
+from sklearn.metrics import roc_curve, confusion_matrix, roc_auc_score
+from skopt import BayesSearchCV
+
+
+def nested_cv_youden(
+    X,
+    y,
+    model,
+    param_space,
+    n_splits_outer=3,
+    n_repeats_outer=3,
+    n_splits_inner=3,
+    n_iter=30,
+    random_state=42,
+    n_jobs=-1,
+):
+    """
+    Nested cross-validation with:
+    - Outer: RepeatedStratifiedKFold
+    - Inner: BayesSearchCV optimizing ROC-AUC
+    - Threshold selected per outer fold using Youden index
+
+    Returns:
+        dict with mean/std metrics and per-fold results
+    """
+
+    outer_cv = RepeatedStratifiedKFold(
+        n_splits=n_splits_outer,
+        n_repeats=n_repeats_outer,
+        random_state=random_state
+    )
+
+    youden_scores = []
+    roc_auc_scores = []
+    sensitivities = []
+    specificities = []
+    thresholds = []
+
+    for outer_train_idx, outer_test_idx in outer_cv.split(X, y):
+
+        X_outer_train, X_outer_test = X[outer_train_idx], X[outer_test_idx]
+        y_outer_train, y_outer_test = y[outer_train_idx], y[outer_test_idx]
+
+        # Inner CV
+        inner_cv = StratifiedKFold(
+            n_splits=n_splits_inner,
+            shuffle=True,
+            random_state=random_state
+        )
+
+        opt = BayesSearchCV(
+            estimator=model,
+            search_spaces=param_space,
+            scoring="roc_auc",
+            cv=inner_cv,
+            n_iter=n_iter,
+            n_jobs=n_jobs,
+            random_state=random_state
+        )
+
+        opt.fit(X_outer_train, y_outer_train)
+        best_model = opt.best_estimator_
+
+        # ---------- Threshold Selection (Outer Train) ----------
+        y_train_proba = best_model.predict_proba(X_outer_train)[:, 1]
+
+        fpr, tpr, threshold_candidates = roc_curve(y_outer_train, y_train_proba)
+        youden = tpr - fpr
+        best_threshold = threshold_candidates[np.argmax(youden)]
+
+        thresholds.append(best_threshold)
+
+        # ---------- Evaluation (Outer Test) ----------
+        y_test_proba = best_model.predict_proba(X_outer_test)[:, 1]
+        y_test_pred = (y_test_proba >= best_threshold).astype(int)
+
+        tn, fp, fn, tp = confusion_matrix(y_outer_test, y_test_pred).ravel()
+
+        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+        youden_test = sensitivity + specificity - 1
+
+        roc_auc = roc_auc_score(y_outer_test, y_test_proba)
+
+        # Store metrics
+        youden_scores.append(youden_test)
+        roc_auc_scores.append(roc_auc)
+        sensitivities.append(sensitivity)
+        specificities.append(specificity)
+
+    results = {
+        "youden_mean": np.mean(youden_scores),
+        "youden_std": np.std(youden_scores),
+        "roc_auc_mean": np.mean(roc_auc_scores),
+        "roc_auc_std": np.std(roc_auc_scores),
+        "sensitivity_mean": np.mean(sensitivities),
+        "specificity_mean": np.mean(specificities),
+        "threshold_mean": np.mean(thresholds),
+        "threshold_std": np.std(thresholds),
+        "youden_all": youden_scores,
+        "roc_auc_all": roc_auc_scores,
+        "thresholds_all": thresholds,
+    }
+
+    return results

@@ -111,7 +111,6 @@ def nested_cv_youden(
             n_iter=n_iter,
             n_jobs=1, # fix at 1; parallellization will be done at the model level (thread_count in model instantiation), not in the folds
             random_state=current_seed, # Optimizer starts at different points
-            early_stopping_rounds=50,
             refit=True,  # refit on full outer_train after search
         )
         opt.fit(X_outer_train, y_outer_train)
@@ -130,7 +129,7 @@ def nested_cv_youden(
             fold_model.fit(
                 X_outer_train[inner_train_idx],
                 y_outer_train[inner_train_idx],
-                verbose=False,
+                verbose=0,
             )
             oof_proba[inner_val_idx] = fold_model.predict_proba(
                 X_outer_train[inner_val_idx]

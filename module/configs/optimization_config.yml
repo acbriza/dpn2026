@@ -1,8 +1,8 @@
 experiment:
-  summary: binary classification - hyperparameter optimization(final experiment)
+  summary: binary classification - hyperparameter optimization (final experiment)
   classification_type: binary
   stage: hyperparameter_optimization
-  tag: development
+  tag: final
   verbosity: 1
   random_seed: 42
 

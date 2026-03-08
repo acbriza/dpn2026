@@ -194,28 +194,6 @@ model_class = {
 
 #### OPTUNA OPTIMIZATION #######
 
-def param_space_fn(trial, config):
-    return  {
-        "iterations": trial.suggest_int(
-            "iterations", 
-            config.param_space.iterations.min, 
-            config.param_space.iterations.max),
-        "depth": trial.suggest_int(
-            "depth", 
-            config.param_space.depth.min, 
-            config.param_space.depth.max),
-        "learning_rate": trial.suggest_float(
-            "learning_rate", 
-            config.param_space.learning_rate.min, 
-            config.param_space.learning_rate.max, 
-            log=True),
-        "l2_leaf_reg": trial.suggest_int(
-            "l2_leaf_reg", 
-            config.param_space.l2_leaf_reg.min, 
-            config.param_space.l2_leaf_reg.max),
-    }
-
-
 def mean_confidence_interval(results, config):
     confidence = config.evaluation.confidence
     verbosity = config.experiment.verbosity

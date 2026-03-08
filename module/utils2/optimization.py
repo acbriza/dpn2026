@@ -103,11 +103,14 @@ def nested_cv_youden(
             random_state=current_seed, # Different for every outer fold
         )
 
+        # Materialize splits once — used by both BayesSearchCV and OOF threshold loop
+        inner_splits = list(inner_cv.split(X_outer_train, y_outer_train))        
+
         opt = BayesSearchCV(
             estimator=model,
             search_spaces=param_space,
             scoring="roc_auc",
-            cv=inner_cv,
+            cv=inner_splits,  # pass the pre-materialized splits directly
             n_iter=n_iter,
             n_jobs=1, # fix at 1; parallellization will be done at the model level (thread_count in model instantiation), not in the folds
             random_state=current_seed, # Optimizer starts at different points
@@ -120,11 +123,10 @@ def nested_cv_youden(
         # Collect out-of-fold probabilities across the inner splits so the
         # threshold is never chosen on data the model was trained on.
         oof_proba = np.zeros(len(y_outer_train))
-        for inner_train_idx, inner_val_idx in inner_cv.split(
-            X_outer_train, y_outer_train
-        ):
+        for inner_train_idx, inner_val_idx in inner_splits: # OOF threshold loop reuses the exact same splits as in BayesSearch CV
             fold_model = opt.best_estimator_.__class__(
-                **opt.best_params_
+                **opt.best_params_, 
+                random_state=random_state,
             )
             fold_model.fit(
                 X_outer_train[inner_train_idx],

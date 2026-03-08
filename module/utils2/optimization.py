@@ -200,12 +200,19 @@ def nested_cv_youden(
     }
 
 
+import numpy as np
+import optuna
+from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
+from sklearn.metrics import roc_curve, confusion_matrix, roc_auc_score
+
+optuna.logging.set_verbosity(optuna.logging.WARNING)
+
 
 def nested_cv_youden_optuna(
     X,
     y,
-    model,
-    param_space,
+    model_class,
+    param_space_fn,
     n_splits_outer=3,
     n_repeats_outer=3,
     n_splits_inner=3,
@@ -215,9 +222,30 @@ def nested_cv_youden_optuna(
     """
     Nested cross-validation with:
     - Outer: RepeatedStratifiedKFold
-    - Inner: BayesSearchCV optimizing ROC-AUC
-    - Threshold selected on inner validation data using Youden index,
+    - Inner: Optuna TPE study optimizing ROC-AUC
+    - Threshold selected on inner-CV OOF predictions using Youden index,
       then applied to the outer test fold (avoids optimistic bias)
+
+    Args:
+        X:               Feature matrix (numpy array)
+        y:               Target vector (numpy array)
+        model_class:     Uninstantiated estimator class (e.g. CatBoostClassifier)
+        param_space_fn:  Callable (trial) -> dict of hyperparameters.
+                         Receives an optuna.trial.Trial and returns a param dict
+                         compatible with model_class(**params).
+                         Example:
+                             def param_space_fn(trial):
+                                 return {
+                                     "depth": trial.suggest_int("depth", 4, 10),
+                                     "learning_rate": trial.suggest_float(
+                                         "learning_rate", 1e-3, 0.3, log=True
+                                     ),
+                                 }
+        n_splits_outer:  Outer CV folds
+        n_repeats_outer: Outer CV repeats
+        n_splits_inner:  Inner CV folds (used inside each Optuna trial)
+        n_iter:          Number of Optuna trials per outer fold
+        random_state:    Base random seed
 
     Returns:
         dict with mean/std summary metrics and per-fold results
@@ -235,42 +263,53 @@ def nested_cv_youden_optuna(
         X_outer_train, X_outer_test = X[outer_train_idx], X[outer_test_idx]
         y_outer_train, y_outer_test = y[outer_train_idx], y[outer_test_idx]
 
-        # ── Inner CV: hyperparameter search ──────────────────────────────────
-        
-        # Create a unique seed for this specific outer fold
+        # ── Inner CV: materialize splits once ────────────────────────────────
+        # Reused by both Optuna objective and the OOF threshold loop so that
+        # the threshold is never chosen on data the model was trained on.
         current_seed = random_state + fold_idx
-        
+
         inner_cv = StratifiedKFold(
             n_splits=n_splits_inner,
             shuffle=True,
-            random_state=current_seed, # Different for every outer fold
+            random_state=current_seed,
         )
+        inner_splits = list(inner_cv.split(X_outer_train, y_outer_train))
 
-        # Materialize splits once — used by both BayesSearchCV and OOF threshold loop
-        inner_splits = list(inner_cv.split(X_outer_train, y_outer_train))        
+        # ── Optuna objective ─────────────────────────────────────────────────
+        def objective(trial):
+            params = param_space_fn(trial)
 
-        opt = BayesSearchCV(
-            estimator=model,
-            search_spaces=param_space,
-            scoring="roc_auc",
-            cv=inner_splits,  # pass the pre-materialized splits directly
-            n_iter=n_iter,
-            n_jobs=1, # fix at 1; parallellization will be done at the model level (thread_count in model instantiation), not in the folds
-            random_state=current_seed, # Optimizer starts at different points
-            refit=True,  # refit on full outer_train after search
-        )
-        opt.fit(X_outer_train, y_outer_train)
-        best_model = opt.best_estimator_
+            fold_aucs = []
+            for inner_train_idx, inner_val_idx in inner_splits:
+                m = model_class(**params, random_state=random_state)
+                m.fit(
+                    X_outer_train[inner_train_idx],
+                    y_outer_train[inner_train_idx],
+                    verbose=0,
+                )
+                val_proba = m.predict_proba(X_outer_train[inner_val_idx])[:, 1]
 
-        # ── Threshold selection on inner-CV OOF (Out of Fold) predictions ──────────────────
-        # Collect out-of-fold probabilities across the inner splits so the
-        # threshold is never chosen on data the model was trained on.
+                if len(np.unique(y_outer_train[inner_val_idx])) > 1:
+                    fold_aucs.append(
+                        roc_auc_score(y_outer_train[inner_val_idx], val_proba)
+                    )
+
+            return float(np.mean(fold_aucs)) if fold_aucs else 0.0
+
+        sampler = optuna.samplers.TPESampler(seed=current_seed)
+        study = optuna.create_study(direction="maximize", sampler=sampler)
+        study.optimize(objective, n_trials=n_iter, show_progress_bar=False)
+
+        best_params = study.best_params
+
+        # ── Refit best model on full outer training set ───────────────────────
+        best_model = model_class(**best_params, random_state=random_state)
+        best_model.fit(X_outer_train, y_outer_train, verbose=0)
+
+        # ── Threshold selection on inner-CV OOF predictions ──────────────────
         oof_proba = np.zeros(len(y_outer_train))
-        for inner_train_idx, inner_val_idx in inner_splits: # OOF threshold loop reuses the exact same splits as in BayesSearch CV
-            fold_model = opt.best_estimator_.__class__(
-                **opt.best_params_, 
-                random_state=random_state,
-            )
+        for inner_train_idx, inner_val_idx in inner_splits:
+            fold_model = model_class(**best_params, random_state=random_state)
             fold_model.fit(
                 X_outer_train[inner_train_idx],
                 y_outer_train[inner_train_idx],
@@ -288,7 +327,6 @@ def nested_cv_youden_optuna(
         y_test_proba = best_model.predict_proba(X_outer_test)[:, 1]
         y_test_pred = (y_test_proba >= best_threshold).astype(int)
 
-        # Guard against degenerate folds (single class in test set)
         cm = confusion_matrix(y_outer_test, y_test_pred, labels=[0, 1])
         tn, fp, fn, tp = cm.ravel()
 
@@ -313,7 +351,7 @@ def nested_cv_youden_optuna(
                 "sensitivity": sensitivity,
                 "specificity": specificity,
                 "threshold": best_threshold,
-                "best_params": dict(opt.best_params_),
+                "best_params": best_params,
             }
         )
 

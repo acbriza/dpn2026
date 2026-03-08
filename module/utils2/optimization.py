@@ -247,6 +247,7 @@ def train_final_model(X, y, model, param_space, n_splits_inner=3, n_iter=30, ran
         n_jobs=n_jobs,
         random_state=random_state,
         refit=True,  # fits final model on all data with best params
+        verbose=0,
     )
     opt.fit(X, y)
     final_model = opt.best_estimator_

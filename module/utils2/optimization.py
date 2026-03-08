@@ -74,34 +74,30 @@ def nested_cv_youden(
     Nested cross-validation with:
     - Outer: RepeatedStratifiedKFold
     - Inner: BayesSearchCV optimizing ROC-AUC
-    - Threshold selected per outer fold using Youden index
+    - Threshold selected on inner validation data using Youden index,
+      then applied to the outer test fold (avoids optimistic bias)
 
     Returns:
-        dict with mean/std metrics and per-fold results
+        dict with mean/std summary metrics and per-fold results
     """
 
     outer_cv = RepeatedStratifiedKFold(
         n_splits=n_splits_outer,
         n_repeats=n_repeats_outer,
-        random_state=random_state
+        random_state=random_state,
     )
 
-    youden_scores = []
-    roc_auc_scores = []
-    sensitivities = []
-    specificities = []
-    thresholds = []
+    fold_results = []
 
-    for outer_train_idx, outer_test_idx in outer_cv.split(X, y):
-
+    for fold_idx, (outer_train_idx, outer_test_idx) in enumerate(outer_cv.split(X, y)):
         X_outer_train, X_outer_test = X[outer_train_idx], X[outer_test_idx]
         y_outer_train, y_outer_test = y[outer_train_idx], y[outer_test_idx]
 
-        # Inner CV
+        # ── Inner CV: hyperparameter search ──────────────────────────────────
         inner_cv = StratifiedKFold(
             n_splits=n_splits_inner,
             shuffle=True,
-            random_state=random_state
+            random_state=random_state,
         )
 
         opt = BayesSearchCV(
@@ -111,51 +107,88 @@ def nested_cv_youden(
             cv=inner_cv,
             n_iter=n_iter,
             n_jobs=n_jobs,
-            random_state=random_state
+            random_state=random_state,
+            refit=True,  # refit on full outer_train after search
         )
-
         opt.fit(X_outer_train, y_outer_train)
         best_model = opt.best_estimator_
 
-        # ---------- Threshold Selection (Outer Train) ----------
-        y_train_proba = best_model.predict_proba(X_outer_train)[:, 1]
+        # ── Threshold selection on inner-CV OOF (Out of Fold) predictions ──────────────────
+        # Collect out-of-fold probabilities across the inner splits so the
+        # threshold is never chosen on data the model was trained on.
+        oof_proba = np.zeros(len(y_outer_train))
+        for inner_train_idx, inner_val_idx in inner_cv.split(
+            X_outer_train, y_outer_train
+        ):
+            fold_model = opt.best_estimator_.__class__(
+                **opt.best_params_
+            )
+            fold_model.fit(
+                X_outer_train[inner_train_idx],
+                y_outer_train[inner_train_idx],
+            )
+            oof_proba[inner_val_idx] = fold_model.predict_proba(
+                X_outer_train[inner_val_idx]
+            )[:, 1]
 
-        fpr, tpr, threshold_candidates = roc_curve(y_outer_train, y_train_proba)
-        youden = tpr - fpr
-        best_threshold = threshold_candidates[np.argmax(youden)]
+        fpr, tpr, threshold_candidates = roc_curve(y_outer_train, oof_proba)
+        youden_index = tpr - fpr
+        best_threshold = float(threshold_candidates[np.argmax(youden_index)])
 
-        thresholds.append(best_threshold)
-
-        # ---------- Evaluation (Outer Test) ----------
+        # ── Evaluation on outer test fold ─────────────────────────────────────
         y_test_proba = best_model.predict_proba(X_outer_test)[:, 1]
         y_test_pred = (y_test_proba >= best_threshold).astype(int)
 
-        tn, fp, fn, tp = confusion_matrix(y_outer_test, y_test_pred).ravel()
+        # Guard against degenerate folds (single class in test set)
+        cm = confusion_matrix(y_outer_test, y_test_pred, labels=[0, 1])
+        tn, fp, fn, tp = cm.ravel()
 
-        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
-        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
-        youden_test = sensitivity + specificity - 1
+        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else np.nan
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else np.nan
+        youden_test = (
+            sensitivity + specificity - 1
+            if not (np.isnan(sensitivity) or np.isnan(specificity))
+            else np.nan
+        )
+        roc_auc = (
+            roc_auc_score(y_outer_test, y_test_proba)
+            if len(np.unique(y_outer_test)) > 1
+            else np.nan
+        )
 
-        roc_auc = roc_auc_score(y_outer_test, y_test_proba)
+        fold_results.append(
+            {
+                "fold": fold_idx,
+                "roc_auc": roc_auc,
+                "youden": youden_test,
+                "sensitivity": sensitivity,
+                "specificity": specificity,
+                "threshold": best_threshold,
+                "best_params": dict(opt.best_params_),
+            }
+        )
 
-        # Store metrics
-        youden_scores.append(youden_test)
-        roc_auc_scores.append(roc_auc)
-        sensitivities.append(sensitivity)
-        specificities.append(specificity)
+    # ── Aggregate ─────────────────────────────────────────────────────────────
+    def _nanstats(key):
+        vals = [f[key] for f in fold_results]
+        return float(np.nanmean(vals)), float(np.nanstd(vals))
 
-    results = {
-        "youden_mean": np.mean(youden_scores),
-        "youden_std": np.std(youden_scores),
-        "roc_auc_mean": np.mean(roc_auc_scores),
-        "roc_auc_std": np.std(roc_auc_scores),
-        "sensitivity_mean": np.mean(sensitivities),
-        "specificity_mean": np.mean(specificities),
-        "threshold_mean": np.mean(thresholds),
-        "threshold_std": np.std(thresholds),
-        "youden_all": youden_scores,
-        "roc_auc_all": roc_auc_scores,
-        "thresholds_all": thresholds,
+    roc_mean, roc_std = _nanstats("roc_auc")
+    you_mean, you_std = _nanstats("youden")
+    sen_mean, _ = _nanstats("sensitivity")
+    spe_mean, _ = _nanstats("specificity")
+    thr_mean, thr_std = _nanstats("threshold")
+
+    return {
+        # ── Summary stats ──
+        "roc_auc_mean": roc_mean,
+        "roc_auc_std": roc_std,
+        "youden_mean": you_mean,
+        "youden_std": you_std,
+        "sensitivity_mean": sen_mean,
+        "specificity_mean": spe_mean,
+        "threshold_mean": thr_mean,
+        "threshold_std": thr_std,
+        # ── Per-fold detail ──
+        "folds": fold_results,
     }
-
-    return results

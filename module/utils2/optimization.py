@@ -15,8 +15,6 @@ from scipy import stats
 import sys 
 sys.path.append('..')  
 
-from utils2.selection import *
-
 def nested_cv_youden_optuna(
     X,
     y,

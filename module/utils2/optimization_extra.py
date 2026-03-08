@@ -18,8 +18,6 @@ optuna.logging.set_verbosity(optuna.logging.WARNING)
 import sys 
 sys.path.append('..')  
 
-from utils2.selection import *
-
 def run_sample_optuna_optimization():
     # 1. Load data (Breast Cancer dataset is a good example for binary classification)
     data = load_breast_cancer()

@@ -264,6 +264,30 @@ def train_final_model_with_threshold_recalculation(X, y, model, param_space, n_s
 
     return final_model, best_threshold, opt.best_params_
 
+def train_final_model(X, y, model, param_space, n_splits_inner=5, n_iter=50, random_state=42, n_jobs=-1):
+    """
+    Train the final deployable model on ALL data:
+    1. BayesSearchCV to find best hyperparameters (inner CV on full dataset)
+    2. Refit on full dataset with best params
+    3. No best threshold recalculation; we will use the one from the cross validated folds
+    """
+
+    inner_cv = StratifiedKFold(n_splits=n_splits_inner, shuffle=True, random_state=random_state)
+
+    opt = BayesSearchCV(
+        estimator=model,
+        search_spaces=param_space,
+        scoring="roc_auc",
+        cv=inner_cv,
+        n_iter=n_iter,
+        n_jobs=n_jobs,
+        random_state=random_state,
+        refit=True,
+        verbose=0,
+    )
+    opt.fit(X, y, callback=None)
+    return opt.best_estimator_, opt.best_params_
+
 def model_predict(X_new, model, threshold):
     proba = model.predict_proba(X_new)[:, 1]
     return (proba >= threshold).astype(int), proba

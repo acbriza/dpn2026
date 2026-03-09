@@ -227,7 +227,7 @@ def mean_confidence_interval(results, config):
 
     return opt_results_ci
 
-def train_final_model(X, y, model, param_space, n_splits_inner=3, n_iter=30, random_state=42, n_jobs=-1):
+def train_final_model_with_threshold_recalculation(X, y, model, param_space, n_splits_inner=3, n_iter=30, random_state=42, n_jobs=-1):
     """
     Train the final deployable model on ALL data:
     1. BayesSearchCV to find best hyperparameters (inner CV on full dataset)

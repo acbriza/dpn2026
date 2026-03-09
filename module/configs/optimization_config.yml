@@ -38,4 +38,4 @@ evaluation:
 
 final_training:
   k_splits_inner: 4
-  n_iter: 5 
+  n_iter: 50

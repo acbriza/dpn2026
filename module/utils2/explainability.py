@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from sklearn.metrics import roc_curve, auc, confusion_matrix
 
 import numpy as np
 import pandas as pd
@@ -31,8 +32,6 @@ COLOR_GROUP_MAP = {
 }
 
 
-
-
 def get_colors(DPN_data, labels):
     D = DPN_data
     return [
@@ -45,6 +44,7 @@ def get_colors(DPN_data, labels):
         palette['Gray']
         for label in labels
     ]
+
 
 def plot_importances(DPN_data, config, importances, feature_names, 
                      minimum=None, limit=None, 
@@ -91,3 +91,82 @@ def plot_importances(DPN_data, config, importances, feature_names,
             filename = f'{filename}_min-{minimum:.3f}'
         plt.savefig(savedir / f'{filename}.png')
     plt.show()
+
+
+def plot_roc_auc(config, y_test, y_proba, savedir=None):
+
+    # Compute ROC curve and AUC
+    fpr, tpr, thresholds = roc_curve(y_test, y_proba)
+    roc_auc = auc(fpr, tpr)
+
+    # Plot ROC curve
+    plt.figure(figsize=(6,6))
+    plt.plot(fpr, tpr, color='blue', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+    plt.plot([0, 1], [0, 1], color='gray', linestyle='--', label='Chance level')
+    plt.xlabel('False Positive Rate (1 - Specificity)')
+    plt.ylabel('True Positive Rate (Sensitivity / Recall)')
+    plt.title('Receiver Operating Characteristic (ROC)')
+    plt.legend(loc="best")
+    plt.grid(True)
+
+    if savedir:
+        filename = f'roc_auc_{config.model.code}'
+        plt.savefig(savedir / f'{filename}.png')
+    plt.show()
+
+
+def plot_decision_curve_analysis(config, model, X, y, thresholds=None):
+    """
+    Perform Decision Curve Analysis (DCA) for a trained classifier.
+
+    Parameters:
+    -----------
+    model : sklearn-like estimator
+        Must have a predict_proba method.
+    X : array-like
+        Feature matrix (test set).
+    y : array-like
+        True binary labels.
+    thresholds : array-like, optional
+        List or array of thresholds to evaluate. Defaults to np.linspace(0.01, 0.99, 50).
+    label : str, optional
+        Label for the model curve.
+
+    Returns:
+    --------
+    thresholds : np.array
+        Threshold probabilities.
+    net_benefits : list
+        Net benefit values for the model.
+    """
+
+    # Default thresholds
+    if thresholds is None:
+        thresholds = np.linspace(0.01, 0.99, 50)
+
+    # Get predicted probabilities
+    y_pred_prob = model.predict_proba(X)[:, 1]
+
+    N = len(y)
+    net_benefits = []
+
+    for pt in thresholds:
+        y_pred = (y_pred_prob >= pt).astype(int)
+        tn, fp, fn, tp = confusion_matrix(y, y_pred).ravel()
+
+        net_benefit = (tp / N) - (fp / N) * (pt / (1 - pt))
+        net_benefits.append(net_benefit)
+
+    # Plotting
+    plt.plot(thresholds, net_benefits, label=config.model.name, linewidth=2)
+    plt.plot(thresholds, [0]*len(thresholds), linestyle="--", label="Treat None")
+    plt.plot(thresholds, thresholds, linestyle="--", label="Treat All")  # Simplified version
+
+    plt.xlabel("Threshold Probability")
+    plt.ylabel("Net Benefit")
+    plt.title(f"DCA for {config.model.name}")
+    plt.legend()
+    plt.grid(True, linestyle="--", alpha=0.6)
+    plt.show()
+
+    return thresholds, net_benefits

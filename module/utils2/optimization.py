@@ -316,6 +316,7 @@ def test_model(model, threshold, Xnew, ynew, uses_proba=False):
         else np.nan
     )
 
+    print()
     print(cm)
     print('youden: ', youden_test)
     print('roc_auc: ', roc_auc)

@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from pathlib import Path
+import shap
 
 palette = {
     'Teal': '#8DD3C7', 
@@ -83,6 +84,8 @@ def plot_importances(DPN_data, config, importances, feature_names,
         title="Feature Groups", 
         loc='best' # Adjust location as needed (e.g., 'best', 'outside')
     )
+
+    plt.tight_layout()
     if savedir:
         filename = f'features_importances_{config.model.code}'
         if limit:
@@ -108,14 +111,15 @@ def plot_roc_auc(config, y_test, y_proba, savedir=None):
     plt.title('Receiver Operating Characteristic (ROC)')
     plt.legend(loc="best")
     plt.grid(True)
-
+    
+    plt.tight_layout()
     if savedir:
         filename = f'roc_auc_{config.model.code}'
         plt.savefig(savedir / f'{filename}.png')
     plt.show()
 
 
-def plot_decision_curve_analysis(config, model, X, y, thresholds=None):
+def plot_decision_curve_analysis(config, model, X, y, thresholds=None, savedir=None):
     """
     Perform Decision Curve Analysis (DCA) for a trained classifier.
 
@@ -167,6 +171,84 @@ def plot_decision_curve_analysis(config, model, X, y, thresholds=None):
     plt.title(f"DCA for {config.model.name}")
     plt.legend()
     plt.grid(True, linestyle="--", alpha=0.6)
-    plt.show()
 
+    plt.tight_layout()
+    if savedir:
+        filename = f'dca_{config.model.code}'
+        plt.savefig(savedir / f'{filename}.png')    
+    plt.show()
     return thresholds, net_benefits
+
+
+def plot_shap(DPN_data, config, model, X_test, savedir=None):
+    
+    D = DPN_data
+
+    def current_model_predict(X):
+        """
+        Define a simple predict function for the current model
+        This closure ensures 'model' refers to the correct model in each iteration
+        For classifiers, .predict_proba is often preferred for SHAP for better interpretability
+        especially for multi-class.
+        """
+        return model.predict_proba(X)[:, 1] #.
+
+    # Use a masker: your input DataFrame
+    #. Don't use a masker so we preserve correlations
+    #. masker = shap.maskers.Independent(X_val)
+
+    # Create explainer with custom predict function
+    # Specify the masker for consistency
+    #. explainer = shap.Explainer(current_model_predict, masker=masker)
+
+    #. use x_test directly
+    explainer = shap.Explainer(current_model_predict, X_test) 
+
+    # Compute SHAP values
+    shap_values = explainer(X_test)
+
+    plt.figure(figsize=(8, 8))
+
+    # 3.1 Generate the SHAP summary plot (bar type)
+    # We set show=False to prevent Matplotlib from displaying it immediately
+    shap.summary_plot(shap_values, X_test, show=False, plot_type="bar", plot_size=None)
+
+    # 3.2 Get the current Axes object (which contains the plot)
+    # This is usually the first (and only) Axes created by the shap plot.
+    ax = plt.gca()
+
+    # 3.3 Identify the features and assign colors
+    # The SHAP bar plot automatically orders features by importance (the Y-axis labels)
+    feature_names = [label.get_text() for label in ax.get_yticklabels()]
+    bar_colors = get_colors(D, feature_names)
+
+    # 3.4 Manually re-color the bars 
+    # The bars are the first container of rectangles in the axes.
+    # They are typically stored in ax.containers[0]
+    for bar, color in zip(ax.containers[0].patches, bar_colors):
+        bar.set_color(color)
+
+    # 3.5 Add Custom Legend
+    legend_handles = [
+        mpatches.Patch(color=color, label=label)
+        for label, color in COLOR_GROUP_MAP.items()
+    ]
+
+    # Set the title first (from your original prompt)
+    plt.title("SHAP Values Feature Importance")
+
+    # Add the legend to the plot
+    ax.legend(
+        handles=legend_handles, 
+        title="Feature Group", 
+        loc='lower right', # Adjust location as needed
+        bbox_to_anchor=(1.05, 0.1), # Place outside the plot area, for example
+        borderaxespad=0.
+    )
+
+    plt.tight_layout()
+    if savedir:
+        filename = f'shap_{config.model.code}'
+        plt.savefig(savedir / f'{filename}.png')    
+
+    plt.show()

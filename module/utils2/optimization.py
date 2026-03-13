@@ -291,3 +291,32 @@ def train_final_model(X, y, model, param_space, n_splits_inner=5, n_iter=50, ran
 def model_predict(X_new, model, threshold):
     proba = model.predict_proba(X_new)[:, 1]
     return (proba >= threshold).astype(int), proba
+
+
+def test_model(model, threshold, Xnew, ynew, uses_proba=False):
+    if uses_proba:
+        ypredproba = model.predict(Xnew)
+        ypred = (ypredproba > threshold).astype(int)
+    else:
+        ypred, ypredproba = model_predict(Xnew, model, threshold)
+
+    cm = confusion_matrix(ynew, ypred, labels=[0, 1])
+    tn, fp, fn, tp = cm.ravel()
+
+    sensitivity = tp / (tp + fn) if (tp + fn) > 0 else np.nan
+    specificity = tn / (tn + fp) if (tn + fp) > 0 else np.nan
+    youden_test = (
+        sensitivity + specificity - 1
+        if not (np.isnan(sensitivity) or np.isnan(specificity))
+        else np.nan
+    )
+    roc_auc = (
+        roc_auc_score(ynew, ypredproba)
+        if len(np.unique(ynew)) > 1
+        else np.nan
+    )
+
+    print(cm)
+    print('youden: ', youden_test)
+    print('roc_auc: ', roc_auc)
+    return youden_test, roc_auc

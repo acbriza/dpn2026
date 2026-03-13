@@ -87,7 +87,7 @@ def plot_importances(DPN_data, config, importances, feature_names,
 
     plt.tight_layout()
     if savedir:
-        filename = f'features_importances_{config.model.code}'
+        filename = f'{config.model.code}_features_importances'
         if limit:
             filename = f'{filename}_top-{limit}'
         if minimum:
@@ -111,10 +111,10 @@ def plot_roc_auc(config, y_test, y_proba, savedir=None):
     plt.title('Receiver Operating Characteristic (ROC)')
     plt.legend(loc="best")
     plt.grid(True)
-    
+
     plt.tight_layout()
     if savedir:
-        filename = f'roc_auc_{config.model.code}'
+        filename = f'{config.model.code}_roc_auc'
         plt.savefig(savedir / f'{filename}.png')
     plt.show()
 
@@ -174,7 +174,7 @@ def plot_decision_curve_analysis(config, model, X, y, thresholds=None, savedir=N
 
     plt.tight_layout()
     if savedir:
-        filename = f'dca_{config.model.code}'
+        filename = f'{config.model.code}_dca'
         plt.savefig(savedir / f'{filename}.png')    
     plt.show()
     return thresholds, net_benefits
@@ -248,7 +248,7 @@ def plot_shap(DPN_data, config, model, X_test, savedir=None):
 
     plt.tight_layout()
     if savedir:
-        filename = f'shap_{config.model.code}'
+        filename = f'{config.model.code}_shap'
         plt.savefig(savedir / f'{filename}.png')    
 
     plt.show()

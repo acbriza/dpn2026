@@ -322,7 +322,7 @@ def test_model(model, threshold, Xnew, ynew, uses_proba=False):
     print(cm)
     print('youden: ', youden_test)
     print('roc_auc: ', roc_auc)
-    return youden_test, roc_auc
+    return cm, youden_test, roc_auc
 
 
 def plot_mutual_info(X, y):

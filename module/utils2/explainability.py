@@ -1,12 +1,18 @@
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from sklearn.metrics import roc_curve, auc, confusion_matrix
-
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+
+from sklearn.metrics import roc_curve, auc, confusion_matrix
+from sklearn.model_selection import StratifiedKFold
+from catboost import CatBoostClassifier
+from skopt.space import Integer, Real
 
 from pathlib import Path
 import shap
+
+from utils2 import optimization as hpo
+
 
 palette = {
     'Teal': '#8DD3C7', 
@@ -45,6 +51,73 @@ def get_colors(DPN_data, labels):
         palette['Gray']
         for label in labels
     ]
+
+
+def get_ksplit_trained_models(X, y, config):
+
+    catboost_model = CatBoostClassifier(
+        verbose=0,
+        loss_function="Logloss",
+        eval_metric="AUC",
+        random_state=config.experiment.random_seed, 
+        thread_count=-1
+    )    
+
+    param_space = {
+        'iterations': Integer(
+            config.param_space.iterations.min, 
+            config.param_space.iterations.max),
+        'depth': Integer(
+            config.param_space.depth.min, 
+            config.param_space.depth.max),
+        'learning_rate': Real(
+            config.param_space.learning_rate.min, 
+            config.param_space.learning_rate.max, 
+            prior='log-uniform'),  # log-uniform better for LR
+        'l2_leaf_reg': Real(
+            config.param_space.l2_leaf_reg.min, 
+            config.param_space.l2_leaf_reg.max, 
+            prior='uniform'),
+    }    
+
+    skf = StratifiedKFold(
+        n_splits=config.optimization.k_splits_outer, 
+        shuffle=True, 
+        random_state=config.experiment.random_seed)
+
+    split_results = []
+
+    for train_idx, test_idx in skf.split(X, y):
+        X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+        y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+
+        model, best_params = hpo.train_final_model(
+            X=X_train.values, 
+            y=y_train.values, 
+            model=catboost_model,
+            param_space=param_space,
+            n_splits_inner=config.optimization.k_splits_inner,
+            n_iter=config.optimization.n_iter, 
+            random_state=config.experiment.random_seed, 
+            n_jobs=1
+        )
+
+        # no need to retrain model since refit=true in train_final_model
+        youden, roc_auc = hpo.test_model(model, config.hpo_results.threshold, X_test, y_test)
+
+        result = {
+            "model" : model,
+            "X_train": X_train,
+            "X_test": X_test,
+            "y_train": y_train,
+            "y_test": y_test,
+            "best_params" : best_params,
+            "youden" : youden,
+            "roc_auc": roc_auc, 
+        }
+        split_results.append(result)
+
+    return split_results
 
 
 def plot_importances(DPN_data, config, importances, feature_names, 

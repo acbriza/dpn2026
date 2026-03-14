@@ -1,0 +1,39 @@
+experiment:
+  summary: binary classification - Explainability Analysis (development)
+  classification_type: binary
+  stage: explainability
+  tag: final
+  verbosity: 1
+  random_seed: 42
+
+data:
+  dataset_path: ../dataset/Sudoscan Working File with Stats.xlsx
+
+model: 
+  code: catboost
+  name: CatBoost
+
+param_space:
+  iterations:
+    min: 100
+    max: 500 
+  depth:
+    min: 4
+    max: 10
+  learning_rate:
+    min: 0.01
+    max: 0.1
+  l2_leaf_reg:
+    min: 1
+    max: 9
+
+# hyperparameter optimization of algorithms 
+hpo_results: 
+  file: binary\hyperparameter_optimization\CatBoost\final\optimization_results.json
+  threshold: 0.6352084424142594
+
+optimization:
+  scoring: roc_auc # hardcoded  
+  k_splits_outer: 3 
+  k_splits_inner: 3
+  n_iter: 5 

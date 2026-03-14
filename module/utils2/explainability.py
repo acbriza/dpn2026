@@ -120,11 +120,12 @@ def get_ksplit_trained_models(X, y, config):
     return split_results
 
 
-def plot_importances(DPN_data, config, importances, feature_names, 
+def plot_importances(DPN_data, model, split_index, feature_names, config, 
                      minimum=None, limit=None, 
                      savedir=None):
 
     D = DPN_data
+    importances = model.get_feature_importance()
     feature_importances = pd.Series(importances, index=feature_names).sort_values(ascending=False)
     if minimum:
         feature_importances = feature_importances[feature_importances>minimum]
@@ -160,7 +161,7 @@ def plot_importances(DPN_data, config, importances, feature_names,
 
     plt.tight_layout()
     if savedir:
-        filename = f'{config.model.code}_features_importances'
+        filename = f'{config.model.code}_split{split_index}_features_importances'
         if limit:
             filename = f'{filename}_top-{limit}'
         if minimum:
@@ -169,7 +170,7 @@ def plot_importances(DPN_data, config, importances, feature_names,
     plt.show()
 
 
-def plot_roc_auc(config, y_test, y_proba, savedir=None):
+def plot_roc_auc(y_test, y_proba, split_index, config, savedir=None):
 
     # Compute ROC curve and AUC
     fpr, tpr, thresholds = roc_curve(y_test, y_proba)
@@ -187,12 +188,12 @@ def plot_roc_auc(config, y_test, y_proba, savedir=None):
 
     plt.tight_layout()
     if savedir:
-        filename = f'{config.model.code}_roc_auc'
+        filename = f'{config.model.code}_split{split_index}_roc_auc'
         plt.savefig(savedir / f'{filename}.png')
     plt.show()
 
 
-def plot_decision_curve_analysis(config, model, X, y, thresholds=None, savedir=None):
+def plot_decision_curve_analysis(model, split_index, X, y, config, thresholds=None, savedir=None):
     """
     Perform Decision Curve Analysis (DCA) for a trained classifier.
 
@@ -247,13 +248,13 @@ def plot_decision_curve_analysis(config, model, X, y, thresholds=None, savedir=N
 
     plt.tight_layout()
     if savedir:
-        filename = f'{config.model.code}_dca'
+        filename = f'{config.model.code}_split{split_index}_dca'
         plt.savefig(savedir / f'{filename}.png')    
     plt.show()
     return thresholds, net_benefits
 
 
-def plot_shap(DPN_data, config, model, X_test, savedir=None):
+def plot_shap(DPN_data, model, split_index, config, X_test, savedir=None):
     
     D = DPN_data
 
@@ -284,11 +285,11 @@ def plot_shap(DPN_data, config, model, X_test, savedir=None):
 
     # 3.1 Generate the SHAP summary plot (bar type)
     # We set show=False to prevent Matplotlib from displaying it immediately
-    shap.summary_plot(shap_values, X_test, show=False, plot_type="bar", plot_size=None)
+    shap.summary_plot(shap_values, X_test, show=False, plot_type="bar", plot_size=(10, 8))
 
     # 3.2 Get the current Axes object (which contains the plot)
     # This is usually the first (and only) Axes created by the shap plot.
-    ax = plt.gca()
+    fig, ax = plt.gcf(), plt.gca()
 
     # 3.3 Identify the features and assign colors
     # The SHAP bar plot automatically orders features by importance (the Y-axis labels)
@@ -307,21 +308,30 @@ def plot_shap(DPN_data, config, model, X_test, savedir=None):
         for label, color in COLOR_GROUP_MAP.items()
     ]
 
+    # Modify tick label sizes
+    ax.tick_params(axis='both', which='major', labelsize=12)
+
+    # Modify the x-axis label specifically
+    ax.set_xlabel("SHAP value (impact on model output)", fontsize=14)
+
+    # Invert the y-axis
+    ax.invert_yaxis()
+              
     # Set the title first (from your original prompt)
-    plt.title("SHAP Values Feature Importance")
+    plt.title("SHAP Values Feature Importance", fontsize=16)
 
     # Add the legend to the plot
     ax.legend(
         handles=legend_handles, 
         title="Feature Group", 
-        loc='lower right', # Adjust location as needed
-        bbox_to_anchor=(1.05, 0.1), # Place outside the plot area, for example
+        loc='upper right', # Adjust location as needed
+        bbox_to_anchor=(0.9, 0.9), # Place outside the plot area, for example
         borderaxespad=0.
     )
 
     plt.tight_layout()
     if savedir:
-        filename = f'{config.model.code}_shap'
+        filename = f'{config.model.code}_split{split_index}_shap'
         plt.savefig(savedir / f'{filename}.png')    
 
     plt.show()

@@ -1,9 +1,11 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
 from sklearn.metrics import roc_curve, confusion_matrix, roc_auc_score
 from sklearn.datasets import load_breast_cancer
+from sklearn.feature_selection import mutual_info_classif
 from sklearn.ensemble import RandomForestClassifier
 from catboost import CatBoostClassifier
 
@@ -321,3 +323,16 @@ def test_model(model, threshold, Xnew, ynew, uses_proba=False):
     print('youden: ', youden_test)
     print('roc_auc: ', roc_auc)
     return youden_test, roc_auc
+
+
+def plot_mutual_info(X, y):
+    mi_scores = mutual_info_classif(X, y)
+
+    plt.figure(figsize=(12,6))
+    labels=X.columns.to_list()
+    plt.bar(labels, mi_scores)
+    plt.ylabel("Mutual Information")
+    plt.xticks(ticks=range(len(X.columns)), labels=labels, rotation=45)
+    plt.xlabel("Features")
+    plt.tight_layout()
+    plt.show()

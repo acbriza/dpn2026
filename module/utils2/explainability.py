@@ -103,7 +103,7 @@ def get_ksplit_trained_models(X, y, config):
         )
 
         # no need to retrain model since refit=true in train_final_model
-        youden, roc_auc = hpo.test_model(model, config.hpo_results.threshold, X_test, y_test)
+        cm, youden, roc_auc = hpo.test_model(model, config.hpo_results.threshold, X_test, y_test)
 
         result = {
             "model" : model,
@@ -112,6 +112,7 @@ def get_ksplit_trained_models(X, y, config):
             "y_train": y_train,
             "y_test": y_test,
             "best_params" : best_params,
+            "cm": cm,
             "youden" : youden,
             "roc_auc": roc_auc, 
         }

@@ -159,12 +159,18 @@ def get_specificity_scorer():
     return make_scorer(specificity_score)
 
 
-def benchmark_models(X, y, cv_splits, n_repeats, random_state, verbosity, experiment_tag):
+def benchmark_models(X, y, config, verbosity=None):
     """
     Model benchmarking
     Uses repeated stratified k-fold 
     """
-    cv = StratifiedKFold(n_splits=cv_splits, shuffle=True, random_state=random_state)
+    if verbosity is None:
+        verbosity = config.experiment.verbosity
+    n_repeats = config.feature_selection.cross_validation.n_repeats
+    random_state = config.experiment.random_seed
+    cv_splits = config.feature_selection.cross_validation.k_splits
+    experiment_tag = config.experiment.tag
+
     rcv = RepeatedStratifiedKFold(n_splits=cv_splits, n_repeats=n_repeats, random_state=random_state)
     scoring = {
         "accuracy": "accuracy",
@@ -183,7 +189,6 @@ def benchmark_models(X, y, cv_splits, n_repeats, random_state, verbosity, experi
         model_items=tqdm(models.items())
     for i, (name, model) in enumerate(model_items):
         pipe = build_smart_pipeline(name, model, X, verbosity)
-        #scores = cross_validate(pipe, X, y, cv=cv, scoring=scoring, n_jobs=-1, error_score="raise")
         scores = cross_validate(pipe, X, y, cv=rcv, scoring=scoring, n_jobs=-1, error_score="raise")
         algo_results = {
             "accuracy": scores["test_accuracy"],
@@ -215,7 +220,7 @@ metric_fullname = {
     "specificity": "Specificity"
 }
 
-def calculate_metric_statistics(experiment_metrics, sorting_metric=None):
+def calculate_metric_statistics(experiment_metrics, config, sorting_metric=None):
     """
     scoring_list: list of metrics to calculate statistics (e.g. youden, roc-auc)
     Calculate statistics (e.g. mean and standard deviation) of repeated cross validation runs for an experiment
@@ -224,6 +229,8 @@ def calculate_metric_statistics(experiment_metrics, sorting_metric=None):
                 'std' : mean/std of all metrics, sorted by  youden
             }
     """
+    if sorting_metric is None:
+        sorting_metric = config.feature_selection.cross_validation.scoring 
     metric_stats = {}
     metric_stats['mean'] = pd.concat(
         [pd.DataFrame({algo['model']: algo['rcv_scores'].mean()}) for algo in experiment_metrics],
@@ -243,7 +250,6 @@ def calculate_metric_statistics(experiment_metrics, sorting_metric=None):
     if sorting_metric:
         metric_stats['std'] = metric_stats['std'][column_order]
         
-    
     return metric_stats
 
 def get_metric_scores(experiment_metrics, exp_code, metrics_stats, target_metric):
@@ -262,7 +268,9 @@ def get_metric_scores(experiment_metrics, exp_code, metrics_stats, target_metric
 
 
 # plot a violin plot
-def plot_metric_scores(metric_scores, exp_code, sorted, experiment_tag, target_metric, savedir):
+def plot_metric_scores(metric_scores, config, exp_code, sorted=True, target_metric=None, savedir=None):
+    if target_metric is None:
+        target_metric = config.feature_selection.cross_validation.scoring    
     plt.figure(figsize=(8, 4))
     if sorted:
         metric_scores_sorted = metric_scores[exp_code].mean().to_frame(name="avg").sort_values(by='avg', ascending=False)
@@ -274,7 +282,7 @@ def plot_metric_scores(metric_scores, exp_code, sorted, experiment_tag, target_m
     plt.ylabel(metric_fullname[target_metric])
     plt.grid(True, axis='y', linestyle='--', alpha=0.7)
     plt.xticks(rotation=75)
-    if experiment_tag not in ['debug']:
+    if savedir:
         plt.savefig(
         savedir / f'{target_metric}_violin.png',
             bbox_inches='tight',
@@ -284,7 +292,9 @@ def plot_metric_scores(metric_scores, exp_code, sorted, experiment_tag, target_m
     plt.close
     
 
-def get_high_vif(df, vif_threshold, verbosity):
+def get_high_vif(df, config):
+    vif_threshold = config.feature_selection.vif_threshold, 
+    verbosity = config.experiment.verbosity    
     # Example: df is your DataFrame with predictors
     df2 = df.copy()
 
@@ -302,9 +312,13 @@ def get_high_vif(df, vif_threshold, verbosity):
         print(high_vif)
     return high_vif
 
-def create_model_summary_table(metrics_stats, savedir, target_metric, topk,  
-                               exclude_features=[], include_mean=True, show_plot=True, save_fig=True, savename_suffix=""):
-    
+def create_model_summary_table(metrics_stats, config, target_metric=None, topk=None,  
+                               exclude_features=[], include_mean=True, show_plot=True, savedir=None):
+    if target_metric is None:
+        target_metric = config.feature_selection.cross_validation.scoring  
+    if topk is None:
+        topk = config.figures.summary_table_topk  
+    print(target_metric, topk, 'target_metric, topk,')
     metric_table = pd.DataFrame()
     for feature_set_name, df in metrics_stats.items():
         if feature_set_name not in exclude_features:
@@ -321,14 +335,12 @@ def create_model_summary_table(metrics_stats, savedir, target_metric, topk,
     plt.title(f"Average {metric_fullname[target_metric]} Across Models and Feature Sets")
     plt.ylabel("Model")
     plt.xlabel("Feature Set")
-    if save_fig:
+    if savedir:
         savename = f'{target_metric}_summary_table'
         if include_mean:
             savename += f'_mean'
         if topk:
             savename += f'_top{topk}'
-        if savename_suffix:
-            savename +=   f'_{savename_suffix}'
         savename = savedir / f'{savename}.png'   
         plt.savefig(savename , bbox_inches='tight', dpi=300)
     if show_plot:

@@ -1,7 +1,7 @@
 experiment:
   summary: binary classification - feature  and model selection (final experiment)
   classification_type: binary
-  stage: feature_model_selection # feature and model selection
+  stage: selection # feature and model selection
   tag: final
   verbosity: 0
   random_seed: 42
@@ -11,7 +11,7 @@ data:
 
 feature_selection:
   cross_validation:
-    k_splits: 4 
+    k_splits: 4
     n_repeats: 10
     scoring: youden
   vif_threshold: 5

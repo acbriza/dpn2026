@@ -11,6 +11,7 @@ data:
 
 model: 
   name: catboost
+  code: CatBoost
 
 param_space:
   iterations:
@@ -37,5 +38,5 @@ evaluation:
   confidence: 0.95
 
 final_training:
-  k_splits_inner: 4
-  n_iter: 50
+  k_splits_inner: 3
+  n_iter: 30

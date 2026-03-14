@@ -1,5 +1,5 @@
 experiment:
-  summary: binary classification - Explainability Analysis (development)
+  summary: binary classification - Explainability Analysis (Final)
   classification_type: binary
   stage: explainability
   tag: final

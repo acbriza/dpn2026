@@ -111,6 +111,7 @@ def get_ksplit_trained_models(X, y, config):
             "X_test": X_test,
             "y_train": y_train,
             "y_test": y_test,
+            "threshold" : config.hpo_results.threshold,
             "best_params" : best_params,
             "cm": cm,
             "youden" : youden,

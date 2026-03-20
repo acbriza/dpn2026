@@ -212,5 +212,40 @@ def get_local_permitted_range(dfXy, instance, allfeature_cols,
 
     return local_permitted_range
 
+def generate_sample_local_cf_with_permitted_range(dfXy, dexp, instance, permitted_range, model_name, CFs=5):
+    print(f"generating counterfactuals for the {model_name} model")    
+    e1 = dexp.generate_counterfactuals(
+        instance, total_CFs=CFs, 
+        desired_class="opposite", 
+        permitted_range=permitted_range,
+        features_to_vary=dfXy.columns.drop(['SEX', 'Confirmed_Binary_DPN']).to_list()
+        )    
+    e1.visualize_as_dataframe(show_only_changes=True)     
 
+
+def get_instances_of_interest(model, X_test, y_test, threshold=0.5, delta=0.1):
+    """Return misclassified and borderline cases around the decision threshold."""
+    y_pred = model.predict(X_test)
+    y_proba = model.predict_proba(X_test)[:, 1]
+
+    misclassified_mask = y_pred != y_test
+
+    margin = np.abs(y_proba - threshold)
+    borderline_mask = margin <= delta
+
+    borderline_idx = np.where(misclassified_mask | borderline_mask)[0]
+    borderline_df = X_test.iloc[borderline_idx].copy()
+    borderline_df["pred_proba"] = y_proba[borderline_idx]
+    borderline_df["margin"] = margin[borderline_idx]
+    borderline_df["pred"] = (y_proba[borderline_idx] >= threshold).astype(int)
+    borderline_df["actual"] = y_test.iloc[borderline_idx].values
+    borderline_df["misclassified"] = borderline_df["pred"] != borderline_df["actual"]
+    
+    print(f"Found {len(borderline_df)} misclassified and borderline cases (|p - {threshold}| ≤ {delta})")
+    
+    display_cols = X_test.columns[:4].to_list() + ['margin', 'misclassified', 'pred_proba','pred','actual']
+    display(
+        borderline_df[display_cols].sort_values(by='margin')
+    )
+    return borderline_df
 

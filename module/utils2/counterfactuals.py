@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from sklearn.base import BaseEstimator, ClassifierMixin
 from catboost import CatBoostClassifier
+from sklearn.metrics import roc_curve, confusion_matrix, roc_auc_score
 
 from IPython.display import display
 
@@ -51,6 +52,33 @@ class CatBoostWrapper(BaseEstimator, ClassifierMixin):
         proba_1 = self.predict_proba(X)[:, 1]
         return (proba_1 >= self.threshold).astype(int)
     
+def test_wrapped_model(model, wrapped_model, X_test, y_test, threshold):
+    # Evaluation at default threshold (0.5)
+    y_pred = model.predict(X_test)
+    y_pred_proba = model.predict_proba(X_test)
+    cm = confusion_matrix(y_test, y_pred)
+    print("Confusion Matrix at default threshold (0.5):")
+    print(cm)
+    # print(classification_report(y_test, y_pred, target_names=["Confirmed", "non-Confirmed"]))
+
+    # Evaluation at custom threshold
+    y_pred_custom = wrapped_model.predict(X_test)
+    y_pred_proba_custom = wrapped_model.predict_proba(X_test)
+    print(f"Confusion Matrix at custom threshold ({threshold}):")
+    cm = confusion_matrix(y_test, y_pred_custom)
+    print(cm)
+    # print(classification_report(y_test, y_pred_custom, target_names=["Confirmed", "non-Confirmed"]))
+
+    # get dissimilar predictions
+    mask = y_pred_custom != y_pred
+
+    print('Rows with different predictions at thresholds: ')
+    df = X_test[mask].copy()
+    df['pred_0.50'] = y_pred[mask]
+    df[f'pred_{threshold:.2f}'] = y_pred_custom[mask]
+    df['pred_proba'] = y_pred_proba[mask][:,1] 
+    display(df)
+    return 
 
 def get_global_permitted_range(dfXy, continuous_cols, verbosity=0):
     global_permitted_range = {}

@@ -80,6 +80,9 @@ def test_wrapped_model(model, wrapped_model, X_test, y_test, threshold):
     display(df)
     return 
 
+# GLOBAL COUNTERFACTUALS 
+# ----------------------
+
 def get_global_permitted_range(dfXy, continuous_cols, verbosity=0):
     global_permitted_range = {}
     for col in continuous_cols: # no need to set range for categorical columns
@@ -162,3 +165,52 @@ def plot_global_importance(dice_obj, DPN_data, X_test, split_index, config,
             filename = f'{filename}_{filename_suffix}'
         plt.savefig(savedir / f'{filename}.png')
     plt.show()
+
+
+# LOCAL COUNTERFACTUALS 
+# ----------------------
+
+def get_local_permitted_range(dfXy, instance, allfeature_cols, 
+                              categorical_cols, continuous_cols, monotonic_cols):
+    local_permitted_range = {}
+    for col in allfeature_cols:
+
+        if col in categorical_cols:
+            # it does not make sense to set a range for categoricals
+            continue
+        
+        instance_val = instance.iloc[0][col]
+        col_stdev = dfXy[col].std()
+        col_min = dfXy[col].min()
+        col_max = dfXy[col].max()
+
+        if col in monotonic_cols: # true for categoricals and continuous
+            minval = instance_val 
+        elif col in continuous_cols:
+            minval = 0 if instance_val==0 else max(0, instance_val-col_stdev)    
+        else: # fall back default 
+            minval = col_min
+
+        if col in continuous_cols:
+            maxval = instance_val + col_stdev
+        # elif col in D.categorical_cols:
+        #     maxval = max(1, col_max)
+        else: # fall back default 
+            maxval = col_max
+
+        local_permitted_range[col] = [minval, maxval]
+
+    # view_local_permitted_range:
+
+    # visualize instance_permitted_range
+    instance_permitted_range_df = pd.DataFrame(local_permitted_range).transpose()
+    instance_permitted_range_df.columns = ['min', 'max']
+
+    # visualize min max with patient data
+    df_vis = pd.concat([instance, instance_permitted_range_df.transpose()]).transpose()    
+    display(df_vis)
+
+    return local_permitted_range
+
+
+

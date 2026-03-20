@@ -223,8 +223,8 @@ def generate_sample_local_cf_with_permitted_range(dfXy, dexp, instance, permitte
     e1.visualize_as_dataframe(show_only_changes=True)     
 
 
-def get_instances_of_interest(model, X_test, y_test, threshold=0.5, delta=0.1):
-    """Return misclassified and borderline cases around the decision threshold."""
+def get_instances_of_interest(model, X_test, y_test, config, split_index, threshold=0.5, delta=0.1, savedir=None):
+    """Return instances of interest (ioi - misclassified and borderline instances) around the decision threshold."""
     y_pred = model.predict(X_test)
     y_proba = model.predict_proba(X_test)[:, 1]
 
@@ -233,19 +233,21 @@ def get_instances_of_interest(model, X_test, y_test, threshold=0.5, delta=0.1):
     margin = np.abs(y_proba - threshold)
     borderline_mask = margin <= delta
 
-    borderline_idx = np.where(misclassified_mask | borderline_mask)[0]
-    borderline_df = X_test.iloc[borderline_idx].copy()
-    borderline_df["pred_proba"] = y_proba[borderline_idx]
-    borderline_df["margin"] = margin[borderline_idx]
-    borderline_df["pred"] = (y_proba[borderline_idx] >= threshold).astype(int)
-    borderline_df["actual"] = y_test.iloc[borderline_idx].values
-    borderline_df["misclassified"] = borderline_df["pred"] != borderline_df["actual"]
+    ioi_idx = np.where(misclassified_mask | borderline_mask)[0]
+    ioi_df = X_test.iloc[ioi_idx].copy()
+    ioi_df["pred_proba"] = y_proba[ioi_idx]
+    ioi_df["margin"] = margin[ioi_idx]
+    ioi_df["pred"] = (y_proba[ioi_idx] >= threshold).astype(int)
+    ioi_df["actual"] = y_test.iloc[ioi_idx].values
+    ioi_df["misclassified"] = ioi_df["pred"] != ioi_df["actual"]
     
-    print(f"Found {len(borderline_df)} misclassified and borderline cases (|p - {threshold}| ≤ {delta})")
+    print(f"Found {len(ioi_df)} misclassified and borderline cases (|p - {threshold:.4f}| ≤ {delta})")
     
     display_cols = X_test.columns[:4].to_list() + ['margin', 'misclassified', 'pred_proba','pred','actual']
-    display(
-        borderline_df[display_cols].sort_values(by='margin')
-    )
-    return borderline_df
+    if config.experiment.verbosity > 0:
+        display(ioi_df[display_cols])
+    if savedir:
+        filename = f'{config.model.code}_split{split_index}_local_cf.csv'
+        ioi_df.to_csv(savedir / filename)
+    return ioi_df, display_cols
 

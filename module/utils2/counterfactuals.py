@@ -286,22 +286,29 @@ def generate_diverse_cfs(dice_exp, instance, total_CFs=30, features_to_vary='all
     
 
 def plot_local_cf_heatmap(dfXy, df_dcf, query_instance, 
-                          pstr, pred, actual, 
-                          savedir,
-                          save_every=15,  
-                          figsize=(15, 6.5)
+                          query_idx, pred, actual,                           
+                          config,
+                          split_index,
+                          savedir=None,
                           ):   
+    z = config.dice.nzfill
+    save_every = config.dice.heatmap.save_every
+    verbosity = config.experiment.verbosity
+    figsize = (config.dice.heatmap.figsize.x, config.dice.heatmap.figsize.y)
+
     # Compute differences (each row in df_large vs. the single row)
     diffs = df_dcf - query_instance.iloc[0]
-    print("diffs.shape: ", diffs.shape)
+    if verbosity: print("diffs.shape: ", diffs.shape)
+    
     batch_ranges = [(b*save_every, b*save_every+save_every) for b in range(int(np.ceil(df_dcf.shape[0]/save_every))) ]
-    print("batch_ranges: ",  batch_ranges)
+    if verbosity: print("batch_ranges: ",  batch_ranges)
+    
     for idx_start, idx_end in batch_ranges:
-        print("idx_start, idx_end: ", idx_start, idx_end)
+        if verbosity: print("idx_start, idx_end: ", idx_start, idx_end)
         diff = diffs.iloc[idx_start: idx_end]
-        print("diff.shape: ",  diff.shape)
+        
         diff = diff[dfXy.drop('Confirmed_Binary_DPN', axis=1).columns]
-        print("diff.shape: ",  diff.shape)
+        if verbosity: print("diff.shape: ",  diff.shape)
 
         # Create mask where values == 0
         mask = diff == 0
@@ -322,11 +329,12 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
         ax.set_yticks(np.arange(len(diff)) + 0.5)
         ax.set_yticklabels(diff.index, rotation=0, fontsize=8)
 
-        # ✅ Make x-tick labels smaller too
+        # Make x-tick labels smaller too
         ax.set_xticklabels(diff.columns, rotation=45, ha='right', fontsize=8)
 
         # plt.title("Differences from Instance", fontsize=12)
-        plt.title(f"Counterfactuals for Patient {pstr}: predicted {pred}, actual {actual}", fontsize=12, pad=20)
+        idx_str = str(query_idx).zfill(z)
+        plt.title(f"Counterfactuals for Patient {idx_str}: predicted {pred}, actual {actual}", fontsize=12, pad=20)
         plt.xlabel("Features")
         plt.ylabel("Counterfactuals")
 
@@ -365,7 +373,10 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
         )
 
         plt.tight_layout()
-        os.makedirs(os.path.join(savedir, pstr), exist_ok=True)
-        idx_end = min(idx_end, idx_start+diff.shape[0])
-        fullfilepath = os.path.join(savedir, pstr, f"local_counterfactual_{pstr}_idx{idx_start}-idx{idx_end-1}.png")
-        plt.savefig(fullfilepath)
+        if savedir:
+            idx_end = min(idx_end, idx_start+diff.shape[0])
+            filename = f'{config.model.code}_split{split_index}_local_cf'
+            filename += f'idx{idx_start}-idx{idx_end-1}'
+            filename += '.png'
+            plt.savefig(savedir / filename)
+        return

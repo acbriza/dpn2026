@@ -213,6 +213,7 @@ def get_local_permitted_range(dfXy, instance, allfeature_cols,
 
     # visualize min max with patient data
     df_vis = pd.concat([instance, instance_permitted_range_df.transpose()]).transpose()
+    df_vis.columns = ['instance', 'min', 'max']
     print("Local permitted range:")
     display(df_vis)
 

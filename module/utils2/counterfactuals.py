@@ -480,7 +480,7 @@ def check_sufficiency(dice_exp, instance, check_features, permitted_range,
     return 
 
 def check_necessity(dice_exp, instance, all_features, permitted_range, desired_class="opposite", 
-                    maxiterations=500, total_CFs=3, nrepeats=5):
+                    maxiterations=500, total_CFs=3, nrepeats=5, verbose=False):
     """Determine necessity (vary all except this one across multiple seeds) of each feature for one instance."""
 
     results = {}
@@ -501,6 +501,7 @@ def check_necessity(dice_exp, instance, all_features, permitted_range, desired_c
                 instance, total_CFs=total_CFs, desired_class=desired_class,
                 features_to_vary=features_wo_f, permitted_range=permitted_range, 
                 maxiterations=maxiterations,
+                verbose=verbose,                
                 #random_seed=seed
             )
             if len(cf_nec.cf_examples_list[0].final_cfs_df) > 0:

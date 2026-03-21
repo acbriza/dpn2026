@@ -392,3 +392,32 @@ def get_most_changed_feature(df_cf, instance):
     change_counts = changed_mask.sum()
     change_counts = change_counts.sort_values(ascending=False)
     return change_counts
+
+
+def analyze_local_cf(instance_df, cf_df, feature_costs=None):
+    """
+    Compute distances, sparsity, and feasibility per counterfactual.
+    feature_costs: optional dict of feature->cost weights
+    """
+    if cf_df.empty:
+        return pd.DataFrame()
+
+    x0 = instance_df.iloc[0]
+    diffs = cf_df.sub(x0)
+    sparsity = (diffs != 0).sum(axis=1)   # number of columns altered
+    l1 = np.abs(diffs).sum(axis=1)        
+    l2 = np.sqrt((diffs**2).sum(axis=1))
+
+    cf_df["sparsity"] = sparsity
+    cf_df["L1_dist"] = l1
+    cf_df["L2_dist"] = l2
+
+    if feature_costs:
+        cf_df["cost"] = sum(np.abs(diffs[f]) * feature_costs.get(f, 1) for f in diffs.columns)
+
+    cf_df.sort_values("L1_dist").reset_index(drop=True)
+    
+    # generate a dataframe with the diffs and the analysis
+    diffs = cf_df.drop(columns=['sparsity', 'L1_dist', 'L2_dist']).sub(x0)     
+    diffs = pd.concat([diffs, cf_df[['sparsity', 'L1_dist', 'L2_dist']]], axis=1)
+    return diffs,  cf_df

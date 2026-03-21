@@ -175,7 +175,8 @@ def plot_global_importance(dice_exp, DPN_data, X_test, split_index, config,
 # ----------------------
 
 def get_local_permitted_range(dfXy, instance, allfeature_cols, 
-                              categorical_cols, continuous_cols, monotonic_cols):
+                              categorical_cols, continuous_cols, 
+                              monotonic_cols):
     local_permitted_range = {}
     for col in allfeature_cols:
 
@@ -211,7 +212,8 @@ def get_local_permitted_range(dfXy, instance, allfeature_cols,
     instance_permitted_range_df.columns = ['min', 'max']
 
     # visualize min max with patient data
-    df_vis = pd.concat([instance, instance_permitted_range_df.transpose()]).transpose()    
+    df_vis = pd.concat([instance, instance_permitted_range_df.transpose()]).transpose()
+    print("Local permitted range:")
     display(df_vis)
 
     return local_permitted_range

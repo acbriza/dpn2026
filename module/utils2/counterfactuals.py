@@ -304,9 +304,11 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
     if verbosity: print("batch_ranges: ",  batch_ranges)
     
     for idx_start, idx_end in batch_ranges:
+        # limit to this batch
         if verbosity: print("idx_start, idx_end: ", idx_start, idx_end)
         diff = diffs.iloc[idx_start: idx_end]
         
+        # reorder to column from original dataframe
         diff = diff[dfXy.drop('Confirmed_Binary_DPN', axis=1).columns]
         if verbosity: print("diff.shape: ",  diff.shape)
 
@@ -379,4 +381,5 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
             filename += f'idx{idx_start}-idx{idx_end-1}'
             filename += '.png'
             plt.savefig(savedir / filename)
+            print(f'Counterfactual heatmaps saved to {filename} in {savedir}')
         return

@@ -3,6 +3,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import random
+import os
+import seaborn as sns
+
 from sklearn.base import BaseEstimator, ClassifierMixin
 from catboost import CatBoostClassifier
 from sklearn.metrics import roc_curve, confusion_matrix, roc_auc_score
@@ -279,3 +283,89 @@ def generate_diverse_cfs(dice_exp, instance, total_CFs=30, features_to_vary='all
         return combined
     else:
         return pd.DataFrame()
+    
+
+def plot_local_cf_heatmap(dfXy, df_dcf, query_instance, 
+                          pstr, pred, actual, 
+                          savedir,
+                          save_every=15,  
+                          figsize=(15, 6.5)
+                          ):   
+    # Compute differences (each row in df_large vs. the single row)
+    diffs = df_dcf - query_instance.iloc[0]
+    print("diffs.shape: ", diffs.shape)
+    batch_ranges = [(b*save_every, b*save_every+save_every) for b in range(int(np.ceil(df_dcf.shape[0]/save_every))) ]
+    print("batch_ranges: ",  batch_ranges)
+    for idx_start, idx_end in batch_ranges:
+        print("idx_start, idx_end: ", idx_start, idx_end)
+        diff = diffs.iloc[idx_start: idx_end]
+        print("diff.shape: ",  diff.shape)
+        diff = diff[dfXy.drop('Confirmed_Binary_DPN', axis=1).columns]
+        print("diff.shape: ",  diff.shape)
+
+        # Create mask where values == 0
+        mask = diff == 0
+
+        # Plot heatmap
+        plt.figure(figsize=figsize)
+        ax = sns.heatmap(
+            diff,
+            mask=mask,            # hide zero differences
+            cmap="RdBu",        # diverging color map centered at 0
+            center=0,
+            annot=True,           # show annotations
+            fmt=".2f",            # format annotations to 2 decimal places
+            annot_kws={"size": 6},# smaller font
+            cbar_kws={'label': 'Difference'}
+        )
+
+        ax.set_yticks(np.arange(len(diff)) + 0.5)
+        ax.set_yticklabels(diff.index, rotation=0, fontsize=8)
+
+        # ✅ Make x-tick labels smaller too
+        ax.set_xticklabels(diff.columns, rotation=45, ha='right', fontsize=8)
+
+        # plt.title("Differences from Instance", fontsize=12)
+        plt.title(f"Counterfactuals for Patient {pstr}: predicted {pred}, actual {actual}", fontsize=12, pad=20)
+        plt.xlabel("Features")
+        plt.ylabel("Counterfactuals")
+
+        # 1. Get the feature values from the query instance
+        desired_order = diff.columns.tolist() 
+        query_instance_reordered = query_instance[desired_order]
+
+        query_values = query_instance_reordered.iloc[0].values
+        NEW_Y_POSITION = -0.05 
+
+        # 2. Loop through each feature to place the value text
+        for i, value in enumerate(query_values):
+            # i + 0.5 centers the text in the column cell.
+            # y = -0.3: Increased separation from the heatmap for visual clarity/alignment.
+            ax.text(
+                x=i + 0.5,
+                y=NEW_Y_POSITION, #-0.3, # Adjusted from -0.2 to -0.3
+                s="0" if value==0 else "1" if value==1 else f"{value:.2f}",  # Display the value, formatted
+                ha='center',
+                va='bottom',
+                fontsize=6,
+                # fontweight='bold',
+                color='#1a1a1a' # Slightly darker color for visibility
+            )
+
+        # 3. Add a row header label for the new values
+        ax.text(
+            x=-0.5, # Position to the left of the Y-axis labels
+            y=NEW_Y_POSITION, #-0.3, # Adjusted from -0.2 to -0.3
+            s="Instance Values:",
+            ha='right',
+            va='bottom',
+            fontsize=6,
+            # fontweight='bold',
+            color='#1a1a1a' # Slightly darker color for visibility
+        )
+
+        plt.tight_layout()
+        os.makedirs(os.path.join(savedir, pstr), exist_ok=True)
+        idx_end = min(idx_end, idx_start+diff.shape[0])
+        fullfilepath = os.path.join(savedir, pstr, f"local_counterfactual_{pstr}_idx{idx_start}-idx{idx_end-1}.png")
+        plt.savefig(fullfilepath)

@@ -101,17 +101,17 @@ def get_global_permitted_range(dfXy, continuous_cols, verbosity=0):
     return global_permitted_range
 
 
-def plot_global_importance(dice_obj, DPN_data, X_test, split_index, config, 
+def plot_global_importance(dice_exp, DPN_data, X_test, split_index, config, 
                            highlight_features=[], total_CFs=10, 
                            title_suffix="", filename_suffix="", savedir=None):
     """
     Parameters:
-    dexp: DiCE explainer object
+    dice_exp: DiCE explainer object
     X_test: test set 
     total_CFs: Number of counterfactuals to generate
     """
     D = DPN_data
-    cobj = dice_obj.global_feature_importance(X_test, total_CFs=total_CFs, posthoc_sparsity_param=None)
+    cobj = dice_exp.global_feature_importance(X_test, total_CFs=total_CFs, posthoc_sparsity_param=None)
     df_imp = pd.DataFrame([cobj.summary_importance])
 
     s = df_imp.iloc[0]
@@ -212,9 +212,9 @@ def get_local_permitted_range(dfXy, instance, allfeature_cols,
 
     return local_permitted_range
 
-def generate_sample_local_cf_with_permitted_range(dfXy, dexp, instance, permitted_range, config, CFs=5):
+def generate_sample_local_cf_with_permitted_range(dfXy, dice_exp, instance, permitted_range, config, CFs=5):
     print(f"generating counterfactuals for the {config.model.name} model")    
-    e1 = dexp.generate_counterfactuals(
+    e1 = dice_exp.generate_counterfactuals(
         instance, total_CFs=CFs, 
         desired_class="opposite", 
         permitted_range=permitted_range,
@@ -253,3 +253,29 @@ def get_instances_of_interest(model, X_test, y_test, config, split_index, thresh
         ioi_df.to_csv(savedir / filename)
     return ioi_df, display_cols
 
+
+def generate_diverse_cfs(dice_exp, instance, total_CFs=30, features_to_vary='all', permitted_range={}, seeds=[0,1,2,3,4], diversity_weight=1.5):
+    """Generate diverse counterfactuals across multiple seeds."""
+    all_cfs = []
+    for s in seeds:
+        # manually set random seed
+        np.random.seed(s)
+        random.seed(s) 
+
+        cf = dice_exp.generate_counterfactuals(
+            instance,
+            total_CFs=total_CFs,
+            desired_class="opposite",
+            features_to_vary=features_to_vary,
+            permitted_range=permitted_range,
+            #random_seed=s,
+            diversity_weight=diversity_weight
+        )        
+        df_cf = cf.cf_examples_list[0].final_cfs_df
+        if not df_cf.empty:
+            all_cfs.append(df_cf)
+    if all_cfs:
+        combined = pd.concat(all_cfs).drop_duplicates().reset_index(drop=True)
+        return combined
+    else:
+        return pd.DataFrame()

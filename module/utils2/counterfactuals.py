@@ -450,6 +450,8 @@ def filter_invalid_progressive_cfs(df_dcf, query_instance, categorical_cols):
     filtered_df = df_dcf.copy()[~mask]
     return filtered_df
 
+# NECESSITY AND SUFFICIENCY 
+# -------------------------
 
 def check_sufficiency(dice_exp, instance, check_features, permitted_range, 
                       desired_class="opposite", maxiterations=500):
@@ -476,3 +478,78 @@ def check_sufficiency(dice_exp, instance, check_features, permitted_range,
         print(f'{f}: {results[f]}')        
 
     return pd.DataFrame(results, index=['sufficiency']).T.reset_index(names="feature")
+
+def check_necessity(dice_exp, instance, all_features, permitted_range, desired_class="opposite", 
+                    maxiterations=500, total_CFs=3, seeds=[0,1,2,3,4]):
+    """Determine necessity (vary all except this one across multiple seeds) of each feature for one instance."""
+    from tqdm import tqdm
+
+    results = {}
+    for f in tqdm(all_features):
+        results[f] = {"necessary": False}       
+        # --- Necessity: vary all except this one across multiple seeds ---
+        features_wo_f = [feat for feat in all_features if feat != f]
+        found_cf = False
+        for seed in seeds:
+        
+            # manually set random seed
+            np.random.seed(seed)
+            random.seed(seed) 
+
+            cf_nec = dice_exp.generate_counterfactuals(
+                instance, total_CFs=3, desired_class=desired_class,
+                features_to_vary=features_wo_f, permitted_range=permitted_range, 
+                maxiterations=maxiterations,
+                #random_seed=seed
+            )
+            if len(cf_nec.cf_examples_list[0].final_cfs_df) > 0:
+                found_cf = True
+                break
+
+        if not found_cf:
+            results[f]["necessary"] = True
+    return pd.DataFrame(results).T.reset_index(names="feature")
+
+
+def check_necessity_edited-(dice_exp, instance, all_features, permitted_range, desired_class="opposite", 
+                    maxiterations=500, total_CFs=3, nrepeats=5):
+    """
+    Determine necessity (vary all except this one across multiple seeds) of each feature for one instance.
+    A necessary feature change is one that must be altered; without it, no counterfactual achieves the desired outcome.
+    """
+    results = {}
+    for f in all_features:
+        print(f'Checking necessity for {f}:', end=" ")    
+        results[f] = "unnecessary"    
+
+        # --- Necessity: vary all except this one across multiple seeds ---
+        features_wo_f = [feat for feat in all_features if feat != f]
+        found_cf = False
+        error = False
+        seeds = list(range(nrepeats))
+        for i, seed in enumerate(seeds):
+        
+            # manually set random seed
+            np.random.seed(seed)
+            random.seed(seed) 
+            try: 
+                cf_nec = dice_exp.generate_counterfactuals(
+                    instance, total_CFs=3, desired_class=desired_class,
+                    features_to_vary=features_wo_f, permitted_range=permitted_range, 
+                    maxiterations=maxiterations,
+                    #random_seed=seed
+                )
+                if len(cf_nec.cf_examples_list[0].final_cfs_df) > 0:
+                    found_cf = True
+                    break
+            except Exception as e:
+                print(f'Error calculating necessity for {f} for pass {i}')
+                # last run and there is still an error, and found_cf not yet True
+                if i == nrepeats-1:
+                    error = True
+                continue
+        if error:
+            results[f] = "error"
+        elif not found_cf:
+            results[f] = "necessary"
+    return pd.DataFrame(results).T.reset_index(names="feature")

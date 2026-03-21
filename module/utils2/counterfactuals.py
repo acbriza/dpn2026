@@ -394,7 +394,7 @@ def get_most_changed_feature(df_cf, instance):
     return change_counts
 
 
-def analyze_local_cf(instance_df, cf_df, feature_costs=None):
+def analyze_local_cf(instance_df, cf_df, feature_costs=None, sort_by=None):
     """
     Compute distances, sparsity, and feasibility per counterfactual.
     feature_costs: optional dict of feature->cost weights
@@ -415,7 +415,10 @@ def analyze_local_cf(instance_df, cf_df, feature_costs=None):
     if feature_costs:
         cf_df["cost"] = sum(np.abs(diffs[f]) * feature_costs.get(f, 1) for f in diffs.columns)
 
-    cf_df.sort_values("L1_dist").reset_index(drop=True)
+    if sort_by == 'L1_dist':        
+        cf_df.sort_values("L1_dist").reset_index(drop=True)
+    elif sort_by == 'L2_dist':        
+        cf_df.sort_values("L2_dist").reset_index(drop=True)
     
     # generate a dataframe with the diffs and the analysis
     diffs = cf_df.drop(columns=['sparsity', 'L1_dist', 'L2_dist']).sub(x0)     

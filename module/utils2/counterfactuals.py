@@ -212,15 +212,17 @@ def get_local_permitted_range(dfXy, instance, allfeature_cols,
 
     return local_permitted_range
 
-def generate_sample_local_cf_with_permitted_range(dfXy, dexp, instance, permitted_range, model_name, CFs=5):
-    print(f"generating counterfactuals for the {model_name} model")    
+def generate_sample_local_cf_with_permitted_range(dfXy, dexp, instance, permitted_range, config, CFs=5):
+    print(f"generating counterfactuals for the {config.model.name} model")    
     e1 = dexp.generate_counterfactuals(
         instance, total_CFs=CFs, 
         desired_class="opposite", 
         permitted_range=permitted_range,
         features_to_vary=dfXy.columns.drop(['SEX', 'Confirmed_Binary_DPN']).to_list()
         )    
-    e1.visualize_as_dataframe(show_only_changes=True)     
+    if config.experiment.verbosity > 0:
+        e1.visualize_as_dataframe(show_only_changes=True)   
+    return e1  
 
 
 def get_instances_of_interest(model, X_test, y_test, config, split_index, threshold=0.5, delta=0.1, savedir=None):

@@ -424,3 +424,28 @@ def analyze_local_cf(instance_df, cf_df, feature_costs=None, sort_by=None):
     diffs = cf_df.drop(columns=['sparsity', 'L1_dist', 'L2_dist']).sub(x0)     
     diffs = pd.concat([diffs, cf_df[['sparsity', 'L1_dist', 'L2_dist']]], axis=1)
     return diffs,  cf_df
+
+def filter_invalid_progressive_cfs(df_dcf, query_instance, categorical_cols):
+    """
+    For progressive features,  if a counterfactual sets to 0 what was originally 1, 
+    it is an invalid counterfactual.
+        cf  orig
+        1   1   no change, ok
+        1   0   valid
+        0   1   invalid
+        0   0   no change, ok    
+    """
+    progressive_categorical_cols = list(set(progressive_cols) & set(categorical_cols))
+    print('Checking for invalid counterfactuals in these columns:\n', progressive_categorical_cols)
+
+    diffs = df_dcf[progressive_categorical_cols] - query_instance.iloc[0][progressive_categorical_cols] 
+
+    # Create a boolean mask where cells equal -1
+    mask = (diffs == -1).any(axis=1)
+    nfiltered = mask.sum()
+    if nfiltered:
+        print(f'Removed {nfiltered} invalid progressive counterfactuals')
+    else:
+        print(f'All counterfactuals are valid. None was filtered.')
+    filtered_df = df_dcf.copy()[~mask]
+    return filtered_df

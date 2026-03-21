@@ -449,3 +449,30 @@ def filter_invalid_progressive_cfs(df_dcf, query_instance, categorical_cols):
         print(f'All counterfactuals are valid. None was filtered.')
     filtered_df = df_dcf.copy()[~mask]
     return filtered_df
+
+
+def check_sufficiency(dice_exp, instance, check_features, permitted_range, 
+                      desired_class="opposite", maxiterations=500):
+    """
+    Determine the sufficiency of each feature for one instance.
+    A sufficient feature  change is one that can cause the outcome change by itself.
+    """
+    results = {}
+    for f in check_features:
+        results[f] = "insufficient"
+        print(f'Checking sufficiency for {f}...')
+        # --- Sufficiency: vary only this feature  ---
+        try:
+            cf_suf = dice_exp.generate_counterfactuals(
+                instance, total_CFs=1, desired_class=desired_class, features_to_vary=[f], 
+                permitted_range=permitted_range, maxiterations=maxiterations,
+            )
+            if len(cf_suf.cf_examples_list[0].final_cfs_df) > 0:
+                results[f] = "sufficient"
+        except Exception as e:
+            print(f'Error calculating sufficiency for {f}')
+            results[f] = "error"
+            pass
+        print(f'{f}: {results[f]}')        
+
+    return pd.DataFrame(results, index=['sufficiency']).T.reset_index(names="feature")

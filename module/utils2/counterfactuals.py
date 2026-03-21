@@ -383,3 +383,12 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
             plt.savefig(savedir / filename)
             print(f'Counterfactual heatmaps saved to {filename} in {savedir}')
         return
+
+def get_most_changed_feature(df_cf, instance):
+    # Boolean mask: True if feature changed compared to the original instance
+    changed_mask = df_cf.ne(instance.iloc[0])
+
+    # Count how many counterfactuals changed each feature
+    change_counts = changed_mask.sum()
+    change_counts = change_counts.sort_values(ascending=False)
+    return change_counts

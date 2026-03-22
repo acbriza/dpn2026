@@ -294,7 +294,8 @@ def generate_diverse_cfs(dice_exp, instance, config, total_CFs=30, features_to_v
         combined_dfs = pd.DataFrame() # empty dataframe
     if savedir:
         filename = f'{config.model.code}_local_cf.csv'
-        combined_dfs.to_csv(savedir / filename)        
+        combined_dfs.to_csv(savedir / filename)
+    return combined_dfs
 
     
 
@@ -391,7 +392,9 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
         if savedir:
             idx_end = min(idx_end, idx_start+diff.shape[0])
             filename = f'{config.model.code}_split{split_index}_cflocal'
-            filename += f'_qidx{qstr}_idx{idx_start}-idx{idx_end-1}'
+            idx_start_str = str(idx_start).zfill(3)
+            idx_end_str = str(idx_end-1).zfill(3)
+            filename += f'_qidx{qstr}_idx{idx_start_str}-idx{idx_end_str}'
             filename += '.png'
             plt.savefig(savedir / filename)
             print(f'Counterfactual heatmaps saved to {filename} in {savedir}')

@@ -87,7 +87,7 @@ def test_wrapped_model(model, wrapped_model, X_test, y_test, threshold):
 # GLOBAL COUNTERFACTUALS 
 # ----------------------
 
-def get_global_permitted_range(dfXy, continuous_cols, verbosity=0):
+def get_global_permitted_range(dfXy, continuous_cols, config, verbosity=0, savedir=None):
     global_permitted_range = {}
     for col in continuous_cols: # no need to set range for categorical columns
         stdev = dfXy[col].std()
@@ -102,6 +102,9 @@ def get_global_permitted_range(dfXy, continuous_cols, verbosity=0):
         global_permitted_range_df = pd.DataFrame(global_permitted_range).transpose()
         global_permitted_range_df.columns = ['min', 'max']
         display(global_permitted_range_df)
+    if savedir:
+        filename = f'{config.model.code}_global_permitted_range.csv'
+        global_permitted_range_df.to_csv(savedir / filename)        
     return global_permitted_range
 
 
@@ -176,7 +179,7 @@ def plot_global_importance(dice_exp, DPN_data, X_test, split_index, config,
 
 def get_local_permitted_range(dfXy, instance, allfeature_cols, 
                               categorical_cols, continuous_cols, 
-                              monotonic_cols):
+                              monotonic_cols, config, savedir=None):
     local_permitted_range = {}
     for col in allfeature_cols:
 
@@ -216,7 +219,9 @@ def get_local_permitted_range(dfXy, instance, allfeature_cols,
     df_vis.columns = ['instance', 'min', 'max']
     print("Local permitted range:")
     display(df_vis)
-
+    if savedir:
+        filename = f'{config.model.code}_instance_permitted_range.csv'
+        df_vis.to_csv(savedir / filename)        
     return local_permitted_range
 
 def generate_sample_local_cf_with_permitted_range(dfXy, dice_exp, instance, permitted_range, config, CFs=5):
@@ -256,14 +261,16 @@ def get_instances_of_interest(model, X_test, y_test, config, split_index, thresh
     if config.experiment.verbosity > 0:
         display(ioi_df[display_cols])
     if savedir:
-        filename = f'{config.model.code}_split{split_index}_local_cf.csv'
+        filename = f'{config.model.code}_split{split_index}_instances_of_interest.csv'
         ioi_df.to_csv(savedir / filename)
     return ioi_df, display_cols
 
 
-def generate_diverse_cfs(dice_exp, instance, total_CFs=30, features_to_vary='all', permitted_range={}, seeds=[0,1,2,3,4], diversity_weight=1.5):
+def generate_diverse_cfs(dice_exp, instance, config, total_CFs=30, features_to_vary='all', 
+                         permitted_range={}, nrepeats=5, diversity_weight=1.5, savedir=None):
     """Generate diverse counterfactuals across multiple seeds."""
     all_cfs = []
+    seeds = list(range(nrepeats))
     for s in seeds:
         # manually set random seed
         np.random.seed(s)
@@ -282,10 +289,13 @@ def generate_diverse_cfs(dice_exp, instance, total_CFs=30, features_to_vary='all
         if not df_cf.empty:
             all_cfs.append(df_cf)
     if all_cfs:
-        combined = pd.concat(all_cfs).drop_duplicates().reset_index(drop=True)
-        return combined
+        combined_dfs = pd.concat(all_cfs).drop_duplicates().reset_index(drop=True)         
     else:
-        return pd.DataFrame()
+        combined_dfs = pd.DataFrame() # empty dataframe
+    if savedir:
+        filename = f'{config.model.code}_local_cf.csv'
+        combined_dfs.to_csv(savedir / filename)        
+
     
 
 def plot_local_cf_heatmap(dfXy, df_dcf, query_instance, 
@@ -338,8 +348,8 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
         ax.set_xticklabels(diff.columns, rotation=45, ha='right', fontsize=8)
 
         # plt.title("Differences from Instance", fontsize=12)
-        idx_str = str(query_idx).zfill(z)
-        plt.title(f"Counterfactuals for Patient {idx_str}: predicted {pred}, actual {actual}", fontsize=12, pad=20)
+        qstr = str(query_idx).zfill(z)
+        plt.title(f"Counterfactuals for Patient {qstr}: predicted {pred}, actual {actual}", fontsize=12, pad=20)
         plt.xlabel("Features")
         plt.ylabel("Counterfactuals")
 
@@ -380,21 +390,27 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
         plt.tight_layout()
         if savedir:
             idx_end = min(idx_end, idx_start+diff.shape[0])
-            filename = f'{config.model.code}_split{split_index}_local_cf'
-            filename += f'idx{idx_start}-idx{idx_end-1}'
+            filename = f'{config.model.code}_split{split_index}_cflocal'
+            filename += f'_qidx{qstr}_idx{idx_start}-idx{idx_end-1}'
             filename += '.png'
             plt.savefig(savedir / filename)
             print(f'Counterfactual heatmaps saved to {filename} in {savedir}')
         return
 
-def get_most_changed_feature(df_cf, instance):
+
+def get_most_changed_feature(df_cf, instance, config, savedir):
     # Boolean mask: True if feature changed compared to the original instance
     changed_mask = df_cf.ne(instance.iloc[0])
 
     # Count how many counterfactuals changed each feature
-    change_counts = changed_mask.sum()
-    change_counts = change_counts.sort_values(ascending=False)
-    return change_counts
+    change_counts_df = changed_mask.sum()
+    change_counts_df = change_counts_df.sort_values(ascending=False)
+    change_counts_df.reset_index()
+    change_counts_df.columns = ['feature', 'change count']
+    if savedir:       
+        filename = f"local_cf_most_changed.csv"
+        change_counts_df.to_csv(savedir / filename)    
+    return change_counts_df
 
 
 def analyze_local_cf(instance_df, cf_df, feature_costs=None, sort_by=None):

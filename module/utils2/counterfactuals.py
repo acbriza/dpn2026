@@ -393,10 +393,11 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
             filename = f'{config.model.code}_split{split_index}_local_cf'
             idx_start_str = str(idx_start).zfill(3)
             idx_end_str = str(idx_end-1).zfill(3)
-            filename += f'_qidx{qstr}_idx{idx_start_str}-idx{idx_end_str}'
+            filename += f'_qidx{qstr}_{idx_start_str}-{idx_end_str}'
             filename += '.png'
             plt.savefig(savedir / filename)
             print(f'Counterfactual heatmaps saved to {filename} in {savedir}')
+        plt.show()
         return
 
 
@@ -410,7 +411,7 @@ def get_most_changed_feature(df_cf, instance, config, split_index, savedir):
     change_counts_df.reset_index()
     change_counts_df.columns = ['feature', 'change count']
     if savedir:       
-        filename = f"{config.model.name}_split{split_index}_local_cf_most_changed.csv"
+        filename = f"{config.model.code}_split{split_index}_local_cf_most_changed.csv"
         change_counts_df.to_csv(savedir / filename)    
     return change_counts_df
 
@@ -448,7 +449,7 @@ def get_local_cf_distances(instance_df, cf_df, config, split_index, feature_cost
     if savedir:
         filename = f'{config.model.code}_split{split_index}_local_cf_distance_diffs.csv'
         diffs.to_csv(savedir / filename)    
-        filename = f'{config.model.code}_split{split_index}_local_cf_with_distances.csv'
+        filename = f'{config.model.code}_split{split_index}_local_cf_distances.csv'
         cf_df.to_csv(savedir / filename)    
     return diffs,  cf_df
 

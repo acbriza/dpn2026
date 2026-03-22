@@ -87,7 +87,7 @@ def test_wrapped_model(model, wrapped_model, X_test, y_test, threshold):
 # GLOBAL COUNTERFACTUALS 
 # ----------------------
 
-def get_global_permitted_range(dfXy, continuous_cols, config, verbosity=0, savedir=None):
+def get_global_permitted_range(dfXy, continuous_cols, config, split_index, verbosity=0, savedir=None):
     global_permitted_range = {}
     for col in continuous_cols: # no need to set range for categorical columns
         stdev = dfXy[col].std()
@@ -103,12 +103,12 @@ def get_global_permitted_range(dfXy, continuous_cols, config, verbosity=0, saved
         global_permitted_range_df.columns = ['min', 'max']
         display(global_permitted_range_df)
     if savedir:
-        filename = f'{config.model.code}_global_permitted_range.csv'
+        filename = f'{config.model.code}_split{split_index}_global_permitted_range.csv'
         global_permitted_range_df.to_csv(savedir / filename)        
     return global_permitted_range
 
 
-def plot_global_importance(dice_exp, DPN_data, X_test, split_index, config, 
+def plot_global_importance(dice_exp, DPN_data, X_test, config, split_index, 
                            highlight_features=[], total_CFs=10, 
                            title_suffix="", filename_suffix="", savedir=None):
     """
@@ -167,7 +167,7 @@ def plot_global_importance(dice_exp, DPN_data, X_test, split_index, config,
     ax.set_xlabel("Value")
     plt.tight_layout()
     if savedir:
-        filename = f'{config.model.code}_split{split_index}_global_cf'
+        filename = f'{config.model.code}_split{split_index}_global_importance'
         if filename_suffix:
             filename = f'{filename}_{filename_suffix}'
         plt.savefig(savedir / f'{filename}.png')
@@ -179,7 +179,7 @@ def plot_global_importance(dice_exp, DPN_data, X_test, split_index, config,
 
 def get_local_permitted_range(dfXy, instance, allfeature_cols, 
                               categorical_cols, continuous_cols, 
-                              monotonic_cols, config, savedir=None):
+                              monotonic_cols, config, split_index, savedir=None):
     local_permitted_range = {}
     for col in allfeature_cols:
 
@@ -220,7 +220,7 @@ def get_local_permitted_range(dfXy, instance, allfeature_cols,
     print("Local permitted range:")
     display(df_vis)
     if savedir:
-        filename = f'{config.model.code}_instance_permitted_range.csv'
+        filename = f'{config.model.code}_split{split_index}_instance_permitted_range.csv'
         df_vis.to_csv(savedir / filename)        
     return local_permitted_range
 
@@ -266,7 +266,7 @@ def get_instances_of_interest(model, X_test, y_test, config, split_index, thresh
     return ioi_df, display_cols
 
 
-def generate_diverse_cfs(dice_exp, instance, config, total_CFs=30, features_to_vary='all', 
+def generate_diverse_cfs(dice_exp, instance, config, split_index, total_CFs=30, features_to_vary='all', 
                          permitted_range={}, nrepeats=5, diversity_weight=1.5, savedir=None):
     """Generate diverse counterfactuals across multiple seeds."""
     all_cfs = []
@@ -293,12 +293,11 @@ def generate_diverse_cfs(dice_exp, instance, config, total_CFs=30, features_to_v
     else:
         combined_dfs = pd.DataFrame() # empty dataframe
     if savedir:
-        filename = f'{config.model.code}_local_cf.csv'
+        filename = f'{config.model.code}_split{split_index}_local_cf.csv'
         combined_dfs.to_csv(savedir / filename)
     return combined_dfs
 
     
-
 def plot_local_cf_heatmap(dfXy, df_dcf, query_instance, 
                           query_idx, pred, actual,                           
                           config,
@@ -391,7 +390,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
         plt.tight_layout()
         if savedir:
             idx_end = min(idx_end, idx_start+diff.shape[0])
-            filename = f'{config.model.code}_split{split_index}_cflocal'
+            filename = f'{config.model.code}_split{split_index}_local_cf'
             idx_start_str = str(idx_start).zfill(3)
             idx_end_str = str(idx_end-1).zfill(3)
             filename += f'_qidx{qstr}_idx{idx_start_str}-idx{idx_end_str}'
@@ -401,7 +400,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
         return
 
 
-def get_most_changed_feature(df_cf, instance, config, savedir):
+def get_most_changed_feature(df_cf, instance, config, split_index, savedir):
     # Boolean mask: True if feature changed compared to the original instance
     changed_mask = df_cf.ne(instance.iloc[0])
 
@@ -411,12 +410,12 @@ def get_most_changed_feature(df_cf, instance, config, savedir):
     change_counts_df.reset_index()
     change_counts_df.columns = ['feature', 'change count']
     if savedir:       
-        filename = f"local_cf_most_changed.csv"
+        filename = f"{config.model.name}_split{split_index}_local_cf_most_changed.csv"
         change_counts_df.to_csv(savedir / filename)    
     return change_counts_df
 
 
-def analyze_local_cf(instance_df, cf_df, feature_costs=None, sort_by=None):
+def get_local_cf_distances(instance_df, cf_df, config, split_index, feature_costs=None, sort_by=None, savedir=None):
     """
     Compute distances, sparsity, and feasibility per counterfactual.
     feature_costs: optional dict of feature->cost weights
@@ -445,6 +444,12 @@ def analyze_local_cf(instance_df, cf_df, feature_costs=None, sort_by=None):
     # generate a dataframe with the diffs and the analysis
     diffs = cf_df.drop(columns=['sparsity', 'L1_dist', 'L2_dist']).sub(x0)     
     diffs = pd.concat([diffs, cf_df[['sparsity', 'L1_dist', 'L2_dist']]], axis=1)
+    
+    if savedir:
+        filename = f'{config.model.code}_split{split_index}_local_cf_distance_diffs.csv'
+        diffs.to_csv(savedir / filename)    
+        filename = f'{config.model.code}_split{split_index}_local_cf_with_distances.csv'
+        cf_df.to_csv(savedir / filename)    
     return diffs,  cf_df
 
 def filter_invalid_progressive_cfs(df_dcf, query_instance, categorical_cols):
@@ -471,6 +476,7 @@ def filter_invalid_progressive_cfs(df_dcf, query_instance, categorical_cols):
         print(f'All counterfactuals are valid. None was filtered.')
     filtered_df = df_dcf.copy()[~mask]
     return filtered_df
+
 
 # NECESSITY AND SUFFICIENCY 
 # -------------------------

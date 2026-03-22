@@ -401,7 +401,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
         return
 
 
-def get_most_changed_feature(df_cf, instance, config, split_index, savedir):
+def get_most_changed_feature(df_cf, instance, config, split_index, savedir, suffix=None):
     # Boolean mask: True if feature changed compared to the original instance
     changed_mask = df_cf.ne(instance.iloc[0])
 
@@ -411,12 +411,15 @@ def get_most_changed_feature(df_cf, instance, config, split_index, savedir):
     change_counts_df.reset_index()
     change_counts_df.columns = ['feature', 'change count']
     if savedir:       
-        filename = f"{config.model.code}_split{split_index}_local_cf_most_changed.csv"
-        change_counts_df.to_csv(savedir / filename)    
+        filename = f"{config.model.code}_split{split_index}_local_cf_most_changed"
+        if suffix: filename += f"_{suffix}"
+        change_counts_df.to_csv(savedir / f'{filename}.csv')    
     return change_counts_df
 
 
-def get_local_cf_distances(instance_df, cf_df, config, split_index, feature_costs=None, sort_by=None, savedir=None):
+def get_local_cf_distances(
+        instance_df, cf_df, config, split_index, 
+        feature_costs=None, sort_by=None, savedir=None, suffix=None):
     """
     Compute distances, sparsity, and feasibility per counterfactual.
     feature_costs: optional dict of feature->cost weights
@@ -447,10 +450,13 @@ def get_local_cf_distances(instance_df, cf_df, config, split_index, feature_cost
     diffs = pd.concat([diffs, cf_df[['sparsity', 'L1_dist', 'L2_dist']]], axis=1)
     
     if savedir:
-        filename = f'{config.model.code}_split{split_index}_local_cf_distance_diffs.csv'
-        diffs.to_csv(savedir / filename)    
-        filename = f'{config.model.code}_split{split_index}_local_cf_distances.csv'
-        cf_df.to_csv(savedir / filename)    
+        filename = f'{config.model.code}_split{split_index}_local_cf_distance_diffs'
+        if suffix: filename += f'_{suffix}'
+        diffs.to_csv(savedir / f'{filename}.csv')    
+
+        filename = f'{config.model.code}_split{split_index}_local_cf_distances'
+        if suffix: filename += f'_{suffix}'
+        cf_df.to_csv(savedir / f'{filename}.csv')    
     return diffs,  cf_df
 
 def filter_invalid_progressive_cfs(df_dcf, query_instance, categorical_cols):

@@ -11,16 +11,26 @@ import sys
 sys.path.append('..')  
 import dice_ml
 
-from module.dataload import DPN_data
+from dataload import DPN_data
 import ymlconfig
 from utils2 import explainability as exp
 from utils2 import counterfactuals as cf
 
 
-def produce_reports():
-    # ## Read Config File
-    config_path = Path(r'experiments')
-    config_filename =  "bin_cf_final.yml"
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python cfreports.py <config file>")
+        print("e.g.   python cfreports.py bin_cf_final.yml")
+        sys.exit(1)
+
+    # config_filename =  "bin_cf_final.yml"
+    config_filename = sys.argv[1]
+
+    # ## Read Config File    
+    current_file = Path(__file__).resolve() # Get the absolute path of the current file
+    script_dir = current_file.parent # Get the directory containing the file
+
+    config_path = Path(script_dir /'experiments')
     config_dict = ymlconfig.load_config(config_path / config_filename)
     config = ymlconfig.dict_to_namespace(config_dict)
 
@@ -34,7 +44,7 @@ def produce_reports():
     shutil.copy(source, destination)
 
     # ## Data Loading
-    D = DPN_data(config.data.dataset_path)
+    D = DPN_data(config.data.dataset_path[3:])
     D.load(classification=config.experiment.classification_type)
     dfdpn = D.df
     data_cols = dfdpn.drop(D.non_data_cols, axis=1, errors="ignore").columns
@@ -43,8 +53,8 @@ def produce_reports():
     dfXy = pd.concat([X, y], axis=1)
 
     # ## Define custom column lists
-    allfeature_cols = dfXy_test.columns.drop('Confirmed_Binary_DPN').to_list()
-    continuous_cols = dfXy_test.columns.difference(D.categorical_cols+['Confirmed_Binary_DPN']).to_list()
+    allfeature_cols = dfXy.columns.drop('Confirmed_Binary_DPN').to_list()
+    continuous_cols = dfXy.columns.difference(D.categorical_cols+['Confirmed_Binary_DPN']).to_list()
     print('all feature columns:\n', len(allfeature_cols), allfeature_cols)
     print('categorical columns:\n', len(D.categorical_cols), D.categorical_cols)
     print('continuous_columns:\n', len(continuous_cols), continuous_cols)
@@ -133,3 +143,6 @@ def produce_reports():
                                     nrepeats=1, # 5
                                     savedir=split_output_dir
                                     )
+
+if __name__ == "__main__":
+    main()

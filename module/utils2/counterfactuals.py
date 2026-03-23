@@ -549,3 +549,69 @@ def check_necessity(dice_exp, instance, all_features, permitted_range, desired_c
         results_df = pd.DataFrame(results, index=['necessity']).T.reset_index(names="feature")
     return results_df 
 
+
+def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, 
+                              features_to_vary,                              
+                              config,
+                              split_index,
+                              allfeature_cols,
+                              categorical_cols,
+                              continuous_cols,
+                              total_CFs=30,
+                              nrepeats=5,
+                              remove_invalid_progressive_cfs=True,
+                              savedir=None):
+    
+    savedir = savedir / str(qidx).zfill(3)
+    savedir.mkdir(parents=True, exist_ok=True) 
+        
+    print(f'Creating reports for Instance {qidx}...')
+    print(f'Outputs will be saved to {savedir}.')
+
+    X = dfXy.drop(['Confirmed_Binary_DPN'], axis=1)
+    query_instance = X[qidx:qidx+1]
+
+    print('Calculating instance permitted range...')
+    instance_permitted_range = get_local_permitted_range(
+        dfXy, query_instance, allfeature_cols, categorical_cols, continuous_cols, 
+        progressive_cols, config, split_index, savedir=savedir)
+
+    print('Generating Counterfactuals...')
+    df_dcf = generate_diverse_cfs(
+        dice_exp,
+        query_instance, 
+        config,
+        split_index,
+        total_CFs=total_CFs,
+        permitted_range=instance_permitted_range,
+        features_to_vary=features_to_vary,
+        nrepeats=nrepeats,
+        savedir=savedir
+        )
+    
+    print('plotting heatmaps...')
+    plot_local_cf_heatmap(dfXy, df_dcf, query_instance, 
+                        query_idx=qidx, 
+                        pred=ioi_df.loc[qidx].pred, 
+                        actual=ioi_df.loc[qidx].actual, 
+                        config=config, split_index=split_index,
+                        savedir=savedir)    
+    
+    print('Getting changed features...')
+    get_most_changed_feature(df_dcf, query_instance, config, split_index, savedir, suffix="unfiltered")
+
+    print('Computing Distances...')
+    _diffs, _cf_ana = get_local_cf_distances(
+        query_instance, df_dcf, config, split_index, sort_by="L2_dist", savedir=savedir, suffix="unfiltered")
+
+    if remove_invalid_progressive_cfs:
+        print('removing invalid progressive counterfactuals...')
+        df_dcf = filter_invalid_progressive_cfs(df_dcf, query_instance, categorical_cols)
+
+        print('Getting changed features...')
+        get_most_changed_feature(df_dcf, query_instance, config, split_index, savedir, suffix="filtered_valid_progressive")
+
+        print('Computing Distances...')
+        _diffs, _cf_ana = get_local_cf_distances(
+            query_instance, df_dcf, config, split_index, sort_by="L2_dist", savedir=savedir, suffix="filtered_valid_progressive")
+

@@ -16,6 +16,7 @@ build/
 *.manifest
 *.spec
 
+catboost_info/
 module/experiments/
 module/outputs/
 module/catboost_info/

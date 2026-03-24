@@ -178,13 +178,9 @@ def plot_global_importance(dice_exp, DPN_data, X_test, config, split_index,
     ax.set_ylabel("Category")
     ax.set_xlabel("Value")
     plt.tight_layout()
-    if backend in ["Agg"]:
-        if savedir:
-            fig.savefig(fullpath)
-        plt.close(fig)
-    else:
-        plt.show()
-
+    if savedir:
+        fig.savefig(fullpath)
+    plt.close(fig) if backend in ["Agg"] else plt.show()
 
 # LOCAL COUNTERFACTUALS 
 # ----------------------
@@ -341,7 +337,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
         mask = diff == 0
 
         # Plot heatmap
-        plt.figure(figsize=figsize)
+        fig = plt.figure(figsize=figsize)
         ax = sns.heatmap(
             diff,
             mask=mask,            # hide zero differences
@@ -409,7 +405,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
             filename += '.png'
             plt.savefig(savedir / filename)
             print(f'Counterfactual heatmaps saved to {filename} in {savedir}')
-        plt.show()
+        plt.close(fig) if backend in ["Agg"] else plt.show()
         return
 
 

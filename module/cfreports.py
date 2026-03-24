@@ -22,18 +22,25 @@ from utils2 import counterfactuals as cf
 def main():
     model_resume_idx = None # assume we'll work on all indices
     if len(sys.argv) < 2:
-        print("Usage: python cfreports.py <config file> <redo-model-idx> <skip-instance-idx:>")
+        print("Usage: python cfreports.py <config file>")
+        print("Usage: python cfreports.py <config file> <resume_instances> <resume-model-idx> <skip-instance-indices:>")
+        print("Usage: python cfreports.py <config file> <redo_instances> <redo-model-idx> <redo-instance-indices:>")
         print("e.g.   python cfreports.py bin_cf_final.yml   --> redo all reports")
-        print("e.g.   python cfreports.py bin_cf_final.yml 2 53--> rework but do not overwrite reports of model 2, skip instance 53")
+        print("e.g.   python cfreports.py bin_cf_final.yml resume 2 53,67--> resume but do not overwrite reports of model 2, skip instances 53 & 67")
+        print("e.g.   python cfreports.py bin_cf_final.yml rework 2 53,67--> rework and do not overwrite reports of model 2 except specifically for instances 53 & 67")
         sys.exit(1)
     if len(sys.argv)>=3:
-        # we'll rework this model but not overwrite existing outputs
-        model_resume_idx = int(sys.argv[2])
+        resume = sys.argv[2]=='resume_instances'
+        rework = sys.argv[2]=='rework_instances'
+
     if len(sys.argv)>=4:
+        # we'll rework this model but not overwrite existing outputs
+        target_model_idx = int(sys.argv[3])
+    if len(sys.argv)>=5:
         # we'll skip these specific instances
-        skip_instance_indices = sys.argv[3]
-        skip_instance_indices = skip_instance_indices.split(',')
-        skip_instance_indices = [int(i) for i in skip_instance_indices]
+        target_instance_indices = sys.argv[4]
+        target_instance_indices = target_instance_indices.split(',')
+        target_instance_indices = [int(i) for i in target_instance_indices]
 
     # config_filename =  "bin_cf_final.yml"
     config_filename = sys.argv[1]
@@ -84,8 +91,8 @@ def main():
     # ## Loop through model splits
     for midx in range(len(split_results)):
 
-        if model_resume_idx is not None and midx!=model_resume_idx:
-            # if this model index is not being reworked
+        if target_model_idx is not None and midx!=target_model_idx:
+            # if this model index is not being resumed or reworked
             print(f"Skipping model {midx}...")             
             continue
 
@@ -148,11 +155,18 @@ def main():
         qindices = ioi_df.index.to_list()
 
         # #### Produce reports for each Instance of Interest
-        for qidx in qindices: 
-            if qidx in skip_instance_indices:
-                # we don't want to rework outputs for this instances (because of error, or reports already exist)
-                print(f"Skipping instance {qidx}...")             
-                continue                
+        for qidx in qindices:
+            if resume: 
+                if qidx in target_instance_indices:
+                    # skip target instances (because of error, or reports already exist)
+                    print(f"Skipping instance {qidx}...")             
+                    continue                
+
+            elif rework: 
+                if qidx not in target_instance_indices:
+                    # skip instances not in target instances (these are what we want to rework)
+                    print(f"Skipping and not reworking instance {qidx}...")             
+                    continue                
 
             print(f"Generating counterfactual analysis for record {qidx}")
             cf.generate_local_cf_reports(dfXy, dexp, ioi_df, qidx, 

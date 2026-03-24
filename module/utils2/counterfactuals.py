@@ -1,6 +1,7 @@
 
 import numpy as np
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import random
@@ -14,6 +15,8 @@ from sklearn.metrics import roc_curve, confusion_matrix, roc_auc_score
 from IPython.display import display
 
 from utils2 import explainability as exp
+
+backend = matplotlib.get_backend()
 
 actionable_cols = ['HBA1C', 'DSLPDMIA', 'INSULIN']
 progressive_cols = ['AGE', 'DM_DUR', 'HPN', 'PAOD', 'CKD', 'GBS', 'DEC_VS', 'DEC_PPS', 'DEC_LTS', 'DEC_AR', 'MNSI']
@@ -117,6 +120,15 @@ def plot_global_importance(dice_exp, DPN_data, X_test, config, split_index,
     X_test: test set 
     total_CFs: Number of counterfactuals to generate
     """
+    if savedir:
+        filename = f'{config.model.code}_split{split_index}_global_importance'
+        if filename_suffix:
+            filename = f'{filename}_{filename_suffix}'
+        fullpath = savedir / f'{filename}.png'
+        if fullpath.is_file():
+            print(f'{fullpath} already exists.')
+            return
+
     D = DPN_data
     cobj = dice_exp.global_feature_importance(X_test, total_CFs=total_CFs, posthoc_sparsity_param=None)
     df_imp = pd.DataFrame([cobj.summary_importance])
@@ -166,12 +178,12 @@ def plot_global_importance(dice_exp, DPN_data, X_test, config, split_index,
     ax.set_ylabel("Category")
     ax.set_xlabel("Value")
     plt.tight_layout()
-    if savedir:
-        filename = f'{config.model.code}_split{split_index}_global_importance'
-        if filename_suffix:
-            filename = f'{filename}_{filename_suffix}'
-        plt.savefig(savedir / f'{filename}.png')
-    plt.show()
+    if backend in ["Agg"]:
+        if savedir:
+            fig.savefig(fullpath)
+        plt.close(fig)
+    else:
+        plt.show()
 
 
 # LOCAL COUNTERFACTUALS 
@@ -425,7 +437,7 @@ def get_local_cf_distances(
     feature_costs: optional dict of feature->cost weights
     """
     if cf_df.empty:
-        return pd.DataFrame()
+        return pd.DataFrame(), pd.DataFrame()
 
     x0 = instance_df.iloc[0]
     diffs = cf_df.sub(x0)

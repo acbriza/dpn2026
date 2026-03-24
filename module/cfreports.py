@@ -3,6 +3,8 @@
 """
 import joblib
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 from catboost import CatBoostClassifier
 
 from pathlib import Path
@@ -18,10 +20,20 @@ from utils2 import counterfactuals as cf
 
 
 def main():
+    model_resume_idx = None # assume we'll work on all indices
     if len(sys.argv) < 2:
-        print("Usage: python cfreports.py <config file>")
-        print("e.g.   python cfreports.py bin_cf_final.yml")
+        print("Usage: python cfreports.py <config file> <redo-model-idx> <skip-instance-idx:>")
+        print("e.g.   python cfreports.py bin_cf_final.yml   --> redo all reports")
+        print("e.g.   python cfreports.py bin_cf_final.yml 2 53--> rework but do not overwrite reports of model 2, skip instance 53")
         sys.exit(1)
+    if len(sys.argv)>=3:
+        # we'll rework this model but not overwrite existing outputs
+        model_resume_idx = int(sys.argv[2])
+    if len(sys.argv)>=4:
+        # we'll skip these specific instances
+        skip_instance_indices = sys.argv[3]
+        skip_instance_indices = skip_instance_indices.split(',')
+        skip_instance_indices = [int(i) for i in skip_instance_indices]
 
     # config_filename =  "bin_cf_final.yml"
     config_filename = sys.argv[1]
@@ -71,6 +83,12 @@ def main():
 
     # ## Loop through model splits
     for midx in range(len(split_results)):
+
+        if model_resume_idx is not None and midx!=model_resume_idx:
+            # if this model index is not being reworked
+            print(f"Skipping model {midx}...")             
+            continue
+
         print(f"Processing results from model {midx}...")
 
         # ## Prepare Explainer
@@ -131,6 +149,11 @@ def main():
 
         # #### Produce reports for each Instance of Interest
         for qidx in qindices: 
+            if qidx in skip_instance_indices:
+                # we don't want to rework outputs for this instances (because of error, or reports already exist)
+                print(f"Skipping instance {qidx}...")             
+                continue                
+
             print(f"Generating counterfactual analysis for record {qidx}")
             cf.generate_local_cf_reports(dfXy, dexp, ioi_df, qidx, 
                                     features_to_vary=dfXy.columns.drop(['SEX', 'Confirmed_Binary_DPN']).to_list(), 

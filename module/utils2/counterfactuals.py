@@ -443,7 +443,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
         return
 
 
-def get_most_changed_feature(df_cf, instance, config, split_index, savedir, suffix=None):
+def get_most_changed_feature(df_cf, instance, config, split_index, savedir):
     # Boolean mask: True if feature changed compared to the original instance
     changed_mask = df_cf.ne(instance.iloc[0])
 
@@ -454,14 +454,13 @@ def get_most_changed_feature(df_cf, instance, config, split_index, savedir, suff
     change_counts_df.columns = ['feature', 'change count']
     if savedir:       
         filename = f"{config.model.code}_split{split_index}_local_cf_most_changed"
-        if suffix: filename += f"_{suffix}"
         change_counts_df.to_csv(savedir / f'{filename}.csv')    
     return change_counts_df
 
 
 def get_local_cf_distances(
         instance_df, cf_df, config, split_index, 
-        feature_costs=None, sort_by=None, savedir=None, suffix=None):
+        feature_costs=None, sort_by=None, savedir=None):
     """
     Compute distances, sparsity, and feasibility per counterfactual.
     feature_costs: optional dict of feature->cost weights
@@ -493,15 +492,13 @@ def get_local_cf_distances(
     
     if savedir:
         filename = f'{config.model.code}_split{split_index}_local_cf_distance_diffs'
-        if suffix: filename += f'_{suffix}'
         diffs.to_csv(savedir / f'{filename}.csv')    
 
         filename = f'{config.model.code}_split{split_index}_local_cf_distances'
-        if suffix: filename += f'_{suffix}'
         cf_df.to_csv(savedir / f'{filename}.csv')    
     return diffs,  cf_df
 
-def filter_invalid_progressive_cfs(df_dcf, query_instance, categorical_cols):
+def filter_invalid_progressive_cfs(df_dcf, query_instance, config, split_index, categorical_cols, savedir):
     """
     For progressive features,  if a counterfactual sets to 0 what was originally 1, 
     it is an invalid counterfactual.
@@ -524,6 +521,9 @@ def filter_invalid_progressive_cfs(df_dcf, query_instance, categorical_cols):
     else:
         print(f'All counterfactuals are valid. None was filtered.')
     filtered_df = df_dcf.copy()[~mask]
+    if savedir:       
+        filename = f'{config.model.code}_split{split_index}_local_cf.csv'
+        filtered_df.to_csv(savedir / filename)    
     return filtered_df
 
 
@@ -604,7 +604,8 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
                               remove_invalid_progressive_cfs=True,
                               savedir=None):
     
-    savedir = savedir / str(qidx).zfill(3)
+    unfiltered_cfs_savedir = savedir / str(qidx).zfill(3) / 'unfiltered'
+    filtered_cfs_savedir = savedir / str(qidx).zfill(3) / 'filtered_progressive'
     savedir.mkdir(parents=True, exist_ok=True) 
         
     print(f'Creating reports for Instance {qidx}...')
@@ -616,7 +617,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
     print('Calculating instance permitted range...')
     instance_permitted_range = get_local_permitted_range(
         dfXy, query_instance, allfeature_cols, categorical_cols, continuous_cols, 
-        progressive_cols, config, split_index, savedir=savedir)
+        progressive_cols, config, split_index, savedir=unfiltered_cfs_savedir)
 
     print('Generating Counterfactuals...')
     df_dcf = generate_diverse_cfs(
@@ -628,7 +629,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
         permitted_range=instance_permitted_range,
         features_to_vary=features_to_vary,
         nrepeats=nrepeats,
-        savedir=savedir
+        savedir=unfiltered_cfs_savedir
         )
     
     print('plotting heatmaps...')
@@ -637,23 +638,30 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
                         pred=ioi_df.loc[qidx].pred, 
                         actual=ioi_df.loc[qidx].actual, 
                         config=config, split_index=split_index,
-                        savedir=savedir)    
+                        savedir=unfiltered_cfs_savedir)    
     
     print('Getting changed features...')
-    get_most_changed_feature(df_dcf, query_instance, config, split_index, savedir, suffix="unfiltered")
+    get_most_changed_feature(df_dcf, query_instance, config, split_index, savedir=unfiltered_cfs_savedir)
 
     print('Computing Distances...')
     _diffs, _cf_ana = get_local_cf_distances(
-        query_instance, df_dcf, config, split_index, sort_by="L2_dist", savedir=savedir, suffix="unfiltered")
+        query_instance, df_dcf, config, split_index, sort_by="L2_dist", savedir=unfiltered_cfs_savedir)
 
     if remove_invalid_progressive_cfs:
         print('removing invalid progressive counterfactuals...')
-        df_dcf = filter_invalid_progressive_cfs(df_dcf, query_instance, categorical_cols)
+        df_dcf = filter_invalid_progressive_cfs(df_dcf, query_instance, categorical_cols, savedir=filtered_cfs_savedir)
 
+        plot_local_cf_heatmap(dfXy, df_dcf, query_instance, 
+                            query_idx=qidx, 
+                            pred=ioi_df.loc[qidx].pred, 
+                            actual=ioi_df.loc[qidx].actual, 
+                            config=config, split_index=split_index,
+                            savedir=filtered_cfs_savedir)  
+        
         print('Getting changed features...')
-        get_most_changed_feature(df_dcf, query_instance, config, split_index, savedir, suffix="filtered_valid_progressive")
+        get_most_changed_feature(df_dcf, query_instance, config, split_index, savedir=filtered_cfs_savedir)
 
         print('Computing Distances...')
         _diffs, _cf_ana = get_local_cf_distances(
-            query_instance, df_dcf, config, split_index, sort_by="L2_dist", savedir=savedir, suffix="filtered_valid_progressive")
+            query_instance, df_dcf, config, split_index, sort_by="L2_dist", savedir=filtered_cfs_savedir)
 

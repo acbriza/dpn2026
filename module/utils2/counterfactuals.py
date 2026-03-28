@@ -111,9 +111,8 @@ def get_global_permitted_range(dfXy, continuous_cols, config, split_index, verbo
     return global_permitted_range
 
 
-def plot_global_importance(dice_exp, DPN_data, X_test, config, split_index, 
-                           highlight_features=[], total_CFs=10, 
-                           title_suffix="", filename_suffix="", savedir=None):
+def get_global_importance(dice_exp, DPN_data, X_test, config, split_index, 
+                           highlight_features=[], filename_suffix="", savedir=None):
     """
     Parameters:
     dice_exp: DiCE explainer object
@@ -124,13 +123,25 @@ def plot_global_importance(dice_exp, DPN_data, X_test, config, split_index,
         filename = f'{config.model.code}_split{split_index}_global_importance'
         if filename_suffix:
             filename = f'{filename}_{filename_suffix}'
-        fullpath = savedir / f'{filename}.png'
-        if fullpath.is_file():
-            print(f'{fullpath} already exists.')
+        fullpath_plot = savedir / f'{filename}.png'
+        fullpath_values = savedir / f'{filename}.csv'
+        if fullpath_plot.is_file():
+            print(f'{fullpath_plot} already exists.')
             return
 
     D = DPN_data
-    cobj = dice_exp.global_feature_importance(X_test, total_CFs=total_CFs, posthoc_sparsity_param=None)
+    if config.dice.global.posthoc_sparsity_param=='None':        
+        posthoc_sparsity_param = None
+    else:
+        posthoc_sparsity_param = config.dice.global.posthoc_sparsity_param
+    cobj = dice_exp.global_feature_importance(
+        X_test, 
+        total_CFs=config.dice.global.total_CFs, 
+        features_to_vary=X_test.columns.drop(['SEX']).to_list()
+        permitted_range=global_permitted_range,
+        posthoc_sparsity_param=posthoc_sparsity_param
+        random_seed=config.experiment.random_seed,
+        verbose=config.experiment.verbosity>0)
     df_imp = pd.DataFrame([cobj.summary_importance])
 
     s = df_imp.iloc[0]
@@ -174,12 +185,13 @@ def plot_global_importance(dice_exp, DPN_data, X_test, config, split_index,
         borderaxespad=0.1
     )
 
-    ax.set_title(f"Global Importance ({title_suffix})")
+    ax.set_title(f"Global Feature Importance for Model {split_index}")
     ax.set_ylabel("Category")
     ax.set_xlabel("Value")
     plt.tight_layout()
     if savedir:
-        fig.savefig(fullpath)
+        df_imp.to_csv(fullpath_values)
+        fig.savefig(fullpath_plot)
     plt.close(fig) if backend in ["Agg"] else plt.show()
 
 # LOCAL COUNTERFACTUALS 
@@ -274,11 +286,11 @@ def get_instances_of_interest(model, X_test, y_test, config, split_index, thresh
     return ioi_df, display_cols
 
 
-def generate_diverse_cfs(dice_exp, instance, config, split_index, total_CFs=30, features_to_vary='all', 
-                         permitted_range={}, nrepeats=5, diversity_weight=1.5, savedir=None):
+def generate_diverse_cfs(dice_exp, instance, config, split_index, features_to_vary='all', 
+                         permitted_range={}, savedir=None):
     """Generate diverse counterfactuals across multiple seeds."""
     all_cfs = []
-    seeds = list(range(nrepeats))
+    seeds = list(range(config.dice.local.nrepeats))
     for s in seeds:
         # manually set random seed
         np.random.seed(s)
@@ -286,12 +298,12 @@ def generate_diverse_cfs(dice_exp, instance, config, split_index, total_CFs=30, 
 
         cf = dice_exp.generate_counterfactuals(
             instance,
-            total_CFs=total_CFs,
+            total_CFs=config.dice.local.total_CFs,
             desired_class="opposite",
             features_to_vary=features_to_vary,
             permitted_range=permitted_range,
             #random_seed=s,
-            diversity_weight=diversity_weight
+            diversity_weight=config.dice.local.diversity_weight
         )        
         df_cf = cf.cf_examples_list[0].final_cfs_df
         if not df_cf.empty:
@@ -314,10 +326,10 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
                           categorical_cols=None,
                           savedir=None,
                           ):   
-    z = config.dice.nzfill
-    save_every = config.dice.heatmap.save_every
+    z = config.reporting.nzfill
+    save_every = config.reporting.heatmap.save_every
     verbosity = config.experiment.verbosity
-    figsize = (config.dice.heatmap.figsize.x, config.dice.heatmap.figsize.y)
+    figsize = (config.reporting.heatmap.figsize.x, config.reporting.heatmap.figsize.y)
 
     # Compute differences (each row in df_large vs. the single row)
     diffs = df_dcf - query_instance.iloc[0]

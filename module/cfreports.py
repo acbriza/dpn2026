@@ -144,13 +144,12 @@ def main():
         dexp = dice_ml.Dice(d, m, method=config.dice.method)
 
         # ### Plot Global Importances
-        cf.plot_global_importance(dexp, D, X_test, config, midx, 
-                                highlight_features=[], total_CFs=10, 
-                                title_suffix="", filename_suffix="", savedir=split_output_dir)
+        cf.get_global_importance(dexp, D, X_test, config, midx, 
+                                highlight_features=[], split_index=midx, filename_suffix="", savedir=split_output_dir)
 
         # #### Instances of Interest
         ioi_df, display_cols = cf.get_instances_of_interest(
-            wrapped_model, X_test, y_test, config=config, split_index=midx, 
+            wrapped_model, X_test, y_test, config=config,  
             threshold=threshold, delta=0.2, savedir=split_output_dir)
         qindices = ioi_df.index.to_list()
 
@@ -176,8 +175,7 @@ def main():
                                     categorical_cols=D.categorical_cols,
                                     continuous_cols=continuous_cols,
                                     split_index=midx,
-                                    total_CFs=10, #30
-                                    nrepeats=1, # 5
+                                    remove_invalid_progressive_cfs=True,
                                     savedir=split_output_dir
                                     )
 

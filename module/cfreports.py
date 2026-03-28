@@ -72,9 +72,9 @@ def main():
     dfXy = pd.concat([X, y], axis=1)
 
     # ## Define custom column lists
-    allfeature_cols = dfXy.columns.drop('Confirmed_Binary_DPN').to_list()
-    continuous_cols = dfXy.columns.difference(D.categorical_cols+['Confirmed_Binary_DPN']).to_list()
-    print('all feature columns:\n', len(allfeature_cols), allfeature_cols)
+    features_to_vary = dfXy.columns.drop(['SEX', 'Confirmed_Binary_DPN']).to_list()
+    continuous_cols = dfXy.columns.difference(D.categorical_cols+['SEX', 'Confirmed_Binary_DPN']).to_list()
+    print('features to vary columns:\n', len(features_to_vary), features_to_vary)
     print('categorical columns:\n', len(D.categorical_cols), D.categorical_cols)
     print('continuous_columns:\n', len(continuous_cols), continuous_cols)
 
@@ -144,8 +144,10 @@ def main():
         dexp = dice_ml.Dice(d, m, method=config.dice.method)
 
         # ### Plot Global Importances
-        cf.get_global_importance(dexp, D, X_test, config, midx, 
-                                highlight_features=[], split_index=midx, filename_suffix="", savedir=split_output_dir)
+        cf.get_global_importance(dexp, D, X_test, config, midx,
+                                features_to_vary, threshold, global_permitted_range,   
+                                highlight_features=D.actionable_cols, 
+                                filename_suffix="", savedir=split_output_dir)
 
         # #### Instances of Interest
         ioi_df, display_cols = cf.get_instances_of_interest(
@@ -169,12 +171,12 @@ def main():
 
             print(f"Generating counterfactual analysis for record {qidx}")
             cf.generate_local_cf_reports(dfXy, dexp, ioi_df, qidx, 
-                                    features_to_vary=dfXy.columns.drop(['SEX', 'Confirmed_Binary_DPN']).to_list(), 
+                                    features_to_vary=features_to_vary, 
                                     config=config,
-                                    allfeature_cols=allfeature_cols,
+                                    split_index=midx,
+                                    threshold=threshold,
                                     categorical_cols=D.categorical_cols,
                                     continuous_cols=continuous_cols,
-                                    split_index=midx,
                                     remove_invalid_progressive_cfs=True,
                                     savedir=split_output_dir
                                     )

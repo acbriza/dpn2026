@@ -112,6 +112,7 @@ def get_global_permitted_range(dfXy, continuous_cols, config, split_index, verbo
 
 
 def get_global_importance(dice_exp, DPN_data, X_test, config, split_index, 
+                          features_to_vary, threshold, global_permitted_range, 
                            highlight_features=[], filename_suffix="", savedir=None):
     """
     Parameters:
@@ -130,16 +131,17 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
             return
 
     D = DPN_data
-    if config.dice.global.posthoc_sparsity_param=='None':        
+    if config.dice.global_cf.posthoc_sparsity_param=='None':
         posthoc_sparsity_param = None
     else:
-        posthoc_sparsity_param = config.dice.global.posthoc_sparsity_param
+        posthoc_sparsity_param = config.dice.global_cf.posthoc_sparsity_param
     cobj = dice_exp.global_feature_importance(
         X_test, 
-        total_CFs=config.dice.global.total_CFs, 
-        features_to_vary=X_test.columns.drop(['SEX']).to_list()
+        total_CFs=config.dice.global_cf.total_CFs, 
+        features_to_vary=features_to_vary,
         permitted_range=global_permitted_range,
-        posthoc_sparsity_param=posthoc_sparsity_param
+        stopping_threshold=threshold,
+        posthoc_sparsity_param=posthoc_sparsity_param,
         random_seed=config.experiment.random_seed,
         verbose=config.experiment.verbosity>0)
     df_imp = pd.DataFrame([cobj.summary_importance])
@@ -197,11 +199,11 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
 # LOCAL COUNTERFACTUALS 
 # ----------------------
 
-def get_local_permitted_range(dfXy, instance, allfeature_cols, 
+def get_local_permitted_range(dfXy, instance, features_to_vary, 
                               categorical_cols, continuous_cols, 
                               monotonic_cols, config, split_index, savedir=None):
     local_permitted_range = {}
-    for col in allfeature_cols:
+    for col in features_to_vary:
 
         if col in categorical_cols:
             # it does not make sense to set a range for categoricals
@@ -286,24 +288,31 @@ def get_instances_of_interest(model, X_test, y_test, config, split_index, thresh
     return ioi_df, display_cols
 
 
-def generate_diverse_cfs(dice_exp, instance, config, split_index, features_to_vary='all', 
-                         permitted_range={}, savedir=None):
+def generate_diverse_cfs(dice_exp, instance, config, split_index, 
+                         threshold, features_to_vary, permitted_range={}, 
+                         savedir=None):
     """Generate diverse counterfactuals across multiple seeds."""
     all_cfs = []
-    seeds = list(range(config.dice.local.nrepeats))
+    seeds = list(range(config.dice.local_cf.nrepeats))
     for s in seeds:
         # manually set random seed
         np.random.seed(s)
         random.seed(s) 
-
         cf = dice_exp.generate_counterfactuals(
             instance,
-            total_CFs=config.dice.local.total_CFs,
+            total_CFs=config.dice.local_cf.total_CFs,
             desired_class="opposite",
-            features_to_vary=features_to_vary,
             permitted_range=permitted_range,
-            #random_seed=s,
-            diversity_weight=config.dice.local.diversity_weight
+            features_to_vary=features_to_vary,
+            stopping_threshold=threshold,
+            posthoc_sparsity_algorithm=config.dice.local_cf.posthoc_sparsity_algorithm,
+            posthoc_sparsity_param=config.dice.local_cf.posthoc_sparsity_paramconfig,
+            proximity_weight=config.dice.local_cf.proximity_weight,
+            diversity_weight=config.dice.local_cf.diversity_weight
+            categorical_penalty=config.dice.local_cf.categorical_penalty,
+            algorithm=config.dice.local_cf.algorithm,
+            num_mutants=config.dice.local_cf.num_mutants,
+            random_seed=s, 
         )        
         df_cf = cf.cf_examples_list[0].final_cfs_df
         if not df_cf.empty:
@@ -608,11 +617,9 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
                               features_to_vary,                              
                               config,
                               split_index,
-                              allfeature_cols,
+                              threshold,
                               categorical_cols,
                               continuous_cols,
-                              total_CFs=30,
-                              nrepeats=5,
                               remove_invalid_progressive_cfs=True,
                               savedir=None):
     
@@ -628,7 +635,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
 
     print('Calculating instance permitted range...')
     instance_permitted_range = get_local_permitted_range(
-        dfXy, query_instance, allfeature_cols, categorical_cols, continuous_cols, 
+        dfXy, query_instance, features_to_vary, categorical_cols, continuous_cols, 
         progressive_cols, config, split_index, savedir=unfiltered_cfs_savedir)
 
     print('Generating Counterfactuals...')
@@ -637,10 +644,9 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
         query_instance, 
         config,
         split_index,
-        total_CFs=total_CFs,
-        permitted_range=instance_permitted_range,
+        threshold,
         features_to_vary=features_to_vary,
-        nrepeats=nrepeats,
+        permitted_range=instance_permitted_range,
         savedir=unfiltered_cfs_savedir
         )
     

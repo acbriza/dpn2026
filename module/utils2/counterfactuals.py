@@ -113,7 +113,7 @@ def get_global_permitted_range(dfXy, continuous_cols, config, split_index, verbo
 
 def get_global_importance(dice_exp, DPN_data, X_test, config, split_index, 
                           features_to_vary, threshold, global_permitted_range, 
-                           highlight_features=[], filename_suffix="", savedir=None):
+                          highlight_features=[], filename_suffix="", savedir=None):
     """
     Parameters:
     dice_exp: DiCE explainer object
@@ -142,8 +142,7 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
         permitted_range=global_permitted_range,
         stopping_threshold=threshold,
         posthoc_sparsity_param=posthoc_sparsity_param,
-        random_seed=config.experiment.random_seed,
-        verbose=config.experiment.verbosity>0)
+        verbose=0)
     df_imp = pd.DataFrame([cobj.summary_importance])
 
     s = df_imp.iloc[0]
@@ -192,7 +191,7 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
     ax.set_xlabel("Value")
     plt.tight_layout()
     if savedir:
-        df_imp.to_csv(fullpath_values)
+        df_imp.T.to_csv(fullpath_values)
         fig.savefig(fullpath_plot)
     plt.close(fig) if backend in ["Agg"] else plt.show()
 
@@ -292,35 +291,37 @@ def generate_diverse_cfs(dice_exp, instance, config, split_index,
                          threshold, features_to_vary, permitted_range={}, 
                          savedir=None):
     """Generate diverse counterfactuals across multiple seeds."""
+    
     all_cfs = []
     seeds = list(range(config.dice.local_cf.nrepeats))
     for s in seeds:
         # manually set random seed
         np.random.seed(s)
         random.seed(s) 
-        cf = dice_exp.generate_counterfactuals(
-            instance,
-            total_CFs=config.dice.local_cf.total_CFs,
-            desired_class="opposite",
-            permitted_range=permitted_range,
-            features_to_vary=features_to_vary,
-            stopping_threshold=threshold,
-            posthoc_sparsity_algorithm=config.dice.local_cf.posthoc_sparsity_algorithm,
-            posthoc_sparsity_param=config.dice.local_cf.posthoc_sparsity_paramconfig,
-            proximity_weight=config.dice.local_cf.proximity_weight,
-            diversity_weight=config.dice.local_cf.diversity_weight
-            categorical_penalty=config.dice.local_cf.categorical_penalty,
-            algorithm=config.dice.local_cf.algorithm,
-            num_mutants=config.dice.local_cf.num_mutants,
-            random_seed=s, 
-        )        
-        df_cf = cf.cf_examples_list[0].final_cfs_df
-        if not df_cf.empty:
-            all_cfs.append(df_cf)
+        try:
+            cf = dice_exp.generate_counterfactuals(
+                instance,
+                total_CFs=config.dice.local_cf.total_CFs,
+                desired_class="opposite",
+                permitted_range=permitted_range,
+                features_to_vary=features_to_vary,
+                stopping_threshold=threshold,
+                posthoc_sparsity_algorithm=config.dice.local_cf.posthoc_sparsity_algorithm,
+                posthoc_sparsity_param=config.dice.local_cf.posthoc_sparsity_param,
+                proximity_weight=config.dice.local_cf.proximity_weight,
+                diversity_weight=config.dice.local_cf.diversity_weight,
+                categorical_penalty=config.dice.local_cf.categorical_penalty,
+                algorithm=config.dice.local_cf.algorithm,
+            )        
+            df_cf = cf.cf_examples_list[0].final_cfs_df
+            if not df_cf.empty:
+                all_cfs.append(df_cf)
+        except Exception as e:
+            print(f"[DiCE] No CFs found — {e}")
     if all_cfs:
         combined_dfs = pd.concat(all_cfs).drop_duplicates().reset_index(drop=True)         
-    else:
-        combined_dfs = pd.DataFrame() # empty dataframe
+    else:        
+        combined_dfs = instance.iloc[0:0].copy() # empty dataframe with only the headers
     if savedir:
         filename = f'{config.model.code}_split{split_index}_local_cf.csv'
         combined_dfs.to_csv(savedir / filename)
@@ -336,9 +337,9 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
                           savedir=None,
                           ):   
     z = config.reporting.nzfill
-    save_every = config.reporting.heatmap.save_every
+    save_every = config.reporting.cf_heatmap.save_every
     verbosity = config.experiment.verbosity
-    figsize = (config.reporting.heatmap.figsize.x, config.reporting.heatmap.figsize.y)
+    figsize = (config.reporting.cf_heatmap.figsize.x, config.reporting.cf_heatmap.figsize.y)
 
     # Compute differences (each row in df_large vs. the single row)
     diffs = df_dcf - query_instance.iloc[0]
@@ -667,7 +668,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
 
     if remove_invalid_progressive_cfs:
         print('removing invalid progressive counterfactuals...')
-        df_dcf = filter_invalid_progressive_cfs(df_dcf, query_instance, categorical_cols, savedir=filtered_cfs_savedir)
+        df_dcf = filter_invalid_progressive_cfs(df_dcf, query_instance, config, split_index, categorical_cols, savedir=filtered_cfs_savedir)
 
         plot_local_cf_heatmap(dfXy, df_dcf, query_instance, 
                             query_idx=qidx, 

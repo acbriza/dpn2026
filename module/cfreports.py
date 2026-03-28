@@ -33,10 +33,11 @@ def main():
         resume = sys.argv[2]=='resume_instances'
         rework = sys.argv[2]=='rework_instances'
 
+    target_model_idx = None
+    target_instance_indices = [] 
     if len(sys.argv)>=4:
         # we'll rework this model but not overwrite existing outputs
         target_model_idx = int(sys.argv[3])
-        target_instance_indices = [] 
     if len(sys.argv)>=5:
         # we'll skip these specific instances
         target_instance_indices = sys.argv[4]

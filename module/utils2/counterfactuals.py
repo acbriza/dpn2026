@@ -307,9 +307,11 @@ def generate_diverse_cfs(dice_exp, instance, config, split_index, total_CFs=30, 
 
     
 def plot_local_cf_heatmap(dfXy, df_dcf, query_instance, 
-                          query_idx, pred, actual,                           
+                          query_idx, pred, actual,
                           config,
                           split_index,
+                          highlight_invalid=False,
+                          categorical_cols=None,
                           savedir=None,
                           ):   
     z = config.dice.nzfill
@@ -348,6 +350,38 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
             annot_kws={"size": 6},# smaller font
             cbar_kws={'label': 'Difference'}
         )
+
+        if highlight_invalid:
+            progressive_categorical_cols = list(set(progressive_cols) & set(categorical_cols))
+            hightlight_cells = []
+            yticklabels = ax.get_yticklabels()
+            for row_idx in range(diff.shape[0]):
+                highlight_row = False
+                for col in progressive_categorical_cols:
+                    col_idx = diff.columns.get_loc(col)
+                    delta = df_dcf.iat[row_idx,col_idx] - query_instance.iat[0,col_idx]
+                    if delta == -1:
+                        hightlight_cells.append((row_idx, col_idx))
+                        highlight_row = True
+                if highlight_row:
+                    yticklabels[row_idx].set_bbox(dict(
+                        facecolor='yellow',
+                        edgecolor='none',
+                        boxstyle='round,pad=0.2'
+                    ))                
+            
+            # row_idx, col_idx = 1, 19   # <-- change this to your desired position
+            # # --- Modify annotation text ---
+            for text in ax.texts:
+                x, y = text.get_position()
+                
+                # Convert heatmap coords → dataframe indices
+                col = int(x - 0.5)
+                row = int(y - 0.5)
+
+                if (row, col) in hightlight_cells:
+                    text.set_weight("bold")      
+                    text.set_backgroundcolor("yellow")
 
         ax.set_yticks(np.arange(len(diff)) + 0.5)
         ax.set_yticklabels(diff.index, rotation=0, fontsize=8)

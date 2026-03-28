@@ -36,6 +36,7 @@ def main():
     if len(sys.argv)>=4:
         # we'll rework this model but not overwrite existing outputs
         target_model_idx = int(sys.argv[3])
+        target_instance_indices = [] 
     if len(sys.argv)>=5:
         # we'll skip these specific instances
         target_instance_indices = sys.argv[4]
@@ -146,12 +147,12 @@ def main():
         # ### Plot Global Importances
         cf.get_global_importance(dexp, D, X_test, config, midx,
                                 features_to_vary, threshold, global_permitted_range,   
-                                highlight_features=D.actionable_cols, 
+                                highlight_features=cf.actionable_cols, 
                                 filename_suffix="", savedir=split_output_dir)
 
         # #### Instances of Interest
         ioi_df, display_cols = cf.get_instances_of_interest(
-            wrapped_model, X_test, y_test, config=config,  
+            wrapped_model, X_test, y_test, config, midx,
             threshold=threshold, delta=0.2, savedir=split_output_dir)
         qindices = ioi_df.index.to_list()
 

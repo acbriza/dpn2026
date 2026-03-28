@@ -462,7 +462,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
             plt.savefig(savedir / filename)
             print(f'Counterfactual heatmaps saved to {filename} in {savedir}')
         plt.close(fig) if backend in ["Agg"] else plt.show()
-        return
+    return
 
 
 def get_most_changed_feature(df_cf, instance, config, split_index, savedir):
@@ -624,9 +624,10 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
                               remove_invalid_progressive_cfs=True,
                               savedir=None):
     
-    unfiltered_cfs_savedir = savedir / str(qidx).zfill(3) / 'unfiltered'
-    filtered_cfs_savedir = savedir / str(qidx).zfill(3) / 'filtered_progressive'
-    savedir.mkdir(parents=True, exist_ok=True) 
+    unfiltered_cfs_savedir = savedir / 'unfiltered' / str(qidx).zfill(3) 
+    filtered_cfs_savedir = savedir / 'filtered_progressive' / str(qidx).zfill(3) 
+    unfiltered_cfs_savedir.mkdir(parents=True, exist_ok=True) 
+    filtered_cfs_savedir.mkdir(parents=True, exist_ok=True) 
         
     print(f'Creating reports for Instance {qidx}...')
     print(f'Outputs will be saved to {savedir}.')

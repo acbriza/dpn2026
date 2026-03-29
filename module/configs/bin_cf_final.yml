@@ -23,7 +23,7 @@ dice:
   method: genetic
   global_cf:
     total_CFs: 20
-    posthoc_sparsity_param: binary
+    posthoc_sparsity_algorithm: binary
   local_cf:
     nrepeats: 3
     total_CFs: 20 

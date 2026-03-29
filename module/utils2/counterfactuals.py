@@ -132,17 +132,17 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
             return
 
     D = DPN_data
-    if config.dice.global_cf.posthoc_sparsity_param=='None':
-        posthoc_sparsity_param = None
+    if config.dice.global_cf.posthoc_sparsity_algorithm=='None':
+        posthoc_sparsity_algorithm = None
     else:
-        posthoc_sparsity_param = config.dice.global_cf.posthoc_sparsity_param
+        posthoc_sparsity_algorithm = config.dice.global_cf.posthoc_sparsity_algorithm
     cobj = dice_exp.global_feature_importance(
         X_test, 
         total_CFs=config.dice.global_cf.total_CFs, 
         features_to_vary=features_to_vary,
         permitted_range=global_permitted_range,
         stopping_threshold=threshold,
-        posthoc_sparsity_param=posthoc_sparsity_param,
+        posthoc_sparsity_algorithm=posthoc_sparsity_algorithm,
         verbose=0)
     df_imp = pd.DataFrame([cobj.summary_importance])
 

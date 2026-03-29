@@ -28,9 +28,15 @@ def main():
         print("e.g.   python cfreports.py bin_cf_final.yml resume_instances 2 53,67--> resume but do not overwrite reports of model 2, skip instances 53 & 67")
         print("e.g.   python cfreports.py bin_cf_final.yml rework_instances 2 53,67--> rework and do not overwrite reports of model 2 except specifically for instances 53 & 67")
         sys.exit(1)
+
+    if len(sys.argv)==2:
+        # we only received a config file: run all experiments
+        rework = False
+        resume = False
+        
     if len(sys.argv)>=3:
-        resume = sys.argv[2]=='resume_instances'
         rework = sys.argv[2]=='rework_instances'
+        resume = sys.argv[2]=='resume_instances'
 
     target_model_idx = None
     target_instance_indices = [] 

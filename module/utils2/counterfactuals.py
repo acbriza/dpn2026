@@ -5,6 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import random
+import math
 import os
 import seaborn as sns
 
@@ -339,7 +340,8 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
     z = config.reporting.nzfill
     save_every = config.reporting.cf_heatmap.save_every
     verbosity = config.experiment.verbosity
-    figsize = (config.reporting.cf_heatmap.figsize.x, config.reporting.cf_heatmap.figsize.y)
+    figsize_x = config.reporting.cf_heatmap.figsize.x 
+    figsize_y = config.reporting.cf_heatmap.figsize.y
 
     # Compute differences (each row in df_large vs. the single row)
     diffs = df_dcf - query_instance.iloc[0]
@@ -361,7 +363,15 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
         mask = diff == 0
 
         # Plot heatmap
-        fig = plt.figure(figsize=figsize)
+        
+        # adjust plot height to number of counterfactuals
+        idx_end = min(idx_end, idx_start+diff.shape[0])
+        num_cfs = idx_end - idx_start 
+        cf_height_ratio = num_cfs/save_every                
+        if cf_height_ratio < 0.4:
+            figsize_y = math.ceil(figsize_y*0.5)
+
+        fig = plt.figure(figsize=(figsize_x, figsize_y))
         ax = sns.heatmap(
             diff,
             mask=mask,            # hide zero differences
@@ -453,7 +463,6 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
 
         plt.tight_layout()
         if savedir:
-            idx_end = min(idx_end, idx_start+diff.shape[0])
             filename = f'{config.model.code}_split{split_index}_local_cf'
             idx_start_str = str(idx_start).zfill(3)
             idx_end_str = str(idx_end-1).zfill(3)
@@ -543,6 +552,7 @@ def filter_invalid_progressive_cfs(df_dcf, query_instance, config, split_index, 
     else:
         print(f'All counterfactuals are valid. None was filtered.')
     filtered_df = df_dcf.copy()[~mask]
+    filtered_df = filtered_df.reset_index(drop=True)
     if savedir:       
         filename = f'{config.model.code}_split{split_index}_local_cf.csv'
         filtered_df.to_csv(savedir / filename)    

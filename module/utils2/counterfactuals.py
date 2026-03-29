@@ -673,7 +673,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
     print('Getting changed features...')
     get_most_changed_feature(df_dcf, query_instance, config, split_index, savedir=unfiltered_cfs_savedir)
 
-    print('Computing Distances...')
+    print('Computing Sparsity and L1, L2 Distances...')
     _diffs, _cf_ana = get_local_cf_distances(
         query_instance, df_dcf, config, split_index, sort_by="L2_dist", savedir=unfiltered_cfs_savedir)
 

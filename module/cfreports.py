@@ -1,5 +1,5 @@
 """
-    Produce counterfactual reports based on counterfactuals.ipynb
+    Produce counterfactual reports based on study from counterfactuals.ipynb
 """
 import joblib
 import pandas as pd
@@ -20,7 +20,6 @@ from utils2 import explainability as exp
 
 
 def main():
-    model_resume_idx = None # assume we'll work on all indices
     if len(sys.argv) < 2:
         print("Usage: python cfreports.py <config file>")
         print("Usage: python cfreports.py <config file> <resume_instances> <resume-model-idx> <skip-instance-indices:>")
@@ -100,14 +99,15 @@ def main():
 
         print(f"Processing results from model {midx}...")
 
-        # ## Prepare Explainer
+        # ## Create output directory for this Model split
         split_output_dir = outputdir / f'split{midx}'
         split_output_dir.mkdir(parents=True, exist_ok=True)
 
         # ## Extract saved variables from split
         threshold = split_results[midx]['threshold']
         best_params = split_results[midx]['best_params']
-
+        
+        # ## Extract Train and Test Sets
         X_test = split_results[midx]['X_test']
         y_test = split_results[midx]['y_test']
         dfXy_test = pd.concat([X_test, y_test], axis=1)
@@ -145,7 +145,7 @@ def main():
         m = dice_ml.Model(model=wrapped_model, backend="sklearn", model_type="classifier")
         dexp = dice_ml.Dice(d, m, method=config.dice.method)
 
-        # ### Plot Global Importances
+        # ### Get Global Importances
         cf.get_global_importance(dexp, D, X_test, config, midx,
                                 features_to_vary, threshold, global_permitted_range,   
                                 highlight_features=cf.actionable_cols, 

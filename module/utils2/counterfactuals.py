@@ -462,7 +462,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
             plt.savefig(savedir / filename)
             print(f'Counterfactual heatmaps saved to {filename} in {savedir}')
         plt.close(fig) if backend in ["Agg"] else plt.show()
-        return
+    return
 
 
 def get_most_changed_feature(df_cf, instance, config, split_index, savedir):

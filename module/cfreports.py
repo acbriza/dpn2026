@@ -15,8 +15,8 @@ import dice_ml
 
 from dataload import DPN_data
 import ymlconfig
-from utils2 import explainability as exp
 from utils2 import counterfactuals as cf
+from utils2 import explainability as exp
 
 
 def main():
@@ -26,8 +26,8 @@ def main():
         print("Usage: python cfreports.py <config file> <resume_instances> <resume-model-idx> <skip-instance-indices:>")
         print("Usage: python cfreports.py <config file> <redo_instances> <redo-model-idx> <redo-instance-indices:>")
         print("e.g.   python cfreports.py bin_cf_final.yml   --> redo all reports")
-        print("e.g.   python cfreports.py bin_cf_final.yml resume 2 53,67--> resume but do not overwrite reports of model 2, skip instances 53 & 67")
-        print("e.g.   python cfreports.py bin_cf_final.yml rework 2 53,67--> rework and do not overwrite reports of model 2 except specifically for instances 53 & 67")
+        print("e.g.   python cfreports.py bin_cf_final.yml resume_instances 2 53,67--> resume but do not overwrite reports of model 2, skip instances 53 & 67")
+        print("e.g.   python cfreports.py bin_cf_final.yml rework_instances 2 53,67--> rework and do not overwrite reports of model 2 except specifically for instances 53 & 67")
         sys.exit(1)
     if len(sys.argv)>=3:
         resume = sys.argv[2]=='resume_instances'

@@ -333,8 +333,8 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
                           query_idx, pred, actual,
                           config,
                           split_index,
+                          categorical_cols,
                           highlight_invalid=False,
-                          categorical_cols=None,
                           savedir=None,
                           ):   
     z = config.reporting.nzfill
@@ -667,7 +667,10 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
                         query_idx=qidx, 
                         pred=ioi_df.loc[qidx].pred, 
                         actual=ioi_df.loc[qidx].actual, 
-                        config=config, split_index=split_index,
+                        config=config,
+                        split_index=split_index,
+                        categorical_cols=categorical_cols,
+                        highlight_invalid=True, 
                         savedir=unfiltered_cfs_savedir)    
     
     print('Getting changed features...')
@@ -684,8 +687,11 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
         plot_local_cf_heatmap(dfXy, df_dcf, query_instance, 
                             query_idx=qidx, 
                             pred=ioi_df.loc[qidx].pred, 
-                            actual=ioi_df.loc[qidx].actual, 
-                            config=config, split_index=split_index,
+                            actual=ioi_df.loc[qidx].actual,
+                            config=config, 
+                            split_index=split_index,
+                            categorical_cols=categorical_cols,
+                            highlight_invalid=False, 
                             savedir=filtered_cfs_savedir)  
         
         print('Getting changed features...')
@@ -694,4 +700,3 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
         print('Computing Distances...')
         _diffs, _cf_ana = get_local_cf_distances(
             query_instance, df_dcf, config, split_index, sort_by="L2_dist", savedir=filtered_cfs_savedir)
-

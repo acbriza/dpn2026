@@ -33,7 +33,7 @@ def main():
         # we only received a config file: run all experiments
         rework = False
         resume = False
-        
+
     if len(sys.argv)>=3:
         rework = sys.argv[2]=='rework_instances'
         resume = sys.argv[2]=='resume_instances'
@@ -166,8 +166,8 @@ def main():
         # #### Produce reports for each Instance of Interest
         for qidx in qindices:
             if resume: 
-                if qidx in target_instance_indices:
                     # skip target instances (because of error, or reports already exist)
+                if qidx in target_instance_indices:
                     print(f"Skipping instance {qidx}...")             
                     continue                
 

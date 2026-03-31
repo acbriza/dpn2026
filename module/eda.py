@@ -101,10 +101,10 @@ def _classify_columns(df, target):
     for c in df.columns:
         if c == target:
             continue
-        if df[c].nunique() <= 2:
-            cat_cols.append(c)
-        elif pd.api.types.is_numeric_dtype(df[c]):
+        if pd.api.types.is_numeric_dtype(df[c]):
             num_cols.append(c)
+        elif df[c].nunique() <= 2:
+            cat_cols.append(c)
         # multi-class categoricals ignored (extend as needed)
     return num_cols, cat_cols
 
@@ -295,7 +295,7 @@ def fig_distributions(df, num_cols, target, output_dir: Path,
             ax.hist(v, bins=25, density=True, alpha=0.30, color=c, linewidth=0)
             kde_x = np.linspace(v.min(), v.max(), 300)
             kde   = stats.gaussian_kde(v)
-            ax.plot(kde_x, kde(kde_x), color=c, lw=1.5, label=f"{target}={g}")
+            ax.plot(kde_x, kde(kde_x), color=c, lw=1.5, label=custom_labels['label_names']['target'][g])
             ax.plot(v, np.full(len(v), -0.002 * ax.get_ylim()[1]),
                     "|", color=c, alpha=0.3, markersize=3)
 
@@ -308,26 +308,23 @@ def fig_distributions(df, num_cols, target, output_dir: Path,
                     bbox=dict(boxstyle="round,pad=0.3", fc="white",
                               ec="0.8", lw=0.6))
 
-        ax.set_xticklabels(custom_labels['label_names']['target'])
         ax.set_xlabel(custom_labels['target_name'])
-
         ax.set_xlabel(col)
         ax.set_ylabel("Density")
         # ax.set_title(col, pad=4)
 
     # Legend on last used axis
     handles = [plt.Line2D([0], [0], color=PALETTE_LIST[k], lw=2,
-                           label=f"{target}={groups[k]}") for k in range(2)]
-    axes[len(num_cols) - 1].legend(handles=handles, loc="upper right",
-                                   fontsize=8)
+                           label=custom_labels['label_names']['target'][k]) for k in range(2)]
+    axes[0].legend(handles=handles, loc="upper right", fontsize=8)
 
     # Hide unused panels
     for j in range(len(num_cols), len(axes)):
         axes[j].set_visible(False)
 
-    fig.suptitle(title or "Figure 1. Distribution of Numerical Features by Binary Outcome",
+    fig.suptitle(title or "Distribution of Numerical Features by Binary Outcome",
                  fontsize=12, fontweight="bold", y=1.01)
-    path = output_dir / "fig1_distributions.png"
+    path = output_dir / "distributions.png"
     _save(fig, path)
     return path
 
@@ -949,16 +946,19 @@ def fig_histogram(df, num_cols, target, output_dir: Path,
         bar_width   = (bins[1] - bins[0]) * 1.68
 
         ax.bar(bin_centers - bar_width / 2, counts0, width=bar_width,
-               color=PALETTE_LIST[0], alpha=0.80, label=f"{target}={g0}",
+               color=PALETTE_LIST[0], alpha=0.80, label=custom_labels['label_names']['target'][g0],
                linewidth=0.4, edgecolor="white")
+        
         ax.bar(bin_centers + bar_width / 2, counts1, width=bar_width,
-               color=PALETTE_LIST[1], alpha=0.80, label=f"{target}={g1}",
+               color=PALETTE_LIST[1], alpha=0.80, label=custom_labels['label_names']['target'][g1],
                linewidth=0.4, edgecolor="white")
 
         ax.set_xticks([0,1])
-        ax.set_xticklabels(custom_labels['label_names']['target'])
+        if col in custom_labels['label_names'].keys():
+            ax.set_xticklabels(custom_labels['label_names'][col])
+        else:
+            ax.set_xticklabels(custom_labels['label_names']['default'])
         ax.set_ylabel("Count")
-        ax.set_xlabel(custom_labels['target_name'])
         ax.set_title(col, pad=4)
         if i == 0:
             ax.legend(fontsize=8)
@@ -966,9 +966,9 @@ def fig_histogram(df, num_cols, target, output_dir: Path,
     for j in range(len(num_cols), len(axes)):
         axes[j].set_visible(False)
 
-    fig.suptitle(title or "Figure 12. Histograms of Numerical Features by Binary Outcome",
+    fig.suptitle(title or "Histograms of Numerical Features by Binary Outcome",
                  fontsize=12, fontweight="bold", y=1.01)
-    path = output_dir / "fig12_histogram.png"
+    path = output_dir / "histogram.png"
     _save(fig, path)
     return path
 
@@ -1007,15 +1007,14 @@ def run_eda(df: pd.DataFrame,
     table_categorical(df, cat_cols, target, output_dir)
 
     print("\n[Figures]")
-    if num_cols:
-        if continuous:        
-            fig_distributions(df, num_cols, target, output_dir,
-                            custom_labels=custom_labels, grid_shape=grid_shape, title=title)
-            fig_boxplots(df, num_cols, target, output_dir,
+    if continuous:        
+        fig_distributions(df, num_cols, target, output_dir,
                         custom_labels=custom_labels, grid_shape=grid_shape, title=title)
-        else:
-            fig_histogram(df, num_cols, target, output_dir,
-                        custom_labels=custom_labels, grid_shape=grid_shape, title=title)
+        fig_boxplots(df, num_cols, target, output_dir,
+                    custom_labels=custom_labels, grid_shape=grid_shape, title=title)
+    else:
+        fig_histogram(df, num_cols, target, output_dir,
+                    custom_labels=custom_labels, grid_shape=grid_shape, title=title)
 
     print(f"  EDA complete. All outputs in: {output_dir}/")
 
@@ -1059,7 +1058,11 @@ def demo():
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    config_path = Path(r'experiments')
+    # ## Read Config File    
+    current_file = Path(__file__).resolve() # Get the absolute path of the current file
+    script_dir = current_file.parent # Get the directory containing the file
+
+    config_path = Path(script_dir /'experiments')    
     config_filename =  "bin_cf_final.yml"
     config_dict = ymlconfig.load_config(config_path / config_filename)
     config = ymlconfig.dict_to_namespace(config_dict)
@@ -1069,7 +1072,7 @@ if __name__ == "__main__":
     outputdir.mkdir(parents=True, exist_ok=True)
     print(outputdir)    
 
-    D = DPN_data(config.data.dataset_path)
+    D = DPN_data(config.data.dataset_path[3:])
     D.load(classification=config.experiment.classification_type)
 
     dfdpn = D.df
@@ -1088,7 +1091,7 @@ if __name__ == "__main__":
         "label_names" : {
             "target" : ["Confirmed", "Not-confirmed"],
             "SEX" : ["Male", "Female"],
-            "Default" : ["Yes", "No"],
+            "default" : ["Yes", "No"],
         }
     }
 
@@ -1102,15 +1105,15 @@ if __name__ == "__main__":
                 continuous=False,
                 )
 
-    # cols = ['AGE', 'DM_DUR', 'HBA1C', 'MNSI'] + [target_col]
-    # eda.run_eda(dfXy[cols], 
-    #             target=target_col, 
-    #             output_dir=outputdir/'profile',
-    #             title="Continuous Data from Profile and MNSI Data",
-    #             custom_labels=custom_labels,
-    #             grid_shape=(2,2),
-    #             continuous=True,
-    #             )
+    cols = ['AGE', 'DM_DUR', 'HBA1C', 'MNSI'] + [target_col]
+    run_eda(dfXy[cols], 
+                target=target_col, 
+                output_dir=outputdir/'profile',
+                title="Continuous Data from Profile and MNSI Data",
+                custom_labels=custom_labels,
+                grid_shape=(2,2),
+                continuous=True,
+                )
 
     cols = D.ncs_cols + [target_col]
     run_eda(dfXy[cols], 
@@ -1122,12 +1125,12 @@ if __name__ == "__main__":
                 continuous=True
                 )
 
-    # cols = D.sudo_cols + [target_col]
-    # eda.run_eda(dfXy[cols], 
-    #             target=target_col, 
-    #             title="Sudoscan",
-    #             grid_shape=(2,3),
-    #             custom_labels=custom_labels,
-    #             output_dir=outputdir/'sudo',
-    #             continuous=True
-    #             )
+    cols = D.sudo_cols + [target_col]
+    run_eda(dfXy[cols], 
+                target=target_col, 
+                title="Sudoscan",
+                grid_shape=(2,3),
+                custom_labels=custom_labels,
+                output_dir=outputdir/'sudo',
+                continuous=True
+                )

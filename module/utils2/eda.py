@@ -14,6 +14,24 @@ Usage:
     df = pd.read_csv("your_data.csv")
     run_eda(df, target="your_binary_column", output_dir="eda_output")
 """
+import warnings
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import random
+
+
+from pathlib import Path
+import sys 
+sys.path.append('..')  
+
+from dataload import DPN_data
+import ymlconfig
+
+
+warnings.filterwarnings('ignore')
+
 
 import warnings
 from pathlib import Path
@@ -83,10 +101,10 @@ def _classify_columns(df, target):
     for c in df.columns:
         if c == target:
             continue
-        if pd.api.types.is_numeric_dtype(df[c]):
-            num_cols.append(c)
-        elif df[c].nunique() <= 2:
+        if df[c].nunique() <= 2:
             cat_cols.append(c)
+        elif pd.api.types.is_numeric_dtype(df[c]):
+            num_cols.append(c)
         # multi-class categoricals ignored (extend as needed)
     return num_cols, cat_cols
 
@@ -248,7 +266,9 @@ def table_categorical(df, cat_cols, target, output_dir: Path):
 # ---------------------------------------------------------------------------
 
 def fig_distributions(df, num_cols, target, output_dir: Path,
-                      grid_shape: tuple | None = None, title: str | None = None):
+                      custom_labels: dict | None = None,
+                      grid_shape: tuple | None = None, 
+                      title: str | None = None):
     """
     One panel per numerical feature: overlaid histograms + KDE curves for
     each class, with a rug plot and reported Mann-Whitney p-value.
@@ -288,9 +308,12 @@ def fig_distributions(df, num_cols, target, output_dir: Path,
                     bbox=dict(boxstyle="round,pad=0.3", fc="white",
                               ec="0.8", lw=0.6))
 
+        ax.set_xticklabels(custom_labels['label_names']['target'])
+        ax.set_xlabel(custom_labels['target_name'])
+
         ax.set_xlabel(col)
         ax.set_ylabel("Density")
-        ax.set_title(col, pad=4)
+        # ax.set_title(col, pad=4)
 
     # Legend on last used axis
     handles = [plt.Line2D([0], [0], color=PALETTE_LIST[k], lw=2,
@@ -314,7 +337,9 @@ def fig_distributions(df, num_cols, target, output_dir: Path,
 # ---------------------------------------------------------------------------
 
 def fig_boxplots(df, num_cols, target, output_dir: Path,
-                 grid_shape: tuple | None = None, title: str | None = None):
+                 custom_labels: dict | None = None,
+                 grid_shape: tuple | None = None, 
+                 title: str | None = None):
     """
     Box-and-whisker plots with overlaid strip for each numerical feature,
     annotated with median and IQR.
@@ -362,17 +387,17 @@ def fig_boxplots(df, num_cols, target, output_dir: Path,
                     fontsize=7.5, color="0.3")
 
         ax.set_xticks([1, 2])
-        ax.set_xticklabels(labels)
-        ax.set_xlabel(target)
+        ax.set_xticklabels(custom_labels['label_names']['target'])
+        ax.set_xlabel(custom_labels['target_name'])
         ax.set_ylabel(col)
-        ax.set_title(col, pad=4)
+        # ax.set_title(col, pad=4)
 
     for j in range(len(num_cols), len(axes)):
         axes[j].set_visible(False)
 
-    fig.suptitle(title or "Figure 2. Box Plots of Numerical Features by Binary Outcome",
+    fig.suptitle(title or "Box Plots of Numerical Features by Binary Outcome",
                  fontsize=12, fontweight="bold", y=1.01)
-    path = output_dir / "fig2_boxplots.png"
+    path = output_dir / "boxplots.png"
     _save(fig, path)
     return path
 
@@ -885,7 +910,9 @@ def fig_bar(df, num_cols, target, output_dir: Path):
 # ---------------------------------------------------------------------------
 
 def fig_histogram(df, num_cols, target, output_dir: Path,
-                  grid_shape: tuple | None = None, title: str | None = None):
+                  custom_labels: dict | None = None,
+                  grid_shape: tuple | None = None, 
+                  title: str | None = None):
     """
     Plain histograms for each numerical feature, stratified by binary target.
     Bars for each class are plotted side-by-side. Bin count is set via the
@@ -928,8 +955,10 @@ def fig_histogram(df, num_cols, target, output_dir: Path,
                color=PALETTE_LIST[1], alpha=0.80, label=f"{target}={g1}",
                linewidth=0.4, edgecolor="white")
 
-        ax.set_xticks([])
+        ax.set_xticks([0,1])
+        ax.set_xticklabels(custom_labels['label_names']['target'])
         ax.set_ylabel("Count")
+        ax.set_xlabel(custom_labels['target_name'])
         ax.set_title(col, pad=4)
         if i == 0:
             ax.legend(fontsize=8)
@@ -946,8 +975,13 @@ def fig_histogram(df, num_cols, target, output_dir: Path,
 
 
 
-def run_eda(df: pd.DataFrame, target: str, output_dir: Path = Path("eda_output"),
-            title: str | None = None, grid_shape: tuple | None = None, continuous: bool=True):
+def run_eda(df: pd.DataFrame, 
+            target: str, 
+            output_dir: Path = Path("eda_output"),
+            title: str | None = None, 
+            custom_labels: dict | None = None, 
+            grid_shape: tuple | None = None, 
+            continuous: bool=True):
     """
     Run the full scientific EDA pipeline.
 
@@ -961,9 +995,7 @@ def run_eda(df: pd.DataFrame, target: str, output_dir: Path = Path("eda_output")
                  layout for multi-panel figures. Defaults to auto (max 3 cols).
     """
     output_dir.mkdir(parents=True, exist_ok=True)
-    print(f"\n{'='*60}")
     print(f"  Scientific EDA  |  n={len(df)}  |  target='{target}'")
-    print(f"{'='*60}\n")
 
     num_cols, cat_cols = _classify_columns(df, target)
     print(f"Numerical features ({len(num_cols)}): {num_cols}")
@@ -978,25 +1010,17 @@ def run_eda(df: pd.DataFrame, target: str, output_dir: Path = Path("eda_output")
     if num_cols:
         if continuous:        
             fig_distributions(df, num_cols, target, output_dir,
-                            grid_shape=grid_shape, title=title)
+                            custom_labels=custom_labels, grid_shape=grid_shape, title=title)
             fig_boxplots(df, num_cols, target, output_dir,
-                        grid_shape=grid_shape, title=title)
+                        custom_labels=custom_labels, grid_shape=grid_shape, title=title)
         else:
             fig_histogram(df, num_cols, target, output_dir,
-                        grid_shape=grid_shape, title=title)
-    if (num_cols + cat_cols):
-        fig_missing_values(df, num_cols, cat_cols, output_dir)
+                        custom_labels=custom_labels, grid_shape=grid_shape, title=title)
 
-    print(f"\n{'='*60}")
     print(f"  EDA complete. All outputs in: {output_dir}/")
-    print(f"{'='*60}\n")
 
 
-# ---------------------------------------------------------------------------
-# Demo — runs with synthetic data when executed directly
-# ---------------------------------------------------------------------------
-
-if __name__ == "__main__":
+def demo():
     np.random.seed(0)
     N = 600
     outcome = np.random.choice([0, 1], size=N, p=[0.62, 0.38])
@@ -1029,3 +1053,81 @@ if __name__ == "__main__":
         demo_df.loc[idx, col] = np.nan
 
     run_eda(demo_df, target="outcome", output_dir=Path("eda_output_demo"))
+
+# ---------------------------------------------------------------------------
+# Demo — runs with synthetic data when executed directly
+# ---------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    config_path = Path(r'experiments')
+    config_filename =  "bin_cf_final.yml"
+    config_dict = ymlconfig.load_config(config_path / config_filename)
+    config = ymlconfig.dict_to_namespace(config_dict)
+    print(config_dict)
+
+    outputdir = config_path /  config.experiment.classification_type /  'eda'
+    outputdir.mkdir(parents=True, exist_ok=True)
+    print(outputdir)    
+
+    D = DPN_data(config.data.dataset_path)
+    D.load(classification=config.experiment.classification_type)
+
+    dfdpn = D.df
+    data_cols = dfdpn.drop(D.non_data_cols, axis=1, errors="ignore").columns
+    X = dfdpn[data_cols]
+    target_col = "Confirmed_Binary_DPN"
+    y = dfdpn[target_col]
+    print(X.shape, y.shape)    
+
+    dfXy = pd.concat([X, y], axis=1)
+    print(X.shape, y.shape, dfXy.shape)
+
+
+    custom_labels = {
+        "target_name" : "DPN Type",
+        "label_names" : {
+            "target" : ["Confirmed", "Not-confirmed"],
+            "SEX" : ["Male", "Female"],
+            "Default" : ["Yes", "No"],
+        }
+    }
+
+    cols = ['SEX', 'SUBJ', 'INSULIN'] + D.comorbidity_cols + D.neuro_cols + [target_col]
+    run_eda(dfXy[cols], 
+                target=target_col, 
+                output_dir=outputdir/'categorical',
+                title="Binary Data from Profile, Commorbidity, Neurological Study",
+                custom_labels=custom_labels,
+                grid_shape=(4,3),
+                continuous=False,
+                )
+
+    # cols = ['AGE', 'DM_DUR', 'HBA1C', 'MNSI'] + [target_col]
+    # eda.run_eda(dfXy[cols], 
+    #             target=target_col, 
+    #             output_dir=outputdir/'profile',
+    #             title="Continuous Data from Profile and MNSI Data",
+    #             custom_labels=custom_labels,
+    #             grid_shape=(2,2),
+    #             continuous=True,
+    #             )
+
+    cols = D.ncs_cols + [target_col]
+    run_eda(dfXy[cols], 
+                target=target_col, 
+                title="Nerve Conduction Studies",
+                grid_shape=(6,3),
+                custom_labels=custom_labels,
+                output_dir=outputdir/'ncs',
+                continuous=True
+                )
+
+    # cols = D.sudo_cols + [target_col]
+    # eda.run_eda(dfXy[cols], 
+    #             target=target_col, 
+    #             title="Sudoscan",
+    #             grid_shape=(2,3),
+    #             custom_labels=custom_labels,
+    #             output_dir=outputdir/'sudo',
+    #             continuous=True
+    #             )

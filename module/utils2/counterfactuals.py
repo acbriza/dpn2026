@@ -280,8 +280,7 @@ def get_instances_of_interest(model, X_test, y_test, config, split_index, thresh
     ioi_df["actual"] = y_test.iloc[ioi_idx].values
     ioi_df["misclassified"] = ioi_df["pred"] != ioi_df["actual"]
     
-    print(f"Found {len(ioi_df)} misclassified and borderline cases (|p - {threshold:.4f}| ≤ {delta})")
-    
+    print(f"Found {len(ioi_df)} misclassified and borderline cases (|p - {threshold:.4f}| ≤ {delta}): indices {ioi_df.index.to_list()}")
     display_cols = X_test.columns[:4].to_list() + ['margin', 'misclassified', 'pred_proba','pred','actual']
     if config.experiment.verbosity > 0:
         display(ioi_df[display_cols])
@@ -394,8 +393,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
                 highlight_row = False
                 for col in progressive_categorical_cols:
                     col_idx = diff.columns.get_loc(col)
-                    delta = df_dcf.iat[row_idx,col_idx] - query_instance.iat[0,col_idx]
-                    if delta == -1:
+                    if diff.iat[row_idx, col_idx] == -1:
                         hightlight_cells.append((row_idx, col_idx))
                         highlight_row = True
                 if highlight_row:
@@ -472,7 +470,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
             filename += f'_qidx{qstr}_{idx_start_str}-{idx_end_str}'
             filename += '.png'
             plt.savefig(savedir / filename)
-            print(f'Counterfactual heatmaps saved to {filename} in {Path(*savedir.parts[-8:])}')
+            print(f'Counterfactual heatmaps saved to {filename} in {Path(*savedir.parts[-7:])}')
         plt.close(fig) if backend in ["Agg"] else plt.show()
     return
 
@@ -643,7 +641,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
     filtered_cfs_savedir.mkdir(parents=True, exist_ok=True) 
         
     print(f'Creating reports for Instance {qidx}...')
-    print(f'Outputs will be saved to {Path(*savedir.parts[-8:])}.')
+    print(f'Outputs will be saved to {Path(*savedir.parts[-7:])}.')
 
     X = dfXy.drop(['Confirmed_Binary_DPN'], axis=1)
     query_instance = X[qidx:qidx+1]

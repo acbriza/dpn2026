@@ -6,8 +6,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import random
 import math
-import os
 import seaborn as sns
+from pathlib import Path
+import os
 
 from sklearn.base import BaseEstimator, ClassifierMixin
 from catboost import CatBoostClassifier
@@ -60,32 +61,33 @@ class CatBoostWrapper(BaseEstimator, ClassifierMixin):
         proba_1 = self.predict_proba(X)[:, 1]
         return (proba_1 >= self.threshold).astype(int)
     
-def test_wrapped_model(model, wrapped_model, X_test, y_test, threshold):
+def test_wrapped_model(model, wrapped_model, X_test, y_test, threshold, verbosity):
     # Evaluation at default threshold (0.5)
     y_pred = model.predict(X_test)
     y_pred_proba = model.predict_proba(X_test)
-    cm = confusion_matrix(y_test, y_pred)
-    print("Confusion Matrix at default threshold (0.5):")
-    print(cm)
-    # print(classification_report(y_test, y_pred, target_names=["Confirmed", "non-Confirmed"]))
+    cm_default = confusion_matrix(y_test, y_pred)
 
     # Evaluation at custom threshold
     y_pred_custom = wrapped_model.predict(X_test)
     y_pred_proba_custom = wrapped_model.predict_proba(X_test)
-    print(f"Confusion Matrix at custom threshold ({threshold}):")
-    cm = confusion_matrix(y_test, y_pred_custom)
-    print(cm)
-    # print(classification_report(y_test, y_pred_custom, target_names=["Confirmed", "non-Confirmed"]))
+    cm_custom = confusion_matrix(y_test, y_pred_custom)
+    
+    if verbosity>0: 
+        # get dissimilar predictions
+        mask = y_pred_custom != y_pred
 
-    # get dissimilar predictions
-    mask = y_pred_custom != y_pred
+        print(f"Confusion Matrix at default threshold (0.5): /n{cm_default}")
+        # print(classification_report(y_test, y_pred, target_names=["Confirmed", "non-Confirmed"]))
+        print(f"Confusion Matrix at custom threshold ({threshold:.2f}): /n({cm_custom}):")
+        # print(classification_report(y_test, y_pred_custom, target_names=["Confirmed", "non-Confirmed"]))
 
-    print('Rows with different predictions at thresholds: ')
-    df = X_test[mask].copy()
-    df['pred_0.50'] = y_pred[mask]
-    df[f'pred_{threshold:.2f}'] = y_pred_custom[mask]
-    df['pred_proba'] = y_pred_proba[mask][:,1] 
-    display(df)
+        print('Rows with different predictions at thresholds: ')
+        df = X_test[mask].copy()
+        df['pred_0.50'] = y_pred[mask]
+        df[f'pred_{threshold:.2f}'] = y_pred_custom[mask]
+        df['pred_proba_0.50'] = y_pred_proba[mask][:,1] 
+        df[f'pred_proba_{threshold:.2f}'] = y_pred_proba_custom[mask][:,1] 
+        display(df)
     return 
 
 # GLOBAL COUNTERFACTUALS 
@@ -239,8 +241,9 @@ def get_local_permitted_range(dfXy, instance, features_to_vary,
     # visualize min max with patient data
     df_vis = pd.concat([instance, instance_permitted_range_df.transpose()]).transpose()
     df_vis.columns = ['instance', 'min', 'max']
-    print("Local permitted range:")
-    display(df_vis)
+    if config.experiment.verbosity:
+        print("Local permitted range:") 
+        display(df_vis) 
     if savedir:
         filename = f'{config.model.code}_split{split_index}_instance_permitted_range.csv'
         df_vis.to_csv(savedir / filename)        
@@ -469,7 +472,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
             filename += f'_qidx{qstr}_{idx_start_str}-{idx_end_str}'
             filename += '.png'
             plt.savefig(savedir / filename)
-            print(f'Counterfactual heatmaps saved to {filename} in {savedir}')
+            print(f'Counterfactual heatmaps saved to {filename} in {Path(*savedir.parts[-8:])}')
         plt.close(fig) if backend in ["Agg"] else plt.show()
     return
 
@@ -640,7 +643,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
     filtered_cfs_savedir.mkdir(parents=True, exist_ok=True) 
         
     print(f'Creating reports for Instance {qidx}...')
-    print(f'Outputs will be saved to {savedir}.')
+    print(f'Outputs will be saved to {Path(*savedir.parts[-8:])}.')
 
     X = dfXy.drop(['Confirmed_Binary_DPN'], axis=1)
     query_instance = X[qidx:qidx+1]

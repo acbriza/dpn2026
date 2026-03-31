@@ -9,8 +9,12 @@ from catboost import CatBoostClassifier
 
 from pathlib import Path
 import shutil
+
 import sys 
 sys.path.append('..')  
+import warnings
+warnings.filterwarnings('ignore')
+
 import dice_ml
 
 from dataload import DPN_data
@@ -81,9 +85,11 @@ def main():
     # ## Define custom column lists
     features_to_vary = dfXy.columns.drop(['SEX', 'Confirmed_Binary_DPN']).to_list()
     continuous_cols = dfXy.columns.difference(D.categorical_cols+['SEX', 'Confirmed_Binary_DPN']).to_list()
-    print('features to vary columns:\n', len(features_to_vary), features_to_vary)
-    print('categorical columns:\n', len(D.categorical_cols), D.categorical_cols)
-    print('continuous_columns:\n', len(continuous_cols), continuous_cols)
+
+    if config.experiment.verbosity > 0:
+        print('features to vary columns:\n', len(features_to_vary), features_to_vary)
+        print('categorical columns:\n', len(D.categorical_cols), D.categorical_cols)
+        print('continuous_columns:\n', len(continuous_cols), continuous_cols)
 
     # ### Load trained model splits from Explainability Stage
     ksplit_trained_models = joblib.load(config_path / config.explainability.ksplit_trained_model_results_file)
@@ -136,7 +142,7 @@ def main():
 
         # ### Wrap model so we can use a custom threshold
         wrapped_model = cf.CatBoostWrapper(model, threshold)
-        cf.test_wrapped_model(model, wrapped_model, X_test, y_test, threshold)
+        cf.test_wrapped_model(model, wrapped_model, X_test, y_test, threshold, config.experiment.verbosity)
 
         ###  Define Global Permitted Range
         global_permitted_range = cf.get_global_permitted_range(

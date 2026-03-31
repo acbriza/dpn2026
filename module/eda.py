@@ -95,17 +95,21 @@ GREY = "#AAAAAA"
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _classify_columns(df, target):
+def _classify_columns(df, target, continuous):
     """Return lists of numerical and binary-categorical columns."""
     num_cols, cat_cols = [], []
-    for c in df.columns:
-        if c == target:
-            continue
-        if pd.api.types.is_numeric_dtype(df[c]):
-            num_cols.append(c)
-        elif df[c].nunique() <= 2:
-            cat_cols.append(c)
-        # multi-class categoricals ignored (extend as needed)
+    if continuous:
+        num_cols = df.drop(target, axis=1).columns.to_list()
+    else:
+        cat_cols = df.drop(target, axis=1).columns.to_list()
+    # for c in df.columns:
+    #     if c == target:
+    #         continue
+    #     if pd.api.types.is_numeric_dtype(df[c]):
+    #         num_cols.append(c)
+    #     elif df[c].nunique() <= 2:
+    #         cat_cols.append(c)
+    #     # multi-class categoricals ignored (extend as needed)
     return num_cols, cat_cols
 
 
@@ -127,77 +131,71 @@ def _save(fig, path, tight=True):
 
 def table_descriptive(df, num_cols, target, output_dir: Path):
     """
-    Table 1: For each numerical feature, report N, mean±SD, median [IQR],
-    min–max, skewness, kurtosis, and normality test result, stratified by
-    the binary target.
-
-    Returns a DataFrame and saves a CSV + LaTeX file.
+    Table 1: One row per numerical feature. Columns are grouped as:
+      Range (Min, Max) | Mean ± SD (g0, g1, All) | Median [IQR] (g0, g1, All)
+      | Stats (Skewness, Kurtosis, p (MW-U), r (effect size))
     """
     groups = df[target].unique()
     g0, g1 = sorted(groups)[:2]
     df0 = df[df[target] == g0]
     df1 = df[df[target] == g1]
-
-    rows = []
+ 
+    def _normality(v):
+        if len(v) < 3:
+            return float("nan")
+        if len(v) <= 5000:
+            _, p = shapiro(v)
+        else:
+            _, p = kstest(v, "norm", args=(v.mean(), v.std()))
+        return p
+ 
+    rows = {}
     for col in num_cols:
         v_all = df[col].dropna()
         v0    = df0[col].dropna()
         v1    = df1[col].dropna()
-
-        # Normality (Shapiro-Wilk for n<5000, else KS)
-        def _normality(v):
-            if len(v) < 3:
-                return float("nan"), "–"
-            if len(v) <= 5000:
-                stat, p = shapiro(v)
-            else:
-                stat, p = kstest(v, "norm", args=(v.mean(), v.std()))
-            return p, ("yes" if p >= 0.05 else "no")
-
-        p_norm_all, norm_all = _normality(v_all)
-
+ 
         # Mann-Whitney U
         if len(v0) > 0 and len(v1) > 0:
             u_stat, p_mw = mannwhitneyu(v0, v1, alternative="two-sided")
             r_eff = _effect_size_r(u_stat, len(v0), len(v1))
         else:
             p_mw, r_eff = float("nan"), float("nan")
-
-        def _fmt(v):
-            if len(v) == 0:
-                return "–", "–", "–"
-            mean_sd = f"{v.mean():.2f} ± {v.std():.2f}"
-            med_iqr = (f"{v.median():.2f} "
-                       f"[{v.quantile(0.25):.2f}–{v.quantile(0.75):.2f}]")
-            rng = f"{v.min():.2f}–{v.max():.2f}"
-            return mean_sd, med_iqr, rng
-
-        ms_all, mi_all, rng_all = _fmt(v_all)
-        ms0,    mi0,    rng0    = _fmt(v0)
-        ms1,    mi1,    rng1    = _fmt(v1)
-
-        rows.append({
-            "Feature":           col,
-            "N (all)":           len(v_all),
-            "Mean ± SD (all)":   ms_all,
-            "Median [IQR] (all)":mi_all,
-            "Range (all)":       rng_all,
-            "Skewness":          f"{stats.skew(v_all):.2f}",
-            "Kurtosis":          f"{stats.kurtosis(v_all):.2f}",
-            "Normal?":           norm_all,
-            f"Mean ± SD ({g0})": ms0,
-            f"Median [IQR] ({g0})": mi0,
-            f"Mean ± SD ({g1})": ms1,
-            f"Median [IQR] ({g1})": mi1,
-            "p (MW-U)":          f"{p_mw:.4f}" if not np.isnan(p_mw) else "–",
-            "r (effect size)":   f"{r_eff:.3f}" if not np.isnan(r_eff) else "–",
-        })
-
-    tbl = pd.DataFrame(rows)
+ 
+        def _mean_sd(v):
+            return f"{v.mean():.2f} ± {v.std():.2f}" if len(v) > 0 else "–"
+ 
+        def _med_iqr(v):
+            return (f"{v.median():.2f} [{v.quantile(0.25):.2f}–{v.quantile(0.75):.2f}]"
+                    if len(v) > 0 else "–")
+ 
+        rows[col] = {
+            ("Range",        "Min"):              f"{v_all.min():.2f}" if len(v_all) > 0 else "–",
+            ("Range",        "Max"):              f"{v_all.max():.2f}" if len(v_all) > 0 else "–",
+            ("Mean ± SD",    str(g0)):            _mean_sd(v0),
+            ("Mean ± SD",    str(g1)):            _mean_sd(v1),
+            ("Mean ± SD",    "All"):              _mean_sd(v_all),
+            ("Median [IQR]", str(g0)):            _med_iqr(v0),
+            ("Median [IQR]", str(g1)):            _med_iqr(v1),
+            ("Median [IQR]", "All"):              _med_iqr(v_all),
+            ("Stats",        "Skewness"):         f"{stats.skew(v_all):.2f}"     if len(v_all) > 0 else "–",
+            ("Stats",        "Kurtosis"):         f"{stats.kurtosis(v_all):.2f}" if len(v_all) > 0 else "–",
+            ("Stats",        "p (MW-U)"):         f"{p_mw:.4f}"  if not np.isnan(p_mw)  else "–",
+            ("Stats",        "r (effect size)"):  f"{r_eff:.3f}" if not np.isnan(r_eff) else "–",
+        }
+ 
+    if not rows:
+        print("  Table 1 skipped — no numerical columns found.")
+        return None
+ 
+    tbl = pd.DataFrame.from_dict(rows, orient="index")
+    tbl.index.name = None
+    tbl.columns    = pd.MultiIndex.from_tuples(tbl.columns)
+ 
     csv_path = output_dir / "table1_descriptive.csv"
     tex_path = output_dir / "table1_descriptive.tex"
-    tbl.to_csv(csv_path, index=False)
-    tbl.to_latex(tex_path, index=False, longtable=True,
+    tbl.to_csv(csv_path)
+    tbl.to_latex(tex_path, longtable=True,
                  caption="Descriptive statistics of numerical features "
                          "stratified by binary outcome.",
                  label="tab:descriptive")
@@ -212,54 +210,76 @@ def table_descriptive(df, num_cols, target, output_dir: Path):
 
 def table_categorical(df, cat_cols, target, output_dir: Path):
     """
-    Table 2: Frequency & proportion of each binary categorical feature
-    stratified by target, plus chi-square test and Cramér's V.
+    Table 2: One row per categorical feature. Columns are grouped by category
+    (g0, g1, Total, Percent) for each category value, followed by chi-square
+    test statistics. The resulting DataFrame uses a MultiIndex column header.
     """
     if not cat_cols:
         return None
-
+ 
     groups = sorted(df[target].unique())
     g0, g1 = groups[0], groups[1]
-
-    rows = []
+    n_total_g0 = (df[target] == g0).sum()
+    n_total_g1 = (df[target] == g1).sum()
+    n_total    = len(df)
+ 
+    # Collect all unique category values across all features to build columns
+    all_cats = {}
     for col in cat_cols:
-        ct = pd.crosstab(df[col], df[target])
-        cats = ct.index.tolist()
-        for cat in cats:
-            n0 = ct.loc[cat, g0] if g0 in ct.columns else 0
-            n1 = ct.loc[cat, g1] if g1 in ct.columns else 0
-            t0 = (df[target] == g0).sum()
-            t1 = (df[target] == g1).sum()
-            rows.append({
-                "Feature":      col,
-                "Category":     cat,
-                f"n ({g0})":    n0,
-                f"% ({g0})":    f"{100*n0/t0:.1f}" if t0 > 0 else "–",
-                f"n ({g1})":    n1,
-                f"% ({g1})":    f"{100*n1/t1:.1f}" if t1 > 0 else "–",
-                "_ct":          ct,
-            })
-
-        # Chi-square + Cramér's V (once per feature, stored on first row)
-        chi2, p_chi, dof, _ = chi2_contingency(ct)
-        n_total = ct.values.sum()
-        v_cramer = np.sqrt(chi2 / (n_total * (min(ct.shape) - 1)))
-        rows[-1]["chi²"]         = f"{chi2:.2f}"
-        rows[-1]["df"]           = dof
-        rows[-1]["p (chi²)"]     = f"{p_chi:.4f}"
-        rows[-1]["Cramér's V"]   = f"{v_cramer:.3f}"
-
-    tbl = pd.DataFrame(rows).drop(columns=["_ct"])
+        all_cats[col] = sorted(df[col].dropna().unique())
+ 
+    # Global category names across all features (union, for consistent columns)
+    unique_cats = sorted({c for cats in all_cats.values() for c in cats})
+ 
+    rows = {}
+    for col in cat_cols:
+        ct   = pd.crosstab(df[col], df[target])
+        row  = {}
+ 
+        for cat in unique_cats:
+            if cat not in all_cats[col]:
+                # Feature doesn't have this category — fill with dashes
+                row[(str(cat), str(g0))]      = "–"
+                row[(str(cat), str(g1))]      = "–"
+                row[(str(cat), "Total")]      = "–"
+                row[(str(cat), "Percent (%)")]= "–"
+                continue
+ 
+            n0  = int(ct.loc[cat, g0]) if g0 in ct.columns else 0
+            n1  = int(ct.loc[cat, g1]) if g1 in ct.columns else 0
+            tot = n0 + n1
+            pct = f"{100 * tot / n_total:.1f}" if n_total > 0 else "–"
+ 
+            row[(str(cat), str(g0))]       = n0
+            row[(str(cat), str(g1))]       = n1
+            row[(str(cat), "Total")]       = tot
+            row[(str(cat), "Percent (%)")] = pct
+ 
+        # Chi-square + Cramér's V
+        chi2_val, p_chi, dof, _ = chi2_contingency(ct)
+        n_obs    = ct.values.sum()
+        v_cramer = np.sqrt(chi2_val / (n_obs * (min(ct.shape) - 1)))
+ 
+        row[("Stats", "chi²")]      = f"{chi2_val:.2f}"
+        row[("Stats", "df")]        = dof
+        row[("Stats", "p (chi²)")]  = f"{p_chi:.4f}"
+        row[("Stats", "Cramér's V")]= f"{v_cramer:.3f}"
+ 
+        rows[col] = row
+ 
+    tbl = pd.DataFrame.from_dict(rows, orient="index")
+    tbl.index.name = None
+    tbl.columns    = pd.MultiIndex.from_tuples(tbl.columns)
+ 
     csv_path = output_dir / "table2_categorical.csv"
     tex_path = output_dir / "table2_categorical.tex"
-    tbl.to_csv(csv_path, index=False)
-    tbl.to_latex(tex_path, index=False, longtable=True,
+    tbl.to_csv(csv_path)
+    tbl.to_latex(tex_path, longtable=True,
                  caption="Frequency distribution of categorical features "
                          "stratified by binary outcome.",
                  label="tab:categorical")
     print(f"  Table 2 saved → {csv_path}")
     return tbl
-
 
 # ---------------------------------------------------------------------------
 # Figure 1 — Distribution overview (histograms + KDE)
@@ -997,7 +1017,7 @@ def run_eda(df: pd.DataFrame,
     output_dir.mkdir(parents=True, exist_ok=True)
     print(f"  Scientific EDA  |  n={len(df)}  |  target='{target}'")
 
-    num_cols, cat_cols = _classify_columns(df, target)
+    num_cols, cat_cols = _classify_columns(df, target, continuous, )
     print(f"Numerical features ({len(num_cols)}): {num_cols}")
     print(f"Binary categorical features ({len(cat_cols)}): {cat_cols}")
     print()

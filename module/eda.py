@@ -285,7 +285,7 @@ def table_categorical(df, cat_cols, target, output_dir: Path):
 # Figure 1 — Distribution overview (histograms + KDE)
 # ---------------------------------------------------------------------------
 
-def fig_distributions(df, num_cols, target, output_dir: Path,
+def fig_distributions(df, num_cols, target, output_dir: Path, filename_prefix: str,
                       custom_labels: dict | None = None,
                       grid_shape: tuple | None = None, 
                       title: str | None = None):
@@ -336,15 +336,15 @@ def fig_distributions(df, num_cols, target, output_dir: Path,
     # Legend on last used axis
     handles = [plt.Line2D([0], [0], color=PALETTE_LIST[k], lw=2,
                            label=custom_labels['label_names']['target'][k]) for k in range(2)]
-    axes[0].legend(handles=handles, loc="upper right", fontsize=8)
+    axes[0].legend(handles=handles, loc="upper left", fontsize=8)
 
     # Hide unused panels
     for j in range(len(num_cols), len(axes)):
         axes[j].set_visible(False)
 
-    fig.suptitle(title or "Distribution of Numerical Features by Binary Outcome",
-                 fontsize=12, fontweight="bold", y=1.01)
-    path = output_dir / "distributions.png"
+    if title: #"Distribution of Numerical Features by Binary Outcome"
+        fig.suptitle(title, fontsize=12, fontweight="bold", y=1.01)
+    path = output_dir / f"{filename_prefix}_distributions.png"
     _save(fig, path)
     return path
 
@@ -353,7 +353,7 @@ def fig_distributions(df, num_cols, target, output_dir: Path,
 # Figure 2 — Box-and-whisker with individual points (strip)
 # ---------------------------------------------------------------------------
 
-def fig_boxplots(df, num_cols, target, output_dir: Path,
+def fig_boxplots(df, num_cols, target, output_dir: Path, filename_prefix: str,
                  custom_labels: dict | None = None,
                  grid_shape: tuple | None = None, 
                  title: str | None = None):
@@ -412,9 +412,9 @@ def fig_boxplots(df, num_cols, target, output_dir: Path,
     for j in range(len(num_cols), len(axes)):
         axes[j].set_visible(False)
 
-    fig.suptitle(title or "Box Plots of Numerical Features by Binary Outcome",
-                 fontsize=12, fontweight="bold", y=1.01)
-    path = output_dir / "boxplots.png"
+    if title: # or "Box Plots of Numerical Features by Binary Outcome"
+        fig.suptitle(title, fontsize=12, fontweight="bold", y=1.01)
+    path = output_dir / f"{filename_prefix}_boxplots.png"
     _save(fig, path)
     return path
 
@@ -926,7 +926,7 @@ def fig_bar(df, num_cols, target, output_dir: Path):
 # Figure 12 — Histograms (simple, no KDE overlay)
 # ---------------------------------------------------------------------------
 
-def fig_histogram(df, num_cols, target, output_dir: Path,
+def fig_histogram(df, num_cols, target, output_dir: Path, filename_prefix: str,
                   custom_labels: dict | None = None,
                   grid_shape: tuple | None = None, 
                   title: str | None = None):
@@ -986,9 +986,9 @@ def fig_histogram(df, num_cols, target, output_dir: Path,
     for j in range(len(num_cols), len(axes)):
         axes[j].set_visible(False)
 
-    fig.suptitle(title or "Histograms of Numerical Features by Binary Outcome",
-                 fontsize=12, fontweight="bold", y=1.01)
-    path = output_dir / "histogram.png"
+    if title: #"Histograms of Numerical Features by Binary Outcome"
+        fig.suptitle(title, fontsize=12, fontweight="bold", y=1.01)
+    path = output_dir / f"{filename_prefix}_histogram.png"
     _save(fig, path)
     return path
 
@@ -998,6 +998,7 @@ def fig_histogram(df, num_cols, target, output_dir: Path,
 def run_eda(df: pd.DataFrame, 
             target: str, 
             output_dir: Path = Path("eda_output"),
+            filename_prefix: str | None = None, 
             title: str | None = None, 
             custom_labels: dict | None = None, 
             grid_shape: tuple | None = None, 
@@ -1028,12 +1029,12 @@ def run_eda(df: pd.DataFrame,
 
     print("\n[Figures]")
     if continuous:        
-        fig_distributions(df, num_cols, target, output_dir,
+        fig_distributions(df, num_cols, target, output_dir, filename_prefix,
                         custom_labels=custom_labels, grid_shape=grid_shape, title=title)
-        fig_boxplots(df, num_cols, target, output_dir,
+        fig_boxplots(df, num_cols, target, output_dir, filename_prefix,
                     custom_labels=custom_labels, grid_shape=grid_shape, title=title)
     else:
-        fig_histogram(df, num_cols, target, output_dir,
+        fig_histogram(df, cat_cols, target, output_dir, filename_prefix,
                     custom_labels=custom_labels, grid_shape=grid_shape, title=title)
 
     print(f"  EDA complete. All outputs in: {output_dir}/")
@@ -1109,7 +1110,7 @@ if __name__ == "__main__":
     custom_labels = {
         "target_name" : "DPN Type",
         "label_names" : {
-            "target" : ["Confirmed", "Not-confirmed"],
+            "target" : ["Unconfirmed", "Confirmed"],
             "SEX" : ["Male", "Female"],
             "default" : ["Yes", "No"],
         }
@@ -1117,9 +1118,10 @@ if __name__ == "__main__":
 
     cols = ['SEX', 'SUBJ', 'INSULIN'] + D.comorbidity_cols + D.neuro_cols + [target_col]
     run_eda(dfXy[cols], 
-                target=target_col, 
+                target=target_col,
+                filename_prefix='categorical', 
                 output_dir=outputdir/'categorical',
-                title="Binary Data from Profile, Commorbidity, Neurological Study",
+                # title="Binary Data from Profile, Commorbidity, Neurological Study",
                 custom_labels=custom_labels,
                 grid_shape=(4,3),
                 continuous=False,
@@ -1128,29 +1130,32 @@ if __name__ == "__main__":
     cols = ['AGE', 'DM_DUR', 'HBA1C', 'MNSI'] + [target_col]
     run_eda(dfXy[cols], 
                 target=target_col, 
+                filename_prefix='profile', 
                 output_dir=outputdir/'profile',
-                title="Continuous Data from Profile and MNSI Data",
+                # title="Continuous Data from Profile and MNSI Data",
                 custom_labels=custom_labels,
-                grid_shape=(2,2),
+                grid_shape=(1,4),
                 continuous=True,
                 )
 
     cols = D.ncs_cols + [target_col]
     run_eda(dfXy[cols], 
                 target=target_col, 
-                title="Nerve Conduction Studies",
-                grid_shape=(6,3),
-                custom_labels=custom_labels,
+                filename_prefix='ncs', 
                 output_dir=outputdir/'ncs',
+                # title="Nerve Conduction Studies",
+                custom_labels=custom_labels,
+                grid_shape=(6,3),
                 continuous=True
                 )
 
     cols = D.sudo_cols + [target_col]
     run_eda(dfXy[cols], 
                 target=target_col, 
-                title="Sudoscan",
-                grid_shape=(2,3),
-                custom_labels=custom_labels,
                 output_dir=outputdir/'sudo',
+                filename_prefix='sudo', 
+                # title="Sudoscan",
+                custom_labels=custom_labels,
+                grid_shape=(2,3),
                 continuous=True
                 )

@@ -129,7 +129,7 @@ def _save(fig, path, tight=True):
 # Table 1 — Descriptive statistics
 # ---------------------------------------------------------------------------
 
-def table_descriptive(df, num_cols, target, output_dir: Path):
+def table_descriptive(df, num_cols, target, output_dir: Path, filename_prefix: str):
     """
     Table 1: One row per numerical feature. Columns are grouped as:
       Range (Min, Max) | Mean ± SD (g0, g1, All) | Median [IQR] (g0, g1, All)
@@ -192,8 +192,9 @@ def table_descriptive(df, num_cols, target, output_dir: Path):
     tbl.index.name = None
     tbl.columns    = pd.MultiIndex.from_tuples(tbl.columns)
  
-    csv_path = output_dir / "table1_descriptive.csv"
-    tex_path = output_dir / "table1_descriptive.tex"
+    csv_path = output_dir / f"{filename_prefix}_table_descriptive.csv"
+    tex_path = output_dir / f"{filename_prefix}_table_categorical.tex"
+
     tbl.to_csv(csv_path)
     tbl.to_latex(tex_path, longtable=True,
                  caption="Descriptive statistics of numerical features "
@@ -208,7 +209,7 @@ def table_descriptive(df, num_cols, target, output_dir: Path):
 # Table 2 — Categorical summary
 # ---------------------------------------------------------------------------
 
-def table_categorical(df, cat_cols, target, output_dir: Path):
+def table_categorical(df, cat_cols, target, output_dir: Path, filename_prefix: str):
     """
     Table 2: One row per categorical feature. Columns are grouped by category
     (g0, g1, Total, Percent) for each category value, followed by chi-square
@@ -271,8 +272,8 @@ def table_categorical(df, cat_cols, target, output_dir: Path):
     tbl.index.name = None
     tbl.columns    = pd.MultiIndex.from_tuples(tbl.columns)
  
-    csv_path = output_dir / "table2_categorical.csv"
-    tex_path = output_dir / "table2_categorical.tex"
+    csv_path = output_dir / f"{filename_prefix}_table_categorical.csv"
+    tex_path = output_dir / f"{filename_prefix}_table_categorical.tex"
     tbl.to_csv(csv_path)
     tbl.to_latex(tex_path, longtable=True,
                  caption="Frequency distribution of categorical features "
@@ -1024,8 +1025,8 @@ def run_eda(df: pd.DataFrame,
     print()
 
     print("[Tables]")
-    table_descriptive(df, num_cols, target, output_dir)
-    table_categorical(df, cat_cols, target, output_dir)
+    table_descriptive(df, num_cols, target, output_dir, filename_prefix)
+    table_categorical(df, cat_cols, target, output_dir, filename_prefix)
 
     print("\n[Figures]")
     if continuous:        
@@ -1116,46 +1117,93 @@ if __name__ == "__main__":
         }
     }
 
-    cols = ['SEX', 'SUBJ', 'INSULIN'] + D.comorbidity_cols + D.neuro_cols + [target_col]
+    cols = ['SEX', 'SUBJ', 'INSULIN']  + [target_col]
     run_eda(dfXy[cols], 
                 target=target_col,
-                filename_prefix='categorical', 
-                output_dir=outputdir/'categorical',
+                filename_prefix='categ_profile', 
+                output_dir=outputdir,
                 # title="Binary Data from Profile, Commorbidity, Neurological Study",
                 custom_labels=custom_labels,
-                grid_shape=(4,3),
+                grid_shape=(1,5),
+                continuous=False,
+                )
+
+    cols = D.comorbidity_cols + [target_col] 
+    run_eda(dfXy[cols], 
+                target=target_col,
+                filename_prefix='categ_comorbs', 
+                output_dir=outputdir,
+                # title="Binary Data from Profile, Commorbidity, Neurological Study",
+                custom_labels=custom_labels,
+                grid_shape=(1,5),
+                continuous=False,
+                )
+
+    cols = D.neuro_cols + [target_col]
+    run_eda(dfXy[cols], 
+                target=target_col,
+                filename_prefix='categ_neuro', 
+                output_dir=outputdir,
+                # title="Binary Data from Profile, Commorbidity, Neurological Study",
+                custom_labels=custom_labels,
+                grid_shape=(1,5),
                 continuous=False,
                 )
 
     cols = ['AGE', 'DM_DUR', 'HBA1C', 'MNSI'] + [target_col]
     run_eda(dfXy[cols], 
                 target=target_col, 
-                filename_prefix='profile', 
-                output_dir=outputdir/'profile',
+                filename_prefix='cont_profile_mnsi', 
+                output_dir=outputdir,
                 # title="Continuous Data from Profile and MNSI Data",
                 custom_labels=custom_labels,
                 grid_shape=(1,4),
                 continuous=True,
                 )
 
-    cols = D.ncs_cols + [target_col]
+    ncs_cols1 = ['SSA_L', 'SSA_R', 'SSC_L', 'SSC_R', 'SPSA_L', 'SPSA_R']
+    ncs_cols2 = ['SPSC_L', 'SPSC_R', 'MCV_L', 'MCV_R', 'DL_L', 'DL_R']
+    ncs_cols3 = ['CMAPANK_L', 'CMAPANK_R', 'CMAPKNE_L', 'CMAPKNE_R', 'FWAVE_L', 'FWAVE_R']
+
+    cols = ncs_cols1 + [target_col]
     run_eda(dfXy[cols], 
                 target=target_col, 
-                filename_prefix='ncs', 
-                output_dir=outputdir/'ncs',
+                filename_prefix='cont_ncs1', 
+                output_dir=outputdir,
                 # title="Nerve Conduction Studies",
                 custom_labels=custom_labels,
-                grid_shape=(6,3),
+                grid_shape=(1,6),
+                continuous=True
+                )
+    cols = ncs_cols2 + [target_col]
+    run_eda(dfXy[cols], 
+                target=target_col, 
+                filename_prefix='cont_ncs2', 
+                output_dir=outputdir,
+                # title="Nerve Conduction Studies",
+                custom_labels=custom_labels,
+                grid_shape=(1,6),
+                continuous=True
+                )
+    
+    cols = ncs_cols3 + [target_col]
+    run_eda(dfXy[cols], 
+                target=target_col, 
+                filename_prefix='cont_ncs3', 
+                output_dir=outputdir,
+                # title="Nerve Conduction Studies",
+                custom_labels=custom_labels,
+                grid_shape=(1,6),
                 continuous=True
                 )
 
     cols = D.sudo_cols + [target_col]
     run_eda(dfXy[cols], 
                 target=target_col, 
-                output_dir=outputdir/'sudo',
-                filename_prefix='sudo', 
+                output_dir=outputdir,
+                filename_prefix='cont_sudo', 
                 # title="Sudoscan",
                 custom_labels=custom_labels,
-                grid_shape=(2,3),
+                grid_shape=(1,6),
                 continuous=True
                 )

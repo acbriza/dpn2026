@@ -406,7 +406,7 @@ def fig_boxplots(df, num_cols, target, output_dir: Path, filename_prefix: str,
 
         ax.set_xticks([1, 2])
         ax.set_xticklabels(custom_labels['label_names']['target'])
-        ax.set_xlabel(custom_labels['target_name'])
+        # ax.set_xlabel(custom_labels['target_name'])
         ax.set_ylabel(col)
         # ax.set_title(col, pad=4)
 
@@ -1075,6 +1075,27 @@ def demo():
 
     run_eda(demo_df, target="outcome", output_dir=Path("eda_output_demo"))
 
+
+def table_features(features_desc_filename: str, outputdir: Path):
+    df = pd.read_excel(features_desc_filename, sheet_name='Features')
+    df[['Group','Code', 'Description']].to_latex(
+        outputdir / 'features_desc.tex',
+        longtable=True,
+        index=False,
+        na_rep='',
+        caption="A listing of features, their description and grouping.",
+        label="tab:features"
+    )
+    df[['Code', 'Description', 'Counterfactual', 'Reason']].to_latex(
+        outputdir / 'features_cf.tex',
+        longtable=True,
+        index=False,
+        na_rep='',
+        caption="A listing of features and their suitability counterfactual analysis.",
+        label="tab:cf"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Demo — runs with synthetic data when executed directly
 # ---------------------------------------------------------------------------
@@ -1107,13 +1128,14 @@ if __name__ == "__main__":
     dfXy = pd.concat([X, y], axis=1)
     print(X.shape, y.shape, dfXy.shape)
 
+    table_features(r'dataset/DPN Features.xlsx',outputdir)
 
     custom_labels = {
         "target_name" : "DPN Type",
         "label_names" : {
             "target" : ["Unconfirmed", "Confirmed"],
             "SEX" : ["Male", "Female"],
-            "default" : ["Yes", "No"],
+            "default" : ["No", "Yes"],
         }
     }
 

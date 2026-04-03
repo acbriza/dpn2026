@@ -20,9 +20,6 @@ from utils2 import explainability as exp
 
 backend = matplotlib.get_backend()
 
-actionable_cols = ['HBA1C', 'DSLPDMIA', 'INSULIN']
-progressive_cols = ['AGE', 'DM_DUR', 'HPN', 'PAOD', 'CKD', 'GBS', 'DEC_VS', 'DEC_PPS', 'DEC_LTS', 'DEC_AR', 'MNSI']
-immutable_cols = ["SEX"]
 
 # Feature list from data loader
 # profile_cols = ['SEX', 'AGE', 'SUBJ', 'DM_DUR', 'INSULIN', 'HBA1C']
@@ -344,6 +341,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
     verbosity = config.experiment.verbosity
     figsize_x = config.reporting.cf_heatmap.figsize.x 
     figsize_y = config.reporting.cf_heatmap.figsize.y
+    progressive_cols = [] if config.dice.cf_features.progressive=='none' else config.dice.cf_features.progressive.split(',')
 
     # Compute differences (each row in df_large vs. the single row)
     diffs = df_dcf - query_instance.iloc[0]
@@ -385,7 +383,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
             cbar_kws={'label': 'Difference'}
         )
 
-        if highlight_invalid:
+        if progressive_cols and highlight_invalid:
             progressive_categorical_cols = list(set(progressive_cols) & set(categorical_cols))
             hightlight_cells = []
             yticklabels = ax.get_yticklabels()
@@ -540,6 +538,10 @@ def filter_invalid_progressive_cfs(df_dcf, query_instance, config, split_index, 
         0   1   invalid
         0   0   no change, ok    
     """
+    progressive_cols = [] if config.dice.cf_features.progressive=='none' else config.dice.cf_features.progressive.split(',')
+    if not progressive_cols:
+        print(f'No progressive columns defined. None was filtered.')
+        return df_dcf
     progressive_categorical_cols = list(set(progressive_cols) & set(categorical_cols))
     print('Checking for invalid counterfactuals in these columns:\n', progressive_categorical_cols)
 
@@ -635,10 +637,14 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
                               remove_invalid_progressive_cfs=True,
                               savedir=None):
     
-    unfiltered_cfs_savedir = savedir / 'unfiltered' / str(qidx).zfill(3) 
-    filtered_cfs_savedir = savedir / 'filtered_progressive' / str(qidx).zfill(3) 
+    unfiltered_cfs_savedir = savedir / 'nofiltering' / str(qidx).zfill(3) 
     unfiltered_cfs_savedir.mkdir(parents=True, exist_ok=True) 
-    filtered_cfs_savedir.mkdir(parents=True, exist_ok=True) 
+    progressive_cols = [] if config.dice.cf_features.progressive=='none' else config.dice.cf_features.progressive.split(',')
+    if progressive_cols:
+        unfiltered_cfs_savedir = savedir / 'unfiltered' / str(qidx).zfill(3) 
+        unfiltered_cfs_savedir.mkdir(parents=True, exist_ok=True) 
+        filtered_cfs_savedir = savedir / 'filtered_progressive' / str(qidx).zfill(3) 
+        filtered_cfs_savedir.mkdir(parents=True, exist_ok=True) 
         
     print(f'Creating reports for Instance {qidx}...')
     print(f'Outputs will be saved to {Path(*savedir.parts[-7:])}.')
@@ -681,7 +687,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
     _diffs, _cf_ana = get_local_cf_distances(
         query_instance, df_dcf, config, split_index, sort_by="L2_dist", savedir=unfiltered_cfs_savedir)
 
-    if remove_invalid_progressive_cfs:
+    if progressive_cols and remove_invalid_progressive_cfs:
         print('removing invalid progressive counterfactuals...')
         df_dcf = filter_invalid_progressive_cfs(df_dcf, query_instance, config, split_index, categorical_cols, savedir=filtered_cfs_savedir)
 

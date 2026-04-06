@@ -8,7 +8,9 @@ import random
 import math
 import seaborn as sns
 from pathlib import Path
+
 import os
+import time
 
 from sklearn.base import BaseEstimator, ClassifierMixin
 from catboost import CatBoostClassifier
@@ -656,7 +658,8 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
         dfXy, query_instance, features_to_vary, categorical_cols, continuous_cols, 
         progressive_cols, config, split_index, savedir=unfiltered_cfs_savedir)
 
-    print('Generating Counterfactuals...')
+    print(f'Generating Counterfactuals for Instance {qidx}...')
+    print(time.strftime("%H:%M:%S", time.localtime()))
     df_dcf = generate_diverse_cfs(
         dice_exp,
         query_instance, 
@@ -667,6 +670,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
         permitted_range=instance_permitted_range,
         savedir=unfiltered_cfs_savedir
         )
+    print(time.strftime("%H:%M:%S", time.localtime()))    
     
     print('plotting heatmaps...')
     plot_local_cf_heatmap(dfXy, df_dcf, query_instance, 

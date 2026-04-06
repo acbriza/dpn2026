@@ -26,11 +26,11 @@ from utils2 import explainability as exp
 def main():
     if len(sys.argv) < 2:
         print("Usage: python cfreports.py <config file>")
-        print("Usage: python cfreports.py <config file> <resume_instances> <resume-model-idx> <skip-instance-indices:>")
-        print("Usage: python cfreports.py <config file> <redo_instances> <redo-model-idx> <redo-instance-indices:>")
+        print("Usage: python cfreports.py <config file> <skip_instances> <model-split-idx> <instance-indices:>")
+        print("Usage: python cfreports.py <config file> <redo_instances> <model-split-idx> <instance-indices:>")
         print("e.g.   python cfreports.py bin_cf_final.yml   --> redo all reports")
-        print("e.g.   python cfreports.py bin_cf_final.yml resume_instances 2 53,67--> resume but do not overwrite reports of model 2, skip instances 53 & 67")
-        print("e.g.   python cfreports.py bin_cf_final.yml rework_instances 2 53,67--> rework and do not overwrite reports of model 2 except specifically for instances 53 & 67")
+        print("e.g.   python cfreports.py bin_cf_final.yml skip_instances 2 53,67--> Do not overwrite reports of model 2, redo all instances but SKIP 53 & 67")
+        print("e.g.   python cfreports.py bin_cf_final.yml redo_instances 2 53,67--> Do not overwrite reports of model 2, redo ONLY instances 53 & 67")
         sys.exit(1)
 
     if len(sys.argv)==2:
@@ -39,8 +39,8 @@ def main():
         resume = False
 
     if len(sys.argv)>=3:
-        rework = sys.argv[2]=='rework_instances'
-        resume = sys.argv[2]=='resume_instances'
+        skip_instances = sys.argv[2]=='skip_instances'
+        redo_instances = sys.argv[2]=='redo_instances'
 
     target_model_idx = None
     target_instance_indices = [] 
@@ -83,8 +83,10 @@ def main():
     dfXy = pd.concat([X, y], axis=1)
 
     # ## Define custom column lists
-    features_to_vary = dfXy.columns.drop(['SEX', 'Confirmed_Binary_DPN']).to_list()
-    continuous_cols = dfXy.columns.difference(D.categorical_cols+['SEX', 'Confirmed_Binary_DPN']).to_list()
+    actionable_features = config.dice.cf_features.unactionable.split(',')
+    unactionable_features = config.dice.cf_features.unactionable.split(',')
+    features_to_vary = dfXy.columns.difference(unactionable_features+['Confirmed_Binary_DPN']).to_list()
+    continuous_cols = dfXy.columns.difference(D.categorical_cols+['Confirmed_Binary_DPN']).to_list()
 
     if config.experiment.verbosity > 0:
         print('features to vary columns:\n', len(features_to_vary), features_to_vary)
@@ -171,17 +173,17 @@ def main():
 
         # #### Produce reports for each Instance of Interest
         for qidx in qindices:
-            if resume: 
-                    # skip target instances (because of error, or reports already exist)
+            if skip_instances: 
+                # skip target instances (because of error, or reports already exist)
                 if qidx in target_instance_indices:
-                    print(f"Skipping instance {qidx}...")             
-                    continue                
+                    print(f"Skipping instance {qidx}...")        
+                    continue
 
-            elif rework: 
+            elif redo_instances:
                 if qidx not in target_instance_indices:
-                    # skip instances not in target instances (these are what we want to rework)
-                    print(f"Skipping and not reworking instance {qidx}...")             
-                    continue                
+                    # redo only target instances; skip the rest
+                    print(f"Skipping and not redoing instance {qidx}...")
+                    continue
 
             print(f"Generating counterfactual analysis for record {qidx}")
             cf.generate_local_cf_reports(dfXy, dexp, ioi_df, qidx, 

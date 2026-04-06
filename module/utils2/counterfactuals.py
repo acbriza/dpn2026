@@ -659,7 +659,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
         progressive_cols, config, split_index, savedir=unfiltered_cfs_savedir)
 
     print(f'Generating Counterfactuals for Instance {qidx}...')
-    print(time.strftime("%H:%M:%S", time.localtime()))
+    print('Start:', time.strftime("%H:%M:%S", time.localtime()))
     df_dcf = generate_diverse_cfs(
         dice_exp,
         query_instance, 
@@ -670,7 +670,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
         permitted_range=instance_permitted_range,
         savedir=unfiltered_cfs_savedir
         )
-    print(time.strftime("%H:%M:%S", time.localtime()))    
+    print('End:', time.strftime("%H:%M:%S", time.localtime()))    
     
     print('plotting heatmaps...')
     plot_local_cf_heatmap(dfXy, df_dcf, query_instance, 

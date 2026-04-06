@@ -162,12 +162,12 @@ def main():
 
         # ### Get Global Importances
         print(f"Getting global importance from model {midx}...")
-        print(time.strftime("%H:%M:%S", time.localtime()))
+        print('Start:', time.strftime("%H:%M:%S", time.localtime()))
         cf.get_global_importance(dexp, D, X_test, config, midx,
                                 features_to_vary, threshold, global_permitted_range,   
                                 highlight_features=actionable_features, 
                                 filename_suffix="", savedir=split_output_dir)
-        print(f"Getting global importance from model {midx}...")
+        print('End:', time.strftime("%H:%M:%S", time.localtime()))
 
         # #### Instances of Interest
         ioi_df, display_cols = cf.get_instances_of_interest(

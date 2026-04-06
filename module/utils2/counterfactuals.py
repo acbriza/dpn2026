@@ -152,7 +152,6 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
     bar_colors = exp.get_colors(D, feature_names) 
 
     HIGHLIGHT_COLOR = '#0000CD'
-    #ACTIONABLE_FEATURES = {'HBA1C', 'DSLPDMIA', 'INSULIN'} 
 
     fig, ax = plt.subplots(figsize=(10, 8))
     s_trimmed.plot.barh(ax=ax, color=bar_colors)
@@ -164,7 +163,7 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
     for label in y_labels:
         feature_name = label.get_text() # Get the text of the label
         
-        if feature_name in highlight_features:
+        if highlight_features and feature_name in highlight_features:
             # Set the font properties for bolding
             label.set_fontweight('bold')
             # Optional: Increase size for more emphasis

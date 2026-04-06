@@ -162,7 +162,7 @@ def main():
         # ### Get Global Importances
         cf.get_global_importance(dexp, D, X_test, config, midx,
                                 features_to_vary, threshold, global_permitted_range,   
-                                highlight_features=None, 
+                                highlight_features=actionable_features, 
                                 filename_suffix="", savedir=split_output_dir)
 
         # #### Instances of Interest

@@ -20,6 +20,7 @@ catboost_info/
 module/experiments/
 module/outputs/
 module/catboost_info/
+dataset/adult
 
 # Pipenv / venv / Poetry
 .venv/

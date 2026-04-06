@@ -1,0 +1,21 @@
+name: mace
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - pip # all packages below had to be manually installed
+  - pip:
+      - numpy
+      - scipy
+      - pandas
+      - scikit-learn
+      - dice-ml
+      - xgboost
+      - matplotlib #.
+      - seaborn #.
+      - openpyxl #.
+      - lightgbm
+      - catboost
+      - scikit-optimize
+      - shap
+      - omnixai

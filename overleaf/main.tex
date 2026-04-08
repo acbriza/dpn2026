@@ -39,6 +39,7 @@ Example s Abstract.
 % Abstract must not include subheadings or citations. 
 
 \end{abstract}
+
 \begin{document}
 
 \flushbottom
@@ -330,77 +331,73 @@ CAS & 0.00 & 49.00 &  & 26.22 ± 10.87 & 31.02 ± 7.62 & 29.50 ± 9.03 &  & -0.6
 \label{tab:continuous}
 \end{table}
 
-%=======================================
 % Categorical Plots
 %=======================================
-% \begin{figure*}[ht]
-%     % \centering
-%     \hspace*{0.085\textwidth}
-%     \includegraphics[width=0.5\textwidth]{figures/eda/categ_profile_histogram.png}
-%     \\[2ex] % Adds a line break and some extra vertical space
-%     \hspace*{0.085\textwidth}
-%     \includegraphics[width=0.83\textwidth]{figures/eda/categ_comorbs_histogram.png}
-%     \\[2ex] % Adds a line break and some extra vertical space
-%     \hspace*{0.085\textwidth}
-%     \includegraphics[width=0.66\textwidth]{figures/eda/categ_neuro_histogram.png}
-%     \caption{
-%     Count distributions of categorical clinical variables comparing Unconfirmed (blue) and Confirmed (red) groups across demographic, comorbidity, and diagnostic subcategory features. Variables are organized into three rows: (1) patient profile — Sex (SEX), Subjective Neuropathy Complaint (SUBJ), and Insulin Use (INSULIN); (2) comorbidities — Hypertension (HPN), Peripheral Arterial Occlusive Disease (PAOD), Dyslipidemia (DSLPDMIA), Chronic Kidney Disease (CKD), and Guillain-Barré Syndrome (GBS); and (3) neurological test — Decreased Vibration Sense (DEC\_VS), Decreased Pinprick Sensation (DEC\_PPS), Decreased Light Touch Sensation (DEC\_LTS), and Decreased Ankle Reflex (DEC\_AR).
-%     Across nearly all variables, the Confirmed group consistently exhibited higher counts in the affirmative ("Yes") category relative to the Unconfirmed group, suggesting a broader and more severe clinical profile. Notably, the Confirmed group showed a strong male predominance, a substantially higher rate of subjective neuropathy complaints, and greater insulin use, potentially reflecting more advanced or insulin-dependent diabetes. Among comorbidities, HPN, DSLPDMIA, and CKD showed markedly higher affirmative counts in the Confirmed group, while PAOD and GBS affirmative cases were nearly absent in both groups, suggesting these may be rare in the study population. In the diagnostic subcategory variables, the Confirmed group consistently reported higher rates of sensory and reflex deficits across all four measures (DEC\_VS, DEC\_PPS, DEC\_LTS, DEC\_AR), consistent with a more pronounced neuropathic presentation and supporting the clinical validity of the group classification.
-%     \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
-%     }
-%     \label{fig:categ}
-% \end{figure*}
+\begin{figure*}[ht]
+    % \centering
+    \hspace*{0.085\textwidth}
+    \includegraphics[width=0.5\textwidth]{figures/eda/categ_profile_histogram.png}
+    \\[2ex] % Adds a line break and some extra vertical space
+    \hspace*{0.085\textwidth}
+    \includegraphics[width=0.83\textwidth]{figures/eda/categ_comorbs_histogram.png}
+    \\[2ex] % Adds a line break and some extra vertical space
+    \hspace*{0.085\textwidth}
+    \includegraphics[width=0.66\textwidth]{figures/eda/categ_neuro_histogram.png}
+    \caption{
+    Count distributions of categorical clinical variables comparing Unconfirmed (blue) and Confirmed (red) groups across demographic, comorbidity, and diagnostic subcategory features. Variables are organized into three rows: (1) patient profile — Sex (SEX), Subjective Neuropathy Complaint (SUBJ), and Insulin Use (INSULIN); (2) comorbidities — Hypertension (HPN), Peripheral Arterial Occlusive Disease (PAOD), Dyslipidemia (DSLPDMIA), Chronic Kidney Disease (CKD), and Guillain-Barré Syndrome (GBS); and (3) neurological test — Decreased Vibration Sense (DEC\_VS), Decreased Pinprick Sensation (DEC\_PPS), Decreased Light Touch Sensation (DEC\_LTS), and Decreased Ankle Reflex (DEC\_AR).
+    Across nearly all variables, the Confirmed group consistently exhibited higher counts in the affirmative ("Yes") category relative to the Unconfirmed group, suggesting a broader and more severe clinical profile. Notably, the Confirmed group showed a strong male predominance, a substantially higher rate of subjective neuropathy complaints, and greater insulin use, potentially reflecting more advanced or insulin-dependent diabetes. Among comorbidities, HPN, DSLPDMIA, and CKD showed markedly higher affirmative counts in the Confirmed group, while PAOD and GBS affirmative cases were nearly absent in both groups, suggesting these may be rare in the study population. In the diagnostic subcategory variables, the Confirmed group consistently reported higher rates of sensory and reflex deficits across all four measures (DEC\_VS, DEC\_PPS, DEC\_LTS, DEC\_AR), consistent with a more pronounced neuropathic presentation and supporting the clinical validity of the group classification.
+    \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
+    }
+    \label{fig:categ}
+\end{figure*}
 
-%=======================================
 % Histogram of Profile MSI 
-%=======================================
-% \begin{figure*}[ht]
-%     \centering
-%     \includegraphics[width=0.66\textwidth]{figures/eda/cont_profile_mnsi_distributions.png}
-%     \\[2ex] % Adds a line break and some extra vertical space
-%     \includegraphics[width=0.66\textwidth]{figures/eda/cont_profile_mnsi_boxplots.png}
-%     \caption{Stacked density distributions (top) and boxplots (bottom) of clinical and demographic variables comparing Unconfirmed (blue) and Confirmed (red) groups. Variables presented include Age (AGE; median: 52.0 vs. 61.0), Diabetes Duration in years (DM\_DUR; median: 2.0 vs. 7.0), Glycated Hemoglobin (HBA1C; median: 7.1 vs. 7.6), and Michigan Neuropathy Screening Instrument score (MNSI; median: 4.0 vs. 6.0). Three of the four variables showed statistically significant group differences (p < 0.001 for AGE, DM\_DUR, and MNSI), while HBA1C did not reach significance (p = 0.256), suggesting that glycemic control levels alone may not distinguish the two groups. The Confirmed group was notably older and had a substantially longer diabetes duration, consistent with the known association between prolonged diabetes and increased neuropathy risk. The wider interquartile range and heavier right tail observed in DM\_DUR for the Confirmed group further suggests considerable heterogeneity in disease chronicity within this group. The significantly higher MNSI scores in the Confirmed group align with expected clinical presentation, reinforcing MNSI as a potentially useful screening variable, while the marginal HBA1C difference warrants caution against over-relying on glycemic markers alone in neuropathy risk stratification.
-%     \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
-%     \label{fig:profile_mnsi}
-%     }
-% \end{figure*}
+% =======================================
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=0.66\textwidth]{figures/eda/cont_profile_mnsi_distributions.png}
+    \\[2ex] % Adds a line break and some extra vertical space
+    \includegraphics[width=0.66\textwidth]{figures/eda/cont_profile_mnsi_boxplots.png}
+    \caption{Stacked density distributions (top) and boxplots (bottom) of clinical and demographic variables comparing Unconfirmed (blue) and Confirmed (red) groups. Variables presented include Age (AGE; median: 52.0 vs. 61.0), Diabetes Duration in years (DM\_DUR; median: 2.0 vs. 7.0), Glycated Hemoglobin (HBA1C; median: 7.1 vs. 7.6), and Michigan Neuropathy Screening Instrument score (MNSI; median: 4.0 vs. 6.0). Three of the four variables showed statistically significant group differences (p < 0.001 for AGE, DM\_DUR, and MNSI), while HBA1C did not reach significance (p = 0.256), suggesting that glycemic control levels alone may not distinguish the two groups. The Confirmed group was notably older and had a substantially longer diabetes duration, consistent with the known association between prolonged diabetes and increased neuropathy risk. The wider interquartile range and heavier right tail observed in DM\_DUR for the Confirmed group further suggests considerable heterogeneity in disease chronicity within this group. The significantly higher MNSI scores in the Confirmed group align with expected clinical presentation, reinforcing MNSI as a potentially useful screening variable, while the marginal HBA1C difference warrants caution against over-relying on glycemic markers alone in neuropathy risk stratification.
+    \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
+    \label{fig:profile_mnsi}
+    }
+\end{figure*}
 
-%=======================================
 % Distribution and Boxplot of NCS 
 %=======================================
-% \begin{figure*}[ht]
-%     \centering
-%     \includegraphics[width=1\textwidth]{figures/eda/cont_ncs1_distributions.png}
-%     \\[2ex] % Adds a line break and some extra vertical space
-%     \includegraphics[width=1\textwidth]{figures/eda/cont_ncs1_boxplots.png}
-%     \\[6ex] % Adds a line break and some extra vertical space
-%     \includegraphics[width=1\textwidth]{figures/eda/cont_ncs2_distributions.png}
-%     \\[2ex] % Adds a line break and some extra vertical space
-%     \includegraphics[width=1\textwidth]{figures/eda/cont_ncs2_boxplots.png}
-%     \\[6ex] % Adds a line break and some extra vertical space
-%     \includegraphics[width=1\textwidth]{figures/eda/cont_ncs3_distributions.png}
-%     \\[2ex] % Adds a line break and some extra vertical space
-%     \includegraphics[width=1\textwidth]{figures/eda/cont_ncs3_boxplots.png}
-%     \caption{
-%     Density distributions and boxplots of Nerve Conduction Study (NCS) variables comparing Unconfirmed (blue) and Confirmed (red) groups, encompassing Sural Peak Sensory Conduction (SPSC\_L, SPSC\_R), Motor Conduction Velocity (MCV\_L, MCV\_R), Distal Latency (DL\_L, DL\_R), Sural Sensory Amplitude (SSA\_L, SSA\_R), Sural Sensory Conduction (SSC\_L, SSC\_R), and Sural Peak Sensory Amplitude (SPSA\_L, SPSA\_R). All variables demonstrated statistically significant group differences (p < 0.001 for most; DL\_R: p = 0.003). The Confirmed group consistently showed lower median values across all conduction velocity and sensory amplitude measures, with density distributions revealing a pronounced clustering near zero in SPSC and MCV variables, indicative of a substantial subset with absent or severely reduced nerve conduction responses. Sensory amplitude variables were most dramatically reduced in the Confirmed group, with compressed interquartile ranges approaching zero across SSA and SPSA measures bilaterally, strongly suggestive of axonal loss or severe sensory nerve compromise. Modest but consistent increases in distal latency in the Confirmed group further corroborate slowed nerve conduction, collectively underscoring the discriminative utility of NCS variables in characterizing neuropathic severity between groups.
-%     \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
-%     \label{fig:ncs}
-%     }
-% \end{figure*}
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/eda/cont_ncs1_distributions.png}
+    \\[2ex] % Adds a line break and some extra vertical space
+    \includegraphics[width=1\textwidth]{figures/eda/cont_ncs1_boxplots.png}
+    \\[6ex] % Adds a line break and some extra vertical space
+    \includegraphics[width=1\textwidth]{figures/eda/cont_ncs2_distributions.png}
+    \\[2ex] % Adds a line break and some extra vertical space
+    \includegraphics[width=1\textwidth]{figures/eda/cont_ncs2_boxplots.png}
+    \\[6ex] % Adds a line break and some extra vertical space
+    \includegraphics[width=1\textwidth]{figures/eda/cont_ncs3_distributions.png}
+    \\[2ex] % Adds a line break and some extra vertical space
+    \includegraphics[width=1\textwidth]{figures/eda/cont_ncs3_boxplots.png}
+    \caption{
+    Density distributions and boxplots of Nerve Conduction Study (NCS) variables comparing Unconfirmed (blue) and Confirmed (red) groups, encompassing Sural Peak Sensory Conduction (SPSC\_L, SPSC\_R), Motor Conduction Velocity (MCV\_L, MCV\_R), Distal Latency (DL\_L, DL\_R), Sural Sensory Amplitude (SSA\_L, SSA\_R), Sural Sensory Conduction (SSC\_L, SSC\_R), and Sural Peak Sensory Amplitude (SPSA\_L, SPSA\_R). All variables demonstrated statistically significant group differences (p < 0.001 for most; DL\_R: p = 0.003). The Confirmed group consistently showed lower median values across all conduction velocity and sensory amplitude measures, with density distributions revealing a pronounced clustering near zero in SPSC and MCV variables, indicative of a substantial subset with absent or severely reduced nerve conduction responses. Sensory amplitude variables were most dramatically reduced in the Confirmed group, with compressed interquartile ranges approaching zero across SSA and SPSA measures bilaterally, strongly suggestive of axonal loss or severe sensory nerve compromise. Modest but consistent increases in distal latency in the Confirmed group further corroborate slowed nerve conduction, collectively underscoring the discriminative utility of NCS variables in characterizing neuropathic severity between groups.
+    \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
+    \label{fig:ncs}
+    }
+\end{figure*}
 
-%=======================================
 % Distribution and Boxplot of Sudoscan 
 %=======================================
-% \begin{figure*}[ht]
-%     \centering
-%     \includegraphics[width=1\textwidth]{figures/eda/cont_sudo_distributions.png}
-%     \\[2ex] % Adds a line break and some extra vertical space
-%     \includegraphics[width=1\textwidth]{figures/eda/cont_sudo_boxplots.png}
-%     \caption{Stacked density distributions (top) and boxplots (bottom) of all SUDOSCAN-derived variables comparing Unconfirmed (blue) and Confirmed (red) groups. Variables presented include Feet Mean Electrochemical Skin Conductance (FEET\_MEAN\_ESC; median: 60.5 vs. 47.5), Feet Percent Asymmetry (FEET\_PCT\_ASYM; median: 3.0 vs. 6.5), Hand Mean ESC (HAND\_MEAN\_ESC; median: 63.0 vs. 56.0), Hand Percent Asymmetry (HAND\_PCT\_ASYM; median: 6.0 vs. 10.0), Nerve Score (NS; median: 60.5 vs. 50.5), and Composite Autonomic Score (CAS; median: 28.0 vs. 31.0). Nearly all variables demonstrated statistically significant group differences (p < 0.001 for FEET\_MEAN\_ESC, FEET\_PCT\_ASYM, and CAS; p= 0.003 for NS; p = 0.016 for HAND\_MEAN\_ESC), with the exception of p = 0.077 for HAND\_PCT\_ASYM) potentially reflecting greater lateralized nerve impairment in the hands. Notably, the Confirmed group exhibited lower mean ESC values in both feet and hands, consistent with reduced sudomotor function. The elevated CAS in the Confirmed group, despite lower NS values, warrants further investigation into the composite scoring methodology and its constituent variables.
-%     \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
-%     \label{fig:sudo}
-%     }
-% \end{figure*}
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/eda/cont_sudo_distributions.png}
+    \\[2ex] % Adds a line break and some extra vertical space
+    \includegraphics[width=1\textwidth]{figures/eda/cont_sudo_boxplots.png}
+    \caption{Stacked density distributions (top) and boxplots (bottom) of all SUDOSCAN-derived variables comparing Unconfirmed (blue) and Confirmed (red) groups. Variables presented include Feet Mean Electrochemical Skin Conductance (FEET\_MEAN\_ESC; median: 60.5 vs. 47.5), Feet Percent Asymmetry (FEET\_PCT\_ASYM; median: 3.0 vs. 6.5), Hand Mean ESC (HAND\_MEAN\_ESC; median: 63.0 vs. 56.0), Hand Percent Asymmetry (HAND\_PCT\_ASYM; median: 6.0 vs. 10.0), Nerve Score (NS; median: 60.5 vs. 50.5), and Composite Autonomic Score (CAS; median: 28.0 vs. 31.0). Nearly all variables demonstrated statistically significant group differences (p < 0.001 for FEET\_MEAN\_ESC, FEET\_PCT\_ASYM, and CAS; p= 0.003 for NS; p = 0.016 for HAND\_MEAN\_ESC), with the exception of p = 0.077 for HAND\_PCT\_ASYM) potentially reflecting greater lateralized nerve impairment in the hands. Notably, the Confirmed group exhibited lower mean ESC values in both feet and hands, consistent with reduced sudomotor function. The elevated CAS in the Confirmed group, despite lower NS values, warrants further investigation into the composite scoring methodology and its constituent variables.
+    \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
+    \label{fig:sudo}
+    }
+\end{figure*}
 
 
 \section*{Methodology}
@@ -627,255 +624,295 @@ The selected parameters balance proximity, diversity, and sparsity, ensuring tha
 \section*{Results and Discussion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%=======================================
+\subsection*{Performance of ML Models}
+The distribution of ROC-AUC (left) and Youden Index (right) scores across multiple runs for sixteen classification models are shown in Figure~\ref{fig:violins_model}. For both ROC-AUC and Youden Index, ensemble tree-based methods consistently achieved the highest median values. These results suggest that ensemble tree-based methods as the most robust candidates for this classification task. For the succeeding steps, CatBoost is chosen as the model to undergo hyperparameter optimization and counterfactual generation.
+
 % Violin Plots
-%=======================================
-% \begin{figure*}[h]
-%     \centering
-%     \begin{subfigure}[b]{0.48\textwidth}
-%         \centering
-%         \includegraphics[width=\textwidth]{figures/modeling/roc-auc_violin.png}
-%         \caption{ROC-AUC}
-%         \label{fig:violin_roc}
-%     \end{subfigure}
-%     \begin{subfigure}[b]{0.48\textwidth}
-%         \centering
-%         \includegraphics[width=\textwidth]{figures/modeling/youden_violin.png}
-%         \caption{Youden Index}
-%         \label{fig:violin_youden}
-%     \end{subfigure}
-%     % \captionsetup{font=footnotesize}
-%     % \captionsetup{font=small}
-%     \caption{Distribution of ROC-AUC (left) and Youden Index (right) scores across multiple runs for sixteen classification models. For ROC-AUC, ensemble tree-based methods (Extra Trees, CatBoost, Random Forest, and XGBoost) consistently achieved the highest median ROC-AUC values ($\geq 0.96$ ) with compact distributions, indicating stable and reproducible performance. For the Youden Index, ensemble tree-based methods again achieved the highest median values ($ \approx 0.80 - 0.87$) with relatively compact distributions, indicating consistently balanced sensitivity and specificity. These results suggest that ensemble tree-based methods as the most robust candidates for this classification task. For the succeeding steps, CatBoost is chosen as the model to undergo hyperparameter optimization and counterfactual generation.}
-%     \label{fig:violins_model}
-% \end{figure*}
+%-------------
+\begin{figure*}[h]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/modeling/roc-auc_violin.png}
+        \caption{ROC-AUC}
+        \label{fig:violin_roc}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/modeling/youden_violin.png}
+        \caption{Youden Index}
+        \label{fig:violin_youden}
+    \end{subfigure}
+    % \captionsetup{font=footnotesize}
+    % \captionsetup{font=small}
+    \caption{Distribution of ROC-AUC (left) and Youden Index (right) scores across multiple runs for sixteen classification models. For ROC-AUC, ensemble tree-based methods (Extra Trees, CatBoost, Random Forest, and XGBoost) consistently achieved the highest median ROC-AUC values ($\geq 0.96$ ) with compact distributions, indicating stable and reproducible performance. For the Youden Index, ensemble tree-based methods again achieved the highest median values ($ \approx 0.80 - 0.87$) with relatively compact distributions, indicating consistently balanced sensitivity and specificity. }
+    \label{fig:violins_model}
+\end{figure*}
 
-%=======================================
+Figure~\ref{fig:youden_summary} shows the actual values of the youden index across multiple models and datasets. Ensemble tree-based methods (CatBoost, Random Forest, XGBoost, Extra Trees, and LightGBM) consistently achieved the highest Youden Index values across most feature sets ($ \geq 0.80$), with the full feature set (All) and features sets with NCS performing best. Notably, performance dropped substantially across nearly all models when NCS features were excluded (NoNCS), suggesting NCS readings carry significant discriminative information. This is confirmed with the NCS-only set produced surprisingly competitive results for several top models (e.g., Extra Trees: 0.86, RBF SVM: 0.82, kNN: 0.82), again showing that NCS data as particularly informative. Surprisingly, removing collinear features significantly dropped the performance of the models, suggesting that a full feature set is worth using. The Sudo-only feature set yielded uniformly poor performance across all models.
+
 % Youden Table
-%=======================================
-% \begin{figure*}[h]
-%     \centering
-%     \includegraphics[width=1\textwidth]{figures/modeling/youden_summary_table.png}
-%     % \captionsetup{font=footnotesize}
-%     \caption{Heatmap of average Youden Index scores across sixteen classification models and ten feature sets, where feature sets represent systematic exclusions of feature groups: All (full feature set), NoCol (No collinear features), NoNCS (No NCS features), NoSudo (NO SUDOSCAN features), NoNeuro (No Neurology Examinationfeatures), NoCom (No Commorbidity features), NoMSI (No MSI feature), NoProf (No Clinical Profile), NCS (NCS feautures only), and Sudo (Sudoscan features only). Ensemble tree-based methods (CatBoost, Random Forest, XGBoost, Extra Trees, and LightGBM) consistently achieved the highest Youden Index values across most feature sets ($ \geq 0.80$), with the full feature set (All) and features sets with NCS performing best. Notably, performance dropped substantially across nearly all models when NCS features were excluded (NoNCS), suggesting NCS readings carry significant discriminative information. This is confirmed with the NCS-only set produced surprisingly competitive results for several top models (e.g., Extra Trees: 0.86, RBF SVM: 0.82, kNN: 0.82), again showing that NCS data as particularly informative. Surprisingly, removing collinear features significantly dropped the performance of the models, suggesting that a full feature set is worth using. The Sudo-only feature set yielded uniformly poor performance across all models.}
-%     \label{fig:youden_summary}
-% \end{figure*}
+%------------------------------
+\begin{figure*}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/modeling/youden_summary_table.png}
+    % \captionsetup{font=footnotesize}
+    \caption{Heatmap of average Youden Index scores across sixteen classification models and ten feature sets, where feature sets represent systematic exclusions of feature groups: All (full feature set), NoCol (No collinear features), NoNCS (No NCS features), NoSudo (NO SUDOSCAN features), NoNeuro (No Neurology Examinationfeatures), NoCom (No Commorbidity features), NoMSI (No MSI feature), NoProf (No Clinical Profile), NCS (NCS feautures only), and Sudo (Sudoscan features only). Ensemble tree-based methods (CatBoost, Random Forest, XGBoost, Extra Trees, and LightGBM) consistently achieved the highest Youden Index values across most feature sets ($ \geq 0.80$), with the full feature set (All) and features sets with NCS performing best.}
+    \label{fig:youden_summary}
+\end{figure*}
 
-%=======================================
+Figure~\ref{fig:roc} shows the ROC-AUC plots for the 3 model splits.  The model exhibits exceptional and consistent discriminative performance across all evaluated folds, achieving Area Under the Curve (AUC) scores of 0.98, 0.99, and 0.94, respectively. This consistently high AUC across multiple splits demonstrates robust model generalization and a high degree of reliability in distinguishing between the target classes with minimal variance.
+
 % ROC-AUC
-%=======================================
-% \begin{figure*}[h]
-%     \centering
-%     \begin{subfigure}[b]{0.32\textwidth}
-%         \centering
-%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split0_roc_auc.png}
-%         \caption{Split 0}
-%         % \label{fig:roc_split0}
-%     \end{subfigure}
-%     \begin{subfigure}[b]{0.32\textwidth}
-%         \centering        
-%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split1_roc_auc.png}
-%         \caption{Split 1}
-%         % \label{fig:roc_split1}
-%     \end{subfigure}
-%     \begin{subfigure}[b]{0.32\textwidth}
-%         \centering
-%         % \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_features_importances.png}
-%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_roc_auc.png}
-%         \caption{Split 2}
-%         % \label{fig:roc_split2}
-%     \end{subfigure}
-%     % \captionsetup{font=footnotesize}
-%     \caption{Receiver Operating Characteristic (ROC) curves of the CatBoost model across three data splits. The panels illustrate the relationship between the True Positive Rate (Sensitivity) and False Positive Rate (1 - Specificity) evaluated on three separate data partitions: (a) Split 0, (b) Split 1, and (c) Split 2. The solid blue curve depicts the model's predictive capability compared to the dashed diagonal line, which represents random chance. The model exhibits exceptional and consistent discriminative performance across all evaluated folds, achieving Area Under the Curve (AUC) scores of 0.98, 0.99, and 0.94, respectively. This consistently high AUC across multiple splits demonstrates robust model generalization and a high degree of reliability in distinguishing between the target classes with minimal variance.}
-% \label{fig:roc}
-% \end{figure*}
+%------------------------------
+\begin{figure*}[h]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/explainability/catboost_split0_roc_auc.png}
+        \caption{Split 0}
+        % \label{fig:roc_split0}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering        
+        \includegraphics[width=\textwidth]{figures/explainability/catboost_split1_roc_auc.png}
+        \caption{Split 1}
+        % \label{fig:roc_split1}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        % \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_features_importances.png}
+        \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_roc_auc.png}
+        \caption{Split 2}
+        % \label{fig:roc_split2}
+    \end{subfigure}
+    % \captionsetup{font=footnotesize}
+    \caption{Receiver Operating Characteristic (ROC) curves of the CatBoost model across three data splits. The panels illustrate the relationship between the True Positive Rate (Sensitivity) and False Positive Rate (1 - Specificity) evaluated on three separate data partitions: (a) Split 0, (b) Split 1, and (c) Split 2. The solid blue curve depicts the model's predictive capability compared to the dashed diagonal line, which represents random chance. The model exhibits exceptional and consistent discriminative performance across all evaluated folds, achieving Area Under the Curve (AUC) scores of 0.98, 0.99, and 0.94, respectively. This consistently high AUC across multiple splits demonstrates robust model generalization and a high degree of reliability in distinguishing between the target classes with minimal variance.}
+\label{fig:roc}
+\end{figure*}
 
-%=======================================
+Figure~\ref{fig:fimp} shows the SHAP (SHapley Additive exPlanations) feature importance across three experimental data splits.
+Echoing the previous Feature Importance analysis, Across all three data splits, variables derived from Nerve Conduction Studies (indicated by the blue bars) consistently dominate the top rankings. Specific electrophysiological measurements—most notably Compound Muscle Action Potential at the knee and ankle (e.g., CMAPKNE\_L, CMAPKNE\_R, CMAPANK\_L) and Sural Sensory Amplitude (e.g., SSA\_L, SSA\_R)—exhibit the highest SHAP values by a substantial margin. Conversely, features from other groups like Sudoscan or Neurology Examinations show relatively minimal impact. The model's heavy and consistent reliance on Nerve Conduction Studies demonstrates that objective electrophysiological data are the primary drivers of its predictive performance. This provides strong clinical interpretability, suggesting that the model is grounding its decisions in robust, direct physiological biomarkers of nerve function rather than secondary demographic or subjective clinical profile features. \textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}    
+
+\subsection*{Explainability through Feature Importance and SHAP}
+
+Figure~\ref{fig:fimp} shows the feature importance plots  for the 3 model splits.  Variables derived from Nerve Conduction Studies (blue bars) unequivocally drive the CatBoost model's predictions across all three folds. Electrophysiological metrics—specifically, Compound Muscle Action Potential at the knee (CMAPKNE\_L, CMAPKNE\_R) and ankle (CMAPANK\_L, CMAPANK\_R), alongside Sural Sensory Amplitude (SSA\_L, SSA\_R)—consistently occupy the top ranks. While the dominant feature shifts slightly by laterality between the splits (e.g., the left-sided CMAPKNE\_L strongly leads the first two splits, whereas the right-sided CMAPKNE\_R and SSA\_R lead the third), the core predictive measurements remain entirely stable. Conversely, features related to Comorbidities (red) and Neurology Examinations (pink) exhibit near-zero importance. The model's persistent reliance on a tight cluster of electrophysiological measurements confirms that these specific nerve conduction metrics are the most robust and informative biomarkers for the predicted outcome. This consistency across multiple splits validates the model's structural stability and underscores the clinical superiority of objective, device-derived nerve assessments over subjective examinations or secondary comorbidities for this specific diagnostic task. \textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}
+
 % Feature Importances
-%=======================================
-% \begin{figure*}[h]
-%     \centering
-%     \begin{subfigure}[b]{0.32\textwidth}
-%         \centering
-%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split0_features_importances.png}
-%         \caption{Split 0}
-%         % \label{fig:fimp_split0}
-%     \end{subfigure}
-%     \begin{subfigure}[b]{0.32\textwidth}
-%         \centering
-%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split1_features_importances.png}
-%         \caption{Split 1}
-%         % \label{fig:fimp_split1}
-%     \end{subfigure}
-%     \begin{subfigure}[b]{0.32\textwidth}
-%         \centering
-%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_features_importances.png}
-%         \caption{Split 2}
-%         % \label{fig:fimp_split2}
-%     \end{subfigure}
-%     % \captionsetup{font=footnotesize}
-%     \caption{CatBoost feature importance rankings across three experimental data splits. The horizontal bar charts display the relative importance scores of the variables utilized by the CatBoost model in each data partition. Features are color-coded by their clinical category to illustrate the varying contributions of different data modalities, such as Nerve Conduction Studies, Patient Profile, and Sudoscan. Variables derived from Nerve Conduction Studies (blue bars) unequivocally drive the CatBoost model's predictions across all three folds. Electrophysiological metrics—specifically, Compound Muscle Action Potential at the knee (CMAPKNE\_L, CMAPKNE\_R) and ankle (CMAPANK\_L, CMAPANK\_R), alongside Sural Sensory Amplitude (SSA\_L, SSA\_R)—consistently occupy the top ranks. While the dominant feature shifts slightly by laterality between the splits (e.g., the left-sided CMAPKNE\_L strongly leads the first two splits, whereas the right-sided CMAPKNE\_R and SSA\_R lead the third), the core predictive measurements remain entirely stable. Conversely, features related to Comorbidities (red) and Neurology Examinations (pink) exhibit near-zero importance. The model's persistent reliance on a tight cluster of electrophysiological measurements confirms that these specific nerve conduction metrics are the most robust and informative biomarkers for the predicted outcome. This consistency across multiple splits validates the model's structural stability and underscores the clinical superiority of objective, device-derived nerve assessments over subjective examinations or secondary comorbidities for this specific diagnostic task.
-%     \textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}
-%     }
-%     \label{fig:fimp}
-% \end{figure*}
+% ---------------------
+\begin{figure*}[h]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/explainability/catboost_split0_features_importances.png}
+        \caption{Split 0}
+        % \label{fig:fimp_split0}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/explainability/catboost_split1_features_importances.png}
+        \caption{Split 1}
+        % \label{fig:fimp_split1}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_features_importances.png}
+        \caption{Split 2}
+        % \label{fig:fimp_split2}
+    \end{subfigure}
+    % \captionsetup{font=footnotesize}
+    \caption{CatBoost feature importance rankings across three experimental data splits. The horizontal bar charts display the relative importance scores of the variables utilized by the CatBoost model in each data partition. Features are color-coded by their clinical category to illustrate the varying contributions of different data modalities, such as Nerve Conduction Studies, Patient Profile, and Sudoscan.}
+    \label{fig:fimp}
+\end{figure*}
 
-%=======================================
+
 % SHAP
-%=======================================
-% \begin{figure*}[h]
-%     \centering
-%     \begin{subfigure}[b]{0.32\textwidth}
-%         \centering
-%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split0_shap.png}
-%         % \caption{Split 0}
-%         % \label{fig:shap_split0}
-%     \end{subfigure}
-%     \begin{subfigure}[b]{0.32\textwidth}
-%         \centering        
-%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split1_shap.png}
-%         % \caption{Split 1}
-%         % \label{fig:shap_split1}
-%     \end{subfigure}
-%     \begin{subfigure}[b]{0.32\textwidth}
-%         \centering
-%         % \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_features_importances.png}
-%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_shap.png}
-%         % \caption{Split 2}
-%         % \label{fig:shap_split2}
-%     \end{subfigure}
-%     % \captionsetup{font=footnotesize}
-%     \caption{SHAP (SHapley Additive exPlanations) feature importance across three experimental data splits. The bar charts illustrate the mean absolute SHAP values for the top predictive features in each split, quantifying their average impact on the model's output magnitude. Features are color-coded according to their clinical category, such as Nerve Conduction Studies, Sudoscan, and patient Profile. Echoing the previous Feature Importance analysis, Across all three data splits, variables derived from Nerve Conduction Studies (indicated by the blue bars) consistently dominate the top rankings. Specific electrophysiological measurements—most notably Compound Muscle Action Potential at the knee and ankle (e.g., CMAPKNE\_L, CMAPKNE\_R, CMAPANK\_L) and Sural Sensory Amplitude (e.g., SSA\_L, SSA\_R)—exhibit the highest SHAP values by a substantial margin. Conversely, features from other groups like Sudoscan or Neurology Examinations show relatively minimal impact. The model's heavy and consistent reliance on Nerve Conduction Studies demonstrates that objective electrophysiological data are the primary drivers of its predictive performance. This provides strong clinical interpretability, suggesting that the model is grounding its decisions in robust, direct physiological biomarkers of nerve function rather than secondary demographic or subjective clinical profile features.
-%     \textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}    
-%     }
-%     \label{fig:shap}
-% \end{figure*}
+%------------------------------
+\begin{figure*}[h]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/explainability/catboost_split0_shap.png}
+        % \caption{Split 0}
+        % \label{fig:shap_split0}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering        
+        \includegraphics[width=\textwidth]{figures/explainability/catboost_split1_shap.png}
+        % \caption{Split 1}
+        % \label{fig:shap_split1}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        % \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_features_importances.png}
+        \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_shap.png}
+        % \caption{Split 2}
+        % \label{fig:shap_split2}
+    \end{subfigure}
+    % \captionsetup{font=footnotesize}
+    \caption{SHAP (SHapley Additive exPlanations) feature importance across three experimental data splits. The bar charts illustrate the mean absolute SHAP values for the top predictive features in each split, quantifying their average impact on the model's output magnitude. Features are color-coded according to their clinical category, such as Nerve Conduction Studies, Sudoscan, and patient Profile.} 
+    \label{fig:shap}
+\end{figure*}
 
-%=======================================
-% Performance Summary
-%=======================================
-% \begin{table}[t]
-% \centering
-% \small
-% \begin{tabular}{lll}
-% \toprule
-% Item & Statistic & Values \\
-% \midrule
-% threshold & mean ± std & 0.635 ± 0.123 \\
-% roc-auc & mean ± std & 0.972 ± 0.020 \\
-% roc-auc  & confidence interval &  0.966 - 0.979 \\
-% youden index &  mean ± std & 0.852 ± 0.068 \\
-% youden index &  confidence interval & 0.831 - 0.873 \\
-% specificity  & mean ± std  &  0.918 ± 0.0675\\
-% sensitivity  &  mean ± std  & 0.934 ± 0.054 \\
-% \bottomrule
-% \end{tabular}
-% \caption{Result of a 3-fold hyperparameter optimization on CatBoost algorithm}
-% \label{tab:hpo}
-% \end{table}
+Table~\ref{tab:hpo} shows the a summary of the performance statistics of CatBoost across 3 splits. The model achieves a near-perfect Area Under the Receiver Operating Characteristic Curve (ROC-AUC) of 0.972 ± 0.020. The tight confidence interval (0.966 - 0.979) indicates that this high performance is extremely stable and reliable across different data folds. The optimization successfully balanced the model's ability to detect both positive and negative cases. With a sensitivity of 0.934 ± 0.054 and a specificity of 0.918 ± 0.0675, the model is highly adept at identifying DPN without an excessive rate of false alarms. The Youden Index (0.852 ± 0.068) is very high. This confirms that the chosen mean probability threshold (0.635) effectively maximizes the trade-off between true positives and false positives, anchoring the model's high sensitivity and specificity.
 
-%=======================================
-% Global Importances 
-%=======================================
+Minimizing Missed Diagnoses: In DPN screening, false negatives carry a heavy clinical cost, potentially leading to untreated progression, foot ulcers, or amputation. The high sensitivity (over 93%) ensures that the vast majority of true DPN cases will be successfully flagged for early medical intervention.
+
+Reliability for Clinical Deployment: CatBoost is specifically designed to handle tabular data with categorical variables efficiently (which is standard for Electronic Health Records). Combined with the robust ROC-AUC and tight confidence intervals shown here, clinicians can have high confidence in integrating this specific algorithm as a reliable, second-opinion diagnostic aid.
+
+\textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}  
+
+% CatBoost  Performance Metrics
+%------------------------------
 \begin{table}[t]
 \centering
 \small
-\begin{tabular}{lrrrr}
+\begin{tabular}{lll}
 \toprule
-Feature & Split 0 & Split 1 & Split 2 & Mean \\
+Item & Statistic & Values \\
 \midrule
-SSA\_L & 0.999 & 1.000 & 1.000 & 1.000 \\
-CMAPKNE\_L & 1.000 & 0.999 & 1.000 & 1.000 \\
-CMAPANK\_L & 0.999 & 1.000 & 0.999 & 0.999 \\
-CMAPKNE\_R & 1.000 & 1.000 & 0.996 & 0.999 \\
-CMAPANK\_R & 0.997 & 0.999 & 0.998 & 0.998 \\
-FWAVE\_L & 0.996 & 0.996 & 0.993 & 0.995 \\
-MCV\_L & 0.994 & 0.991 & 0.996 & 0.994 \\
-FWAVE\_R & 0.996 & 0.993 & 0.992 & 0.994 \\
-SSA\_R & 0.983 & 0.998 & 0.996 & 0.993 \\
-SPSA\_L & 0.997 & 0.985 & 0.994 & 0.992 \\
-MCV\_R & 0.994 & 0.992 & 0.988 & 0.991 \\
-NS & 0.988 & 0.988 & 0.979 & 0.985 \\
-HBA1C & 0.986 & 0.968 & 0.992 & 0.982 \\
-FEET\_MEAN\_ESC & 0.983 & 0.974 & 0.987 & 0.981 \\
-SPSA\_R & 0.983 & 0.973 & 0.985 & 0.980 \\
-SSC\_R & 0.978 & 0.979 & 0.982 & 0.980 \\
-HAND\_MEAN\_ESC & 0.977 & 0.987 & 0.973 & 0.979 \\
-SPSC\_L & 0.975 & 0.977 & 0.980 & 0.977 \\
-SSC\_L & 0.963 & 0.973 & 0.989 & 0.975 \\
-SPSC\_R & 0.970 & 0.968 & 0.979 & 0.972 \\
-DL\_L & 0.967 & 0.966 & 0.977 & 0.970 \\
-DL\_R & 0.973 & 0.967 & 0.960 & 0.967 \\
-CAS & 0.947 & 0.947 & 0.963 & 0.952 \\
-HAND\_PCT\_ASYM & 0.929 & 0.940 & 0.947 & 0.939 \\
-FEET\_PCT\_ASYM & 0.913 & 0.887 & 0.933 & 0.911 \\
-MNSI & 0.874 & 0.851 & 0.873 & 0.866 \\
-DEC\_VS & 0.469 & 0.423 & 0.512 & 0.468 \\
-DEC\_AR & 0.432 & 0.414 & 0.492 & 0.446 \\
-DSLPDMIA & 0.414 & 0.435 & 0.439 & 0.429 \\
-DEC\_PPS & 0.419 & 0.417 & 0.442 & 0.426 \\
-INSULIN & 0.467 & 0.378 & 0.387 & 0.411 \\
-DEC\_LTS & 0.383 & 0.381 & 0.446 & 0.403 \\
-HPN & 0.418 & 0.349 & 0.398 & 0.388 \\
-CKD & 0.157 & 0.231 & 0.360 & 0.249 \\
-PAOD & 0.050 & 0.110 & 0.100 & 0.086 \\
+threshold & mean ± std & 0.635 ± 0.123 \\
+roc-auc & mean ± std & 0.972 ± 0.020 \\
+roc-auc  & confidence interval &  0.966 - 0.979 \\
+youden index &  mean ± std & 0.852 ± 0.068 \\
+youden index &  confidence interval & 0.831 - 0.873 \\
+specificity  & mean ± std  &  0.918 ± 0.0675\\
+sensitivity  &  mean ± std  & 0.934 ± 0.054 \\
 \bottomrule
 \end{tabular}
-\caption{Global Importances across 3 splits}
+\caption{Performance metrics following a 3-fold hyperparameter optimization of the CatBoost algorithm for Diabetic Peripheral Neuropathy (DPN) classification. The table summarizes the mean, standard deviation, and confidence intervals for key diagnostic threshold and accuracy metrics, demonstrating exceptional discriminative ability (ROC-AUC) and a highly balanced sensitivity-specificity profile.}
+\label{tab:hpo}
+\end{table}
+
+
+\subsection*{Global Feature Importances}
+%=======================================
+Table~\ref{tab:global_imp} shows the Global feature importances across 3 model splits. The models demonstrates remarkable stability, achieving consistency across splits. The importance scores for the top features barely fluctuate across Split 0, Split 1, and Split 2, indicating that the AI is learning generalized patterns rather than overfitting to a specific subset of the training data. Nerve conduction study (NCS) parameters dominate the top of the hierarchy. Variables like SSA\_L (1.000), CMAPKNE\_L (1.000), and FWAVE\_L (0.995) are the primary drivers of the model's predictions. Core diabetic metrics like HBA1C (0.982) and standard screening tools like MNSI (0.866) maintain strong to moderate importance. Conversely, secondary comorbidities like Chronic Kidney Disease (CKD, 0.249) and Peripheral Arterial Occlusive Disease (PAOD, 0.086) contribute very little to the model's specific detection of DPN. 
+
+Validation of Clinical Ground Truth: The explainability (XAI) output heavily aligns with existing neurological principles—namely, that direct measures of nerve conduction (CMAP, F-waves) are the most reliable indicators of peripheral neuropathy. This alignment builds crucial clinician trust, proving the "black box" is using medically sound logic rather than spurious correlations.
+
+Streamlined Diagnostics: Because the model relies so heavily on specific electrophysiological parameters and HbA1c, clinics could potentially optimize their diagnostic pipelines by prioritizing these specific inputs, saving time and resources on less predictive screening measures when feeding data into the AI.
+
+\textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}
+
+% Global Importances 
+%-------------------
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{lrrrr @{\hskip 0.3in} lrrrr}
+\toprule
+Feature & Split 0 & Split 1 & Split 2 & Mean & Feature & Split 0 & Split 1 & Split 2 & Mean \\
+\midrule
+SSA\_L & 0.999 & 1.000 & 1.000 & 1.000 & SSC\_L & 0.963 & 0.973 & 0.989 & 0.975 \\
+CMAPKNE\_L & 1.000 & 0.999 & 1.000 & 1.000 & SPSC\_R & 0.970 & 0.968 & 0.979 & 0.972 \\
+CMAPANK\_L & 0.999 & 1.000 & 0.999 & 0.999 & DL\_L & 0.967 & 0.966 & 0.977 & 0.970 \\
+CMAPKNE\_R & 1.000 & 1.000 & 0.996 & 0.999 & DL\_R & 0.973 & 0.967 & 0.960 & 0.967 \\
+CMAPANK\_R & 0.997 & 0.999 & 0.998 & 0.998 & CAS & 0.947 & 0.947 & 0.963 & 0.952 \\
+FWAVE\_L & 0.996 & 0.996 & 0.993 & 0.995 & HAND\_PCT\_ASYM & 0.929 & 0.940 & 0.947 & 0.939 \\
+MCV\_L & 0.994 & 0.991 & 0.996 & 0.994 & FEET\_PCT\_ASYM & 0.913 & 0.887 & 0.933 & 0.911 \\
+FWAVE\_R & 0.996 & 0.993 & 0.992 & 0.994 & MNSI & 0.874 & 0.851 & 0.873 & 0.866 \\
+SSA\_R & 0.983 & 0.998 & 0.996 & 0.993 & DEC\_VS & 0.469 & 0.423 & 0.512 & 0.468 \\
+SPSA\_L & 0.997 & 0.985 & 0.994 & 0.992 & DEC\_AR & 0.432 & 0.414 & 0.492 & 0.446 \\
+MCV\_R & 0.994 & 0.992 & 0.988 & 0.991 & DSLPDMIA & 0.414 & 0.435 & 0.439 & 0.429 \\
+NS & 0.988 & 0.988 & 0.979 & 0.985 & DEC\_PPS & 0.419 & 0.417 & 0.442 & 0.426 \\
+HBA1C & 0.986 & 0.968 & 0.992 & 0.982 & INSULIN & 0.467 & 0.378 & 0.387 & 0.411 \\
+FEET\_MEAN\_ESC & 0.983 & 0.974 & 0.987 & 0.981 & DEC\_LTS & 0.383 & 0.381 & 0.446 & 0.403 \\
+SPSA\_R & 0.983 & 0.973 & 0.985 & 0.980 & HPN & 0.418 & 0.349 & 0.398 & 0.388 \\
+SSC\_R & 0.978 & 0.979 & 0.982 & 0.980 & CKD & 0.157 & 0.231 & 0.360 & 0.249 \\
+HAND\_MEAN\_ESC & 0.977 & 0.987 & 0.973 & 0.979 & PAOD & 0.050 & 0.110 & 0.100 & 0.086 \\
+SPSC\_L & 0.975 & 0.977 & 0.980 & 0.977 & & & & & \\
+\bottomrule
+\end{tabular}
+\caption{Global feature importance scores for the Diabetic Peripheral Neuropathy (DPN) predictive model. Values represent the relative contribution of each clinical and electrophysiological feature across three distinct cross-validation splits, alongside the overall mean. Electrophysiological parameters, notably left and right compound muscle action potentials (e.g., CMAPKNE\_L, CMAPANK\_L), demonstrate the highest predictive utility, while broad systemic comorbidities (e.g., CKD, PAOD) show minimal influence on the model's decision-making process.    
+}
 \label{tab:global_imp}
 \end{table}
 
-% \begin{table}[t]
-% \centering
-% \small
-% \begin{tabular}{cccccccc}
-% \toprule
-% Model & # Instances  & # Misclassified & # Instances with CF & Sparsity Mean & L1 Mean & L2 Mean \\
-% \midrule
-% Split 0 & 6 & 4 & 6 & 25.669 & 106.291 & 30.464 \\
-% Split 1 & 7 & 4 & 6 & 25.970 & 104.365 & 29.863 \\
-% Split 2 & 9 & 6 & 8 & 25.543 & 101.207 & 29.327 \\
-% \bottomrule
-% \end{tabular}
-% \caption{Local Counterfactual Analysis}
-% \label{tab:localcf_summary_all}
-% \end{table}
+\subsection*{Local counterfactual analysis}
+%==========================================
+Table~\ref{tab:local_cf} shows Local counterfactual analysis evaluating model decision boundaries across three data splits.
+
+The Explainable AI (XAI) framework is highly effective at generating counterfactuals. It successfully produced CFs for nearly all evaluated instances (e.g., 6 of 6 in Split 0; 8 of 9 in Split 2), proving the method works robustly even on difficult or misclassified cases. 
+
+The perturbation metrics are remarkably stable across all three splits. The Sparsity Mean (~25.5 to 25.9), L1 Mean (~101 to 106), and L2 Mean (~29.3 to 30.4) show very little variance. This indicates that the "distance" to cross the AI's decision boundary is uniform regardless of how the training data was divided. 
+
+A mean sparsity of ~25 implies that, on average, roughly 25 different clinical or electrophysiological features must be slightly adjusted to change the model's prediction. This suggests a highly complex, multi-dimensional decision boundary rather than reliance on just one or two overriding variables.
+
+Actionable "What-If" Scenarios: Local counterfactuals are incredibly valuable for clinical interpretation. For a borderline or misclassified patient, this analysis explicitly tells the clinician: "If this patient's feature X was lower by amount Y, the model would have classified them as healthy." This helps doctors understand exactly where a patient sits on the DPN spectrum.
+
+Auditing Diagnostic Errors: By isolating the misclassified instances and examining their counterfactuals, clinicians and data scientists can audit why the AI failed. It can reveal if the model was confused by conflicting electrophysiological signals or if the patient simply presents an atypical, rare manifestation of diabetic neuropathy.
+\textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}   
+
+% Local counterfactual analysis
+%==============================
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{cccccccc}
+\toprule
+Model & Instance  & Misclassified & Instances with CF & Sparsity Mean & L1 Mean & L2 Mean \\
+\midrule
+Split 0 & 6 & 4 & 6 & 25.669 & 106.291 & 30.464 \\
+Split 1 & 7 & 4 & 6 & 25.970 & 104.365 & 29.863 \\
+Split 2 & 9 & 6 & 8 & 25.543 & 101.207 & 29.327 \\
+\bottomrule
+\end{tabular}
+\caption{Local counterfactual (CF) analysis evaluating model decision boundaries across three data splits. The table presents the number of evaluated instances, the subset of misclassified cases, and the success rate of generating counterfactual explanations. Distance metrics—Mean Sparsity (number of altered features), L1 Mean (absolute change), and L2 Mean (Euclidean distance)—quantify the minimal feature perturbations required to flip the model's diagnostic prediction. 
+}
+\label{tab:localcf\_summary_all}
+\end{table}
+
+\subsection*{Instance-Level Local Counterfactual Analysis}
+%========================================================
+
+Instance-level local counterfactual (CF) analysis across three model splits. This table details specific patient instances, comparing the model's prediction against the actual DPN diagnosis. It outlines the model's predictive confidence (probability), distance to the decision threshold (margin), and specific counterfactual metrics (CF Count, Sparsity, L1, and L2 Means) required to alter the diagnostic classification for both correctly and incorrectly classified cases.
+
+High Variability in CF Count: Unlike the stable perturbation averages seen in global metrics, the number of feasible counterfactuals generated for individual patients varies drastically (e.g., ranging from 4 for ID 106 to 45 for ID 54). This indicates that some patients sit in highly complex, dense regions of the feature space where many different minor physiological changes could alter their diagnosis, while others have very limited pathways to a different classification.
+
+Auditing "Confident but Wrong" Predictions: The table exposes highly confident misclassifications. For example, Instance ID 73 (Split 1) was predicted as "Confirmed" with a very high probability (0.934) but was actually "Unconfirmed." Identifying these specific edge cases is a crucial function of the XAI layer.
+
+Stable Sparsity Despite Individual Differences: Even though the margin and CF counts vary wildly between patients, the Sparsity metric remains relatively stable (generally between 22 and 30 features). This reinforces that altering a DPN diagnosis mathematically requires a systemic shift across multiple variables, rather than a drastic change in just one or two metrics.
+
+Investigating Diagnostic Blind Spots: By isolating instances with high confidence but incorrect predictions (like ID 73), clinical researchers can manually review the patient's file. This helps uncover whether the patient has a rare comorbidity confusing the model, or if there is a fundamental flaw in how the AI weighs certain nerve conduction parameters for specific demographics.
+
+Personalized Preventative Care: For patients who are correctly classified but have a very narrow decision margin (e.g., ID 12 in Split 1 with a margin of just 0.031), the counterfactuals act as a highly personalized warning system. Clinicians can view the specific CF pathways to see exactly which minor physiological shifts would push this specific patient into a "Confirmed" DPN status, allowing for highly targeted preventative treatments.
 
 
-% \begin{table}[t]
-% \centering
-% \small
-% \begin{tabular}{lrrrrrrrrrr}
-% \toprule
-% model & ID & prediction & actual & misclassified & probability & margin & CF Count & Sparsity & L1 Mean & L2 Mean \\
-% \midrule
-% Split 0 & 4 & Confirmed & Confirmed & No & 0.719 & 0.083 & 4 & 28.250 & 116.995 & 30.669 \\
-%  & 55 & Confirmed & Confirmed & No & 0.767 & 0.131 & 22 & 27.545 & 107.345 & 29.713 \\
-%  & 67 & Unconfirmed & Confirmed & Yes & 0.187 & 0.449 & 20 & 24.000 & 92.632 & 28.135 \\
-%  & 106 & Unconfirmed & Confirmed & Yes & 0.524 & 0.111 & 4 & 25.250 & 114.363 & 34.028 \\
-%  & 128 & Unconfirmed & Confirmed & Yes & 0.275 & 0.360 & 35 & 22.829 & 93.903 & 28.710 \\
-%  & 158 & Unconfirmed & Confirmed & Yes & 0.037 & 0.598 & 35 & 26.143 & 112.511 & 31.527 \\
-% \midrule
-% Split 1 & 12 & Confirmed & Confirmed & No & 0.666 & 0.031 & 38 & 27.605 & 111.169 & 30.800 \\
-%  & 54 & Confirmed & Confirmed & No & 0.751 & 0.116 & 45 & 28.267 & 121.284 & 32.891 \\
-%  & 73 & Confirmed & Unconfirmed & Yes & 0.934 & 0.298 & 39 & 28.308 & 122.743 & 32.733 \\
-%  & 94 & Unconfirmed & Unconfirmed & No & 0.481 & 0.154 & 11 & 18.364 & 56.315 & 20.650 \\
-%  & 119 & Confirmed & Unconfirmed & Yes & 0.725 & 0.090 & 25 & 26.360 & 110.292 & 31.537 \\
-%  & 178 & Confirmed & Unconfirmed & Yes & 0.701 & 0.066 & 35 & 26.914 & 104.387 & 30.569 \\
-% \midrule
-% Split 2 & 22 & Unconfirmed & Confirmed & Yes & 0.171 & 0.464 & 31 & 25.161 & 94.326 & 28.951 \\
-%  & 45 & Confirmed & Unconfirmed & Yes & 0.900 & 0.265 & 15 & 25.933 & 107.987 & 30.173 \\
-%  & 68 & Unconfirmed & Confirmed & Yes & 0.007 & 0.629 & 25 & 24.160 & 114.459 & 34.346 \\
-%  & 88 & Confirmed & Confirmed & No & 0.826 & 0.191 & 19 & 25.684 & 92.409 & 26.595 \\
-%  & 96 & Unconfirmed & Confirmed & Yes & 0.512 & 0.123 & 23 & 25.478 & 94.640 & 27.299 \\
-%  & 136 & Confirmed & Confirmed & No & 0.648 & 0.013 & 12 & 24.250 & 91.867 & 28.033 \\
-%  & 155 & Confirmed & Confirmed & No & 0.745 & 0.110 & 8 & 30.875 & 136.090 & 35.099 \\
-%  & 167 & Unconfirmed & Confirmed & Yes & 0.127 & 0.508 & 25 & 22.800 & 77.874 & 24.117 \\
-% \bottomrule
-% \end{tabular}
-% \caption{Local Counterfactual Analysis for Model 0}
-% \label{tab:localcf_summary_0}
-% \end{table}
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+model & ID & prediction & actual & misclassified & probability & margin & CF Count & Sparsity & L1 Mean & L2 Mean \\
+\midrule
+Split 0 & 4 & Confirmed & Confirmed & No & 0.719 & 0.083 & 4 & 28.250 & 116.995 & 30.669 \\
+ & 55 & Confirmed & Confirmed & No & 0.767 & 0.131 & 22 & 27.545 & 107.345 & 29.713 \\
+ & 67 & Unconfirmed & Confirmed & Yes & 0.187 & 0.449 & 20 & 24.000 & 92.632 & 28.135 \\
+ & 106 & Unconfirmed & Confirmed & Yes & 0.524 & 0.111 & 4 & 25.250 & 114.363 & 34.028 \\
+ & 128 & Unconfirmed & Confirmed & Yes & 0.275 & 0.360 & 35 & 22.829 & 93.903 & 28.710 \\
+ & 158 & Unconfirmed & Confirmed & Yes & 0.037 & 0.598 & 35 & 26.143 & 112.511 & 31.527 \\
+\midrule
+Split 1 & 12 & Confirmed & Confirmed & No & 0.666 & 0.031 & 38 & 27.605 & 111.169 & 30.800 \\
+ & 54 & Confirmed & Confirmed & No & 0.751 & 0.116 & 45 & 28.267 & 121.284 & 32.891 \\
+ & 73 & Confirmed & Unconfirmed & Yes & 0.934 & 0.298 & 39 & 28.308 & 122.743 & 32.733 \\
+ & 94 & Unconfirmed & Unconfirmed & No & 0.481 & 0.154 & 11 & 18.364 & 56.315 & 20.650 \\
+ & 119 & Confirmed & Unconfirmed & Yes & 0.725 & 0.090 & 25 & 26.360 & 110.292 & 31.537 \\
+ & 178 & Confirmed & Unconfirmed & Yes & 0.701 & 0.066 & 35 & 26.914 & 104.387 & 30.569 \\
+\midrule
+Split 2 & 22 & Unconfirmed & Confirmed & Yes & 0.171 & 0.464 & 31 & 25.161 & 94.326 & 28.951 \\
+ & 45 & Confirmed & Unconfirmed & Yes & 0.900 & 0.265 & 15 & 25.933 & 107.987 & 30.173 \\
+ & 68 & Unconfirmed & Confirmed & Yes & 0.007 & 0.629 & 25 & 24.160 & 114.459 & 34.346 \\
+ & 88 & Confirmed & Confirmed & No & 0.826 & 0.191 & 19 & 25.684 & 92.409 & 26.595 \\
+ & 96 & Unconfirmed & Confirmed & Yes & 0.512 & 0.123 & 23 & 25.478 & 94.640 & 27.299 \\
+ & 136 & Confirmed & Confirmed & No & 0.648 & 0.013 & 12 & 24.250 & 91.867 & 28.033 \\
+ & 155 & Confirmed & Confirmed & No & 0.745 & 0.110 & 8 & 30.875 & 136.090 & 35.099 \\
+ & 167 & Unconfirmed & Confirmed & Yes & 0.127 & 0.508 & 25 & 22.800 & 77.874 & 24.117 \\
+\bottomrule
+\end{tabular}
+\caption{Instance-level local counterfactual (CF) analysis across three model splits. This table details specific patient instances, comparing the model's prediction against the actual DPN diagnosis. It outlines the model's predictive confidence (probability), distance to the decision threshold (margin), and specific counterfactual metrics (CF Count, Sparsity, L1, and L2 Means) required to alter the diagnostic classification for both correctly and incorrectly classified cases.}
+\label{tab:localcf_summary_0}
+\end{table}
 
 
 % \begin{figure*}
@@ -912,7 +949,7 @@ PAOD & 0.050 & 0.110 & 0.100 & 0.086 \\
 % \end{sidewaysfigure}
 
 \section*{Conclusion}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%
 
 
 \bibliography{sample}

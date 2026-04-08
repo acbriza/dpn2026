@@ -334,74 +334,74 @@ CAS & 0.00 & 49.00 &  & 26.22 ± 10.87 & 31.02 ± 7.62 & 29.50 ± 9.03 &  & -0.6
 %=======================================
 % Categorical Plots
 %=======================================
-\begin{figure*}[ht]
-    % \centering
-    \hspace*{0.085\textwidth}
-    \includegraphics[width=0.5\textwidth]{figures/eda/categ_profile_histogram.png}
-    \\[2ex] % Adds a line break and some extra vertical space
-    \hspace*{0.085\textwidth}
-    \includegraphics[width=0.83\textwidth]{figures/eda/categ_comorbs_histogram.png}
-    \\[2ex] % Adds a line break and some extra vertical space
-    \hspace*{0.085\textwidth}
-    \includegraphics[width=0.66\textwidth]{figures/eda/categ_neuro_histogram.png}
-    \caption{
-    Count distributions of categorical clinical variables comparing Unconfirmed (blue) and Confirmed (red) groups across demographic, comorbidity, and diagnostic subcategory features. Variables are organized into three rows: (1) patient profile — Sex (SEX), Subjective Neuropathy Complaint (SUBJ), and Insulin Use (INSULIN); (2) comorbidities — Hypertension (HPN), Peripheral Arterial Occlusive Disease (PAOD), Dyslipidemia (DSLPDMIA), Chronic Kidney Disease (CKD), and Guillain-Barré Syndrome (GBS); and (3) neurological test — Decreased Vibration Sense (DEC\_VS), Decreased Pinprick Sensation (DEC\_PPS), Decreased Light Touch Sensation (DEC\_LTS), and Decreased Ankle Reflex (DEC\_AR).
-    Across nearly all variables, the Confirmed group consistently exhibited higher counts in the affirmative ("Yes") category relative to the Unconfirmed group, suggesting a broader and more severe clinical profile. Notably, the Confirmed group showed a strong male predominance, a substantially higher rate of subjective neuropathy complaints, and greater insulin use, potentially reflecting more advanced or insulin-dependent diabetes. Among comorbidities, HPN, DSLPDMIA, and CKD showed markedly higher affirmative counts in the Confirmed group, while PAOD and GBS affirmative cases were nearly absent in both groups, suggesting these may be rare in the study population. In the diagnostic subcategory variables, the Confirmed group consistently reported higher rates of sensory and reflex deficits across all four measures (DEC\_VS, DEC\_PPS, DEC\_LTS, DEC\_AR), consistent with a more pronounced neuropathic presentation and supporting the clinical validity of the group classification.
-    \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
-    }
-    \label{fig:categ}
-\end{figure*}
+% \begin{figure*}[ht]
+%     % \centering
+%     \hspace*{0.085\textwidth}
+%     \includegraphics[width=0.5\textwidth]{figures/eda/categ_profile_histogram.png}
+%     \\[2ex] % Adds a line break and some extra vertical space
+%     \hspace*{0.085\textwidth}
+%     \includegraphics[width=0.83\textwidth]{figures/eda/categ_comorbs_histogram.png}
+%     \\[2ex] % Adds a line break and some extra vertical space
+%     \hspace*{0.085\textwidth}
+%     \includegraphics[width=0.66\textwidth]{figures/eda/categ_neuro_histogram.png}
+%     \caption{
+%     Count distributions of categorical clinical variables comparing Unconfirmed (blue) and Confirmed (red) groups across demographic, comorbidity, and diagnostic subcategory features. Variables are organized into three rows: (1) patient profile — Sex (SEX), Subjective Neuropathy Complaint (SUBJ), and Insulin Use (INSULIN); (2) comorbidities — Hypertension (HPN), Peripheral Arterial Occlusive Disease (PAOD), Dyslipidemia (DSLPDMIA), Chronic Kidney Disease (CKD), and Guillain-Barré Syndrome (GBS); and (3) neurological test — Decreased Vibration Sense (DEC\_VS), Decreased Pinprick Sensation (DEC\_PPS), Decreased Light Touch Sensation (DEC\_LTS), and Decreased Ankle Reflex (DEC\_AR).
+%     Across nearly all variables, the Confirmed group consistently exhibited higher counts in the affirmative ("Yes") category relative to the Unconfirmed group, suggesting a broader and more severe clinical profile. Notably, the Confirmed group showed a strong male predominance, a substantially higher rate of subjective neuropathy complaints, and greater insulin use, potentially reflecting more advanced or insulin-dependent diabetes. Among comorbidities, HPN, DSLPDMIA, and CKD showed markedly higher affirmative counts in the Confirmed group, while PAOD and GBS affirmative cases were nearly absent in both groups, suggesting these may be rare in the study population. In the diagnostic subcategory variables, the Confirmed group consistently reported higher rates of sensory and reflex deficits across all four measures (DEC\_VS, DEC\_PPS, DEC\_LTS, DEC\_AR), consistent with a more pronounced neuropathic presentation and supporting the clinical validity of the group classification.
+%     \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
+%     }
+%     \label{fig:categ}
+% \end{figure*}
 
 %=======================================
 % Histogram of Profile MSI 
 %=======================================
-\begin{figure*}[ht]
-    \centering
-    \includegraphics[width=0.66\textwidth]{figures/eda/cont_profile_mnsi_distributions.png}
-    \\[2ex] % Adds a line break and some extra vertical space
-    \includegraphics[width=0.66\textwidth]{figures/eda/cont_profile_mnsi_boxplots.png}
-    \caption{Stacked density distributions (top) and boxplots (bottom) of clinical and demographic variables comparing Unconfirmed (blue) and Confirmed (red) groups. Variables presented include Age (AGE; median: 52.0 vs. 61.0), Diabetes Duration in years (DM\_DUR; median: 2.0 vs. 7.0), Glycated Hemoglobin (HBA1C; median: 7.1 vs. 7.6), and Michigan Neuropathy Screening Instrument score (MNSI; median: 4.0 vs. 6.0). Three of the four variables showed statistically significant group differences (p < 0.001 for AGE, DM\_DUR, and MNSI), while HBA1C did not reach significance (p = 0.256), suggesting that glycemic control levels alone may not distinguish the two groups. The Confirmed group was notably older and had a substantially longer diabetes duration, consistent with the known association between prolonged diabetes and increased neuropathy risk. The wider interquartile range and heavier right tail observed in DM\_DUR for the Confirmed group further suggests considerable heterogeneity in disease chronicity within this group. The significantly higher MNSI scores in the Confirmed group align with expected clinical presentation, reinforcing MNSI as a potentially useful screening variable, while the marginal HBA1C difference warrants caution against over-relying on glycemic markers alone in neuropathy risk stratification.
-    \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
-    \label{fig:profile_mnsi}
-    }
-\end{figure*}
+% \begin{figure*}[ht]
+%     \centering
+%     \includegraphics[width=0.66\textwidth]{figures/eda/cont_profile_mnsi_distributions.png}
+%     \\[2ex] % Adds a line break and some extra vertical space
+%     \includegraphics[width=0.66\textwidth]{figures/eda/cont_profile_mnsi_boxplots.png}
+%     \caption{Stacked density distributions (top) and boxplots (bottom) of clinical and demographic variables comparing Unconfirmed (blue) and Confirmed (red) groups. Variables presented include Age (AGE; median: 52.0 vs. 61.0), Diabetes Duration in years (DM\_DUR; median: 2.0 vs. 7.0), Glycated Hemoglobin (HBA1C; median: 7.1 vs. 7.6), and Michigan Neuropathy Screening Instrument score (MNSI; median: 4.0 vs. 6.0). Three of the four variables showed statistically significant group differences (p < 0.001 for AGE, DM\_DUR, and MNSI), while HBA1C did not reach significance (p = 0.256), suggesting that glycemic control levels alone may not distinguish the two groups. The Confirmed group was notably older and had a substantially longer diabetes duration, consistent with the known association between prolonged diabetes and increased neuropathy risk. The wider interquartile range and heavier right tail observed in DM\_DUR for the Confirmed group further suggests considerable heterogeneity in disease chronicity within this group. The significantly higher MNSI scores in the Confirmed group align with expected clinical presentation, reinforcing MNSI as a potentially useful screening variable, while the marginal HBA1C difference warrants caution against over-relying on glycemic markers alone in neuropathy risk stratification.
+%     \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
+%     \label{fig:profile_mnsi}
+%     }
+% \end{figure*}
 
 %=======================================
 % Distribution and Boxplot of NCS 
 %=======================================
-\begin{figure*}[ht]
-    \centering
-    \includegraphics[width=1\textwidth]{figures/eda/cont_ncs1_distributions.png}
-    \\[2ex] % Adds a line break and some extra vertical space
-    \includegraphics[width=1\textwidth]{figures/eda/cont_ncs1_boxplots.png}
-    \\[6ex] % Adds a line break and some extra vertical space
-    \includegraphics[width=1\textwidth]{figures/eda/cont_ncs2_distributions.png}
-    \\[2ex] % Adds a line break and some extra vertical space
-    \includegraphics[width=1\textwidth]{figures/eda/cont_ncs2_boxplots.png}
-    \\[6ex] % Adds a line break and some extra vertical space
-    \includegraphics[width=1\textwidth]{figures/eda/cont_ncs3_distributions.png}
-    \\[2ex] % Adds a line break and some extra vertical space
-    \includegraphics[width=1\textwidth]{figures/eda/cont_ncs3_boxplots.png}
-    \caption{
-    Density distributions and boxplots of Nerve Conduction Study (NCS) variables comparing Unconfirmed (blue) and Confirmed (red) groups, encompassing Sural Peak Sensory Conduction (SPSC\_L, SPSC\_R), Motor Conduction Velocity (MCV\_L, MCV\_R), Distal Latency (DL\_L, DL\_R), Sural Sensory Amplitude (SSA\_L, SSA\_R), Sural Sensory Conduction (SSC\_L, SSC\_R), and Sural Peak Sensory Amplitude (SPSA\_L, SPSA\_R). All variables demonstrated statistically significant group differences (p < 0.001 for most; DL\_R: p = 0.003). The Confirmed group consistently showed lower median values across all conduction velocity and sensory amplitude measures, with density distributions revealing a pronounced clustering near zero in SPSC and MCV variables, indicative of a substantial subset with absent or severely reduced nerve conduction responses. Sensory amplitude variables were most dramatically reduced in the Confirmed group, with compressed interquartile ranges approaching zero across SSA and SPSA measures bilaterally, strongly suggestive of axonal loss or severe sensory nerve compromise. Modest but consistent increases in distal latency in the Confirmed group further corroborate slowed nerve conduction, collectively underscoring the discriminative utility of NCS variables in characterizing neuropathic severity between groups.
-    \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
-    \label{fig:ncs}
-    }
-\end{figure*}
+% \begin{figure*}[ht]
+%     \centering
+%     \includegraphics[width=1\textwidth]{figures/eda/cont_ncs1_distributions.png}
+%     \\[2ex] % Adds a line break and some extra vertical space
+%     \includegraphics[width=1\textwidth]{figures/eda/cont_ncs1_boxplots.png}
+%     \\[6ex] % Adds a line break and some extra vertical space
+%     \includegraphics[width=1\textwidth]{figures/eda/cont_ncs2_distributions.png}
+%     \\[2ex] % Adds a line break and some extra vertical space
+%     \includegraphics[width=1\textwidth]{figures/eda/cont_ncs2_boxplots.png}
+%     \\[6ex] % Adds a line break and some extra vertical space
+%     \includegraphics[width=1\textwidth]{figures/eda/cont_ncs3_distributions.png}
+%     \\[2ex] % Adds a line break and some extra vertical space
+%     \includegraphics[width=1\textwidth]{figures/eda/cont_ncs3_boxplots.png}
+%     \caption{
+%     Density distributions and boxplots of Nerve Conduction Study (NCS) variables comparing Unconfirmed (blue) and Confirmed (red) groups, encompassing Sural Peak Sensory Conduction (SPSC\_L, SPSC\_R), Motor Conduction Velocity (MCV\_L, MCV\_R), Distal Latency (DL\_L, DL\_R), Sural Sensory Amplitude (SSA\_L, SSA\_R), Sural Sensory Conduction (SSC\_L, SSC\_R), and Sural Peak Sensory Amplitude (SPSA\_L, SPSA\_R). All variables demonstrated statistically significant group differences (p < 0.001 for most; DL\_R: p = 0.003). The Confirmed group consistently showed lower median values across all conduction velocity and sensory amplitude measures, with density distributions revealing a pronounced clustering near zero in SPSC and MCV variables, indicative of a substantial subset with absent or severely reduced nerve conduction responses. Sensory amplitude variables were most dramatically reduced in the Confirmed group, with compressed interquartile ranges approaching zero across SSA and SPSA measures bilaterally, strongly suggestive of axonal loss or severe sensory nerve compromise. Modest but consistent increases in distal latency in the Confirmed group further corroborate slowed nerve conduction, collectively underscoring the discriminative utility of NCS variables in characterizing neuropathic severity between groups.
+%     \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
+%     \label{fig:ncs}
+%     }
+% \end{figure*}
 
 %=======================================
 % Distribution and Boxplot of Sudoscan 
 %=======================================
-\begin{figure*}[ht]
-    \centering
-    \includegraphics[width=1\textwidth]{figures/eda/cont_sudo_distributions.png}
-    \\[2ex] % Adds a line break and some extra vertical space
-    \includegraphics[width=1\textwidth]{figures/eda/cont_sudo_boxplots.png}
-    \caption{Stacked density distributions (top) and boxplots (bottom) of all SUDOSCAN-derived variables comparing Unconfirmed (blue) and Confirmed (red) groups. Variables presented include Feet Mean Electrochemical Skin Conductance (FEET\_MEAN\_ESC; median: 60.5 vs. 47.5), Feet Percent Asymmetry (FEET\_PCT\_ASYM; median: 3.0 vs. 6.5), Hand Mean ESC (HAND\_MEAN\_ESC; median: 63.0 vs. 56.0), Hand Percent Asymmetry (HAND\_PCT\_ASYM; median: 6.0 vs. 10.0), Nerve Score (NS; median: 60.5 vs. 50.5), and Composite Autonomic Score (CAS; median: 28.0 vs. 31.0). Nearly all variables demonstrated statistically significant group differences (p < 0.001 for FEET\_MEAN\_ESC, FEET\_PCT\_ASYM, and CAS; p= 0.003 for NS; p = 0.016 for HAND\_MEAN\_ESC), with the exception of p = 0.077 for HAND\_PCT\_ASYM) potentially reflecting greater lateralized nerve impairment in the hands. Notably, the Confirmed group exhibited lower mean ESC values in both feet and hands, consistent with reduced sudomotor function. The elevated CAS in the Confirmed group, despite lower NS values, warrants further investigation into the composite scoring methodology and its constituent variables.
-    \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
-    \label{fig:sudo}
-    }
-\end{figure*}
+% \begin{figure*}[ht]
+%     \centering
+%     \includegraphics[width=1\textwidth]{figures/eda/cont_sudo_distributions.png}
+%     \\[2ex] % Adds a line break and some extra vertical space
+%     \includegraphics[width=1\textwidth]{figures/eda/cont_sudo_boxplots.png}
+%     \caption{Stacked density distributions (top) and boxplots (bottom) of all SUDOSCAN-derived variables comparing Unconfirmed (blue) and Confirmed (red) groups. Variables presented include Feet Mean Electrochemical Skin Conductance (FEET\_MEAN\_ESC; median: 60.5 vs. 47.5), Feet Percent Asymmetry (FEET\_PCT\_ASYM; median: 3.0 vs. 6.5), Hand Mean ESC (HAND\_MEAN\_ESC; median: 63.0 vs. 56.0), Hand Percent Asymmetry (HAND\_PCT\_ASYM; median: 6.0 vs. 10.0), Nerve Score (NS; median: 60.5 vs. 50.5), and Composite Autonomic Score (CAS; median: 28.0 vs. 31.0). Nearly all variables demonstrated statistically significant group differences (p < 0.001 for FEET\_MEAN\_ESC, FEET\_PCT\_ASYM, and CAS; p= 0.003 for NS; p = 0.016 for HAND\_MEAN\_ESC), with the exception of p = 0.077 for HAND\_PCT\_ASYM) potentially reflecting greater lateralized nerve impairment in the hands. Notably, the Confirmed group exhibited lower mean ESC values in both feet and hands, consistent with reduced sudomotor function. The elevated CAS in the Confirmed group, despite lower NS values, warrants further investigation into the composite scoring methodology and its constituent variables.
+%     \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
+%     \label{fig:sudo}
+%     }
+% \end{figure*}
 
 
 \section*{Methodology}
@@ -552,7 +552,7 @@ DiCE object(dice\_ml.Dice)
 & method & genetic \\
 \hline
 \label{tab:dice_setup}
-\caption{DiCE General Configuration. This table shows the parameters used for create the DiCE Data, Model, and Instance objects.}
+\caption{DiCE General Configuration. These are the parameters used to create the DiCE data, model, and instance objects.}
 \end{tabular}
 \end{table}
 
@@ -575,7 +575,7 @@ posthoc\_sparsity\_algorithm & binary \\
 \hline
 \end{tabular}
 \label{tab:global_cf}
-\caption{Global Counterfactual Importance Parameters. These are the parameters for computing the global importance with a call to \textit{global\_feature\_importance}}
+\caption{Global Counterfactual Importance Parameters. These are the parameters for computing the global importance with a call to \textit{global\_feature\_importance}.}
 \end{table}
 
 \subsubsection*{Local Counterfactual Analysis}
@@ -598,7 +598,6 @@ The parameters used for generating local counterfactuals via $generate\_counterf
 
 \begin{table}[htbp]
 \centering
-\caption{Local Counterfactual Generation Parameters}
 \begin{tabular}{ll}
 \hline
 \textbf{Parameter} & \textbf{Value / Description} \\
@@ -617,6 +616,7 @@ categorical\_penalty & 0.1 \\
 algorithm & DiverseCF \\
 \hline
 \end{tabular}
+\caption{Local Counterfactual Generation Parameters. These are the parameters for generating the local counterfactuals with a call to \textit{generate\_counterfactuals}.}
 \label{tab:local_cf}
 \end{table}
 
@@ -644,7 +644,9 @@ The selected parameters balance proximity, diversity, and sparsity, ensuring tha
         \label{fig:violin_youden}
     \end{subfigure}
     % \captionsetup{font=footnotesize}
-    \caption{Violin plots of ROC-AUC and Youden Index across all models}
+    \caption{Violin plots of  across all models.
+    Distribution of ROC-AUC (left) and Youden Index (right) scores across multiple runs for sixteen classification models. For ROC-AUC, ensemble tree-based methods — Extra Trees, CatBoost, Random Forest, and XGBoost — consistently achieved the highest median ROC-AUC values (≥ 0.96) with compact distributions, indicating stable and reproducible performance. For the Youden Index, ensemble tree-based methods again achieved the highest median values (≈ 0.80–0.87) with relatively compact distributions, indicating consistently balanced sensitivity and specificity. These results suggest that ensemble tree-based methods as the most robust candidates for this classification task. 
+    }
     \label{fig:violins_model}
 \end{figure*}
 
@@ -655,8 +657,8 @@ The selected parameters balance proximity, diversity, and sparsity, ensuring tha
     \centering
     \includegraphics[width=1\textwidth]{figures/modeling/youden_summary_table.png}
     % \captionsetup{font=footnotesize}
-    \caption{Summary of Youden values across all models.}
-    \label{fig:run_time}
+    \caption{Heatmap of average Youden Index scores across sixteen classification models and ten feature sets, where feature sets represent systematic exclusions of variable groups: All (full feature set), NoCol, NoNCS, NoSudo, NoNeuro, NoCom, NoMSI, NoProf, NCS-only, and Sudo-only. Ensemble tree-based methods — CatBoost, Random Forest, XGBoost, Extra Trees, and LightGBM — consistently achieved the highest Youden Index values across most feature sets (≥ 0.80), with the full feature set (All) and NCS-adjacent sets performing best. Notably, performance dropped substantially across nearly all models when NCS-derived (NoNCS) features were excluded, suggesting NCS readings carry significant discriminative information.This is confirmed with the NCS-only set produced surprisingly competitive results for several top models (e.g., Extra Trees: 0.86, RBF SVM: 0.82, kNN: 0.82), again showing that NCS data as particularly informative. Interestingly, dropping collinear features significantly dropped the performance of the models. The Sudo-only feature set yielded uniformly poor performance across all models.}
+    \label{fig:youden_summary}
 \end{figure*}
 
 %=======================================

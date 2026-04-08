@@ -71,8 +71,7 @@ This is an explanatory section \textbf{for the authors' use only} -- it won't ap
 
 \section*{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%
-\textcolor{blue}{Diabetic peripheral neuropathy (DPN) is the most common type of polyneuropathy affecting 42-
-58\% of Filipinos \cite{ropper2019adams, araneta2006hyperglycemia, dagang2016validation}.
+\textcolor{blue}{Diabetic peripheral neuropathy (DPN) is the most common type of polyneuropathy affecting 42-58\% of Filipinos \cite{ropper2019adams, araneta2006hyperglycemia, dagang2016validation}.
 }
 Characterized by progressive nerve damage, DPN often presents with symptoms such as pain, numbness, and loss of sensation in the extremities, particularly the feet. Beyond its direct impact on quality of life, DPN is a major risk factor for foot ulcers, infections, and lower-limb amputations, contributing significantly to healthcare burden.
 
@@ -477,41 +476,41 @@ Table~\ref{tab:cf_features} shows the feature set and their suitability for coun
 % =======================================
 % Table of Counterfactual Features
 % =======================================
-\begin{table}[ht]
-\centering
-\small
-\begin{tabular}{p{0.1\linewidth} p{0.25\linewidth} p{0.1\linewidth} p{0.4\linewidth}}
-\toprule
-GROUP &  DESCRIPTION & SUITABLE? & REASON \\
-\midrule
-Profile      & Patient's sex (M or F) & No & Cannot be changed \\
-             & Patient's age & No & Cannot be changed \\
-             & Other symptoms & No & Too vague to act on \\
-             & Diabetes Mellitus duration & No & Cannot be reversed \\
-             & Patient is taking insulin treatments & Yes & Directly actionable — treatment can be started, stopped, or changed \\
-             & Hemoglobin A1c & Yes & Modifiable through lifestyle, diet, and medication \\
-\midrule
-Commorbidity & Hypertension & Yes & Manageable through antihypertensives and lifestyle \\
-             & Peripheral Arterial Occulsive Disease & Conditional & Partially treatable (revascularization, lifestyle) but not fully reversible \\
-             & Dyslipidemia & Yes & Modifiable through statins, diet, exercise\\
-             & Chronic Kidney Disease & Yes & Partially modifiable through nephroprotective interventions \\
-             & Guillain-Barre Syndrome & Yes & Acute/post-infectious — not a modifiable long-term factor in this context \\
-\midrule
-Neurology \newline Test   & Decreased Vibration Sensation, Pinprick Sensation, Light Touch Sensation & Yes &  Can improve with glycemic control and neuropathy treatment \\
-                 & Decreased Ankle Reflex & Yes &  Can improve with glycemic control and neuropathy treatment \\
-\midrule
-MNSI            & Michigan Neuropathy Screening Instrument & Yes & Can reflect treatable neuropathic progression \\
-\midrule
-Nerve \newline Conduction \newline Study   & All & Observational & These are biomarker outcomes of neuropathy. While these are not directly actionable inputs, they can be treated as counterfactuals that answer "what must change". Intervention is left to the physician. While the traditional counterfactual framing asks: "What should the patient change?", these observational ocounterfactuals ask: "What clinical targets must be achieved for the model to predict a different outcome?"\\
-\midrule
-Sudoscan & All & Observational &  Similar to Nerve Conduction Features, these are physiological biomarkers, not direct interventions and are thus considered Observational counterfactuals. \\
-\bottomrule
-\end{tabular}
-\caption{Suitability of features for counterfactual analysis. Counterfactual analysis asks "what if this feature were different?" — so suitable features must be actionable, modifiable, and clinically meaningful to change. Unsuitable features are those that cannot be changed, reversed, or acted on. Conditional and observational features are outcomes or downstream measurements — more useful as targets of counterfactuals than as inputs. For the counterfactual analysis done in this study, all features except those marked as unsuitable (\textit{No} in the third column) are included in the generation of counterfactuals.
-\textcolor{red}{<EAMC: This categorization is crucial in the generation of counterfactuals and is the may carry half of the value of the paper.  Please confirm if you agree with this classification and observations.>}
-}
-\label{tab:cf_features}
-\end{table}
+% \begin{table}[ht]
+% \centering
+% \small
+% \begin{tabular}{p{0.1\linewidth} p{0.25\linewidth} p{0.1\linewidth} p{0.4\linewidth}}
+% \toprule
+% GROUP &  DESCRIPTION & SUITABLE? & REASON \\
+% \midrule
+% Profile      & Patient's sex (M or F) & No & Cannot be changed \\
+%              & Patient's age & No & Cannot be changed \\
+%              & Other symptoms & No & Too vague to act on \\
+%              & Diabetes Mellitus duration & No & Cannot be reversed \\
+%              & Patient is taking insulin treatments & Yes & Directly actionable — treatment can be started, stopped, or changed \\
+%              & Hemoglobin A1c & Yes & Modifiable through lifestyle, diet, and medication \\
+% \midrule
+% Commorbidity & Hypertension & Yes & Manageable through antihypertensives and lifestyle \\
+%              & Peripheral Arterial Occulsive Disease & Conditional & Partially treatable (revascularization, lifestyle) but not fully reversible \\
+%              & Dyslipidemia & Yes & Modifiable through statins, diet, exercise\\
+%              & Chronic Kidney Disease & Yes & Partially modifiable through nephroprotective interventions \\
+%              & Guillain-Barre Syndrome & Yes & Acute/post-infectious — not a modifiable long-term factor in this context \\
+% \midrule
+% Neurology \newline Test   & Decreased Vibration Sensation, Pinprick Sensation, Light Touch Sensation & Yes &  Can improve with glycemic control and neuropathy treatment \\
+%                  & Decreased Ankle Reflex & Yes &  Can improve with glycemic control and neuropathy treatment \\
+% \midrule
+% MNSI            & Michigan Neuropathy Screening Instrument & Yes & Can reflect treatable neuropathic progression \\
+% \midrule
+% Nerve \newline Conduction \newline Study   & All & Observational & These are biomarker outcomes of neuropathy. While these are not directly actionable inputs, they can be treated as counterfactuals that answer "what must change". Intervention is left to the physician. While the traditional counterfactual framing asks: "What should the patient change?", these observational ocounterfactuals ask: "What clinical targets must be achieved for the model to predict a different outcome?"\\
+% \midrule
+% Sudoscan & All & Observational &  Similar to Nerve Conduction Features, these are physiological biomarkers, not direct interventions and are thus considered Observational counterfactuals. \\
+% \bottomrule
+% \end{tabular}
+% \caption{Suitability of features for counterfactual analysis. Counterfactual analysis asks "what if this feature were different?" — so suitable features must be actionable, modifiable, and clinically meaningful to change. Unsuitable features are those that cannot be changed, reversed, or acted on. Conditional and observational features are outcomes or downstream measurements — more useful as targets of counterfactuals than as inputs. For the counterfactual analysis done in this study, all features except those marked as unsuitable (\textit{No} in the third column) are included in the generation of counterfactuals.
+% \textcolor{red}{<EAMC: This categorization is crucial in the generation of counterfactuals and is the may carry half of the value of the paper.  Please confirm if you agree with this classification and observations.>}
+% }
+% \label{tab:cf_features}
+% \end{table}
 
 
 \subsubsection*{General Setup}
@@ -532,47 +531,50 @@ The configuration of the DiCE framework is summarized in Table~\ref{tab:dice_set
 % =======================================
 % DICE General Configuration
 % =======================================
-\begin{table}[htbp]
+\begin{table}[t]
 \centering
+% \small
 \begin{tabular}{lll}
-\hline
-\textbf{Component} & \textbf{Parameter} & \textbf{Value / Description} \\
-\hline
-\multirow{3}{*}{Data (dice\_ml.Data)} 
-& continuous\_features & continuous features as defined in Table~\ref{tab:features} \\
+\toprule
+Component & Parameter & Value / Description \\
+% \multirow{3}{*}{Data (dice\_ml.Data)} 
+\midrule
+Data (dice\_ml.Data) & continuous\_features & continuous features as defined in Table~\ref{tab:features} \\
 & categorical\_features & binary categorical features as defined in Table~\ref{tab:features} \\
 & permitted\_range & global permitted range as defined in the section \textit{General Setup}\\
-\hline
-\multirow{3}{*}{Model (dice\_ml.Model)} 
-& model & trained model under the mean threshold \\
+\midrule
+% \multirow{3}{*}{Model (dice\_ml.Model)} 
+Model (dice\_ml.Model) & model & trained model under the mean threshold \\
 & backend & sklearn \\
 & model\_type & classifier \\
-\hline
-DiCE object(dice\_ml.Dice) 
-& method & genetic \\
-\hline
+\midrule
+DiCE object(dice\_ml.Dice)  & method & genetic \\
+\bottomrule
+\end{tabular}
 \label{tab:dice_setup}
 \caption{DiCE General Configuration. These are the parameters used to create the DiCE data, model, and instance objects.}
-\end{tabular}
 \end{table}
+
 
 \subsubsection*{Global Feature Importance}
 \paragraph{Parameter Configuration}
 Global feature importance was computed using DiCE’s $global\_feature\_importance$ method, which identifies features that are most frequently altered across counterfactuals, thereby indicating their influence on model predictions.
 
 The parameters used are summarized in Table~\ref{tab:global_cf}.
-\begin{table}[htbp]
+
+\begin{table}[t]
 \centering
+% \small
 \begin{tabular}{ll}
-\hline
+\toprule
 \textbf{Parameter} & \textbf{Value / Description} \\
-\hline
+\midrule
 total\_CFs & 20 \\
 features\_to\_vary & all features except those marked unsuitable in Table~\ref{tab:cf_features} \\
 permitted\_range & global permitted range \\
 stopping\_threshold & mean threshold from hyperparameter optimization \\
 posthoc\_sparsity\_algorithm & binary \\
-\hline
+\bottomrule
 \end{tabular}
 \label{tab:global_cf}
 \caption{Global Counterfactual Importance Parameters. These are the parameters for computing the global importance with a call to \textit{global\_feature\_importance}.}
@@ -628,152 +630,152 @@ The selected parameters balance proximity, diversity, and sparsity, ensuring tha
 %=======================================
 % Violin Plots
 %=======================================
-\begin{figure*}[h]
-    \captionsetup{font=small}
-    \centering
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{figures/modeling/roc-auc_violin.png}
-        \caption{ROC-AUC}
-        \label{fig:violin_roc}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{figures/modeling/youden_violin.png}
-        \caption{Youden Index}
-        \label{fig:violin_youden}
-    \end{subfigure}
-    % \captionsetup{font=footnotesize}
-    \caption{Violin plots of  across all models.
-    Distribution of ROC-AUC (left) and Youden Index (right) scores across multiple runs for sixteen classification models. For ROC-AUC, ensemble tree-based methods — Extra Trees, CatBoost, Random Forest, and XGBoost — consistently achieved the highest median ROC-AUC values (≥ 0.96) with compact distributions, indicating stable and reproducible performance. For the Youden Index, ensemble tree-based methods again achieved the highest median values (≈ 0.80–0.87) with relatively compact distributions, indicating consistently balanced sensitivity and specificity. These results suggest that ensemble tree-based methods as the most robust candidates for this classification task. 
-    }
-    \label{fig:violins_model}
-\end{figure*}
+% \begin{figure*}[h]
+%     \centering
+%     \begin{subfigure}[b]{0.48\textwidth}
+%         \centering
+%         \includegraphics[width=\textwidth]{figures/modeling/roc-auc_violin.png}
+%         \caption{ROC-AUC}
+%         \label{fig:violin_roc}
+%     \end{subfigure}
+%     \begin{subfigure}[b]{0.48\textwidth}
+%         \centering
+%         \includegraphics[width=\textwidth]{figures/modeling/youden_violin.png}
+%         \caption{Youden Index}
+%         \label{fig:violin_youden}
+%     \end{subfigure}
+%     % \captionsetup{font=footnotesize}
+%     % \captionsetup{font=small}
+%     \caption{Distribution of ROC-AUC (left) and Youden Index (right) scores across multiple runs for sixteen classification models. For ROC-AUC, ensemble tree-based methods (Extra Trees, CatBoost, Random Forest, and XGBoost) consistently achieved the highest median ROC-AUC values ($\geq 0.96$ ) with compact distributions, indicating stable and reproducible performance. For the Youden Index, ensemble tree-based methods again achieved the highest median values ($ \approx 0.80 - 0.87$) with relatively compact distributions, indicating consistently balanced sensitivity and specificity. These results suggest that ensemble tree-based methods as the most robust candidates for this classification task. For the succeeding steps, CatBoost is chosen as the model to undergo hyperparameter optimization and counterfactual generation.}
+%     \label{fig:violins_model}
+% \end{figure*}
 
 %=======================================
 % Youden Table
 %=======================================
-\begin{figure*}[h]
-    \centering
-    \includegraphics[width=1\textwidth]{figures/modeling/youden_summary_table.png}
-    % \captionsetup{font=footnotesize}
-    \caption{Heatmap of average Youden Index scores across sixteen classification models and ten feature sets, where feature sets represent systematic exclusions of variable groups: All (full feature set), NoCol, NoNCS, NoSudo, NoNeuro, NoCom, NoMSI, NoProf, NCS-only, and Sudo-only. Ensemble tree-based methods — CatBoost, Random Forest, XGBoost, Extra Trees, and LightGBM — consistently achieved the highest Youden Index values across most feature sets (≥ 0.80), with the full feature set (All) and NCS-adjacent sets performing best. Notably, performance dropped substantially across nearly all models when NCS-derived (NoNCS) features were excluded, suggesting NCS readings carry significant discriminative information.This is confirmed with the NCS-only set produced surprisingly competitive results for several top models (e.g., Extra Trees: 0.86, RBF SVM: 0.82, kNN: 0.82), again showing that NCS data as particularly informative. Interestingly, dropping collinear features significantly dropped the performance of the models. The Sudo-only feature set yielded uniformly poor performance across all models.}
-    \label{fig:youden_summary}
-\end{figure*}
+% \begin{figure*}[h]
+%     \centering
+%     \includegraphics[width=1\textwidth]{figures/modeling/youden_summary_table.png}
+%     % \captionsetup{font=footnotesize}
+%     \caption{Heatmap of average Youden Index scores across sixteen classification models and ten feature sets, where feature sets represent systematic exclusions of feature groups: All (full feature set), NoCol (No collinear features), NoNCS (No NCS features), NoSudo (NO SUDOSCAN features), NoNeuro (No Neurology Examinationfeatures), NoCom (No Commorbidity features), NoMSI (No MSI feature), NoProf (No Clinical Profile), NCS (NCS feautures only), and Sudo (Sudoscan features only). Ensemble tree-based methods (CatBoost, Random Forest, XGBoost, Extra Trees, and LightGBM) consistently achieved the highest Youden Index values across most feature sets ($ \geq 0.80$), with the full feature set (All) and features sets with NCS performing best. Notably, performance dropped substantially across nearly all models when NCS features were excluded (NoNCS), suggesting NCS readings carry significant discriminative information. This is confirmed with the NCS-only set produced surprisingly competitive results for several top models (e.g., Extra Trees: 0.86, RBF SVM: 0.82, kNN: 0.82), again showing that NCS data as particularly informative. Surprisingly, removing collinear features significantly dropped the performance of the models, suggesting that a full feature set is worth using. The Sudo-only feature set yielded uniformly poor performance across all models.}
+%     \label{fig:youden_summary}
+% \end{figure*}
 
 %=======================================
 % ROC-AUC
 %=======================================
-\begin{figure*}[h]
-    \centering
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{figures/explainability/catboost_split0_roc_auc.png}
-        % \caption{Split 0}
-        % \label{fig:roc_split0}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering        
-        \includegraphics[width=\textwidth]{figures/explainability/catboost_split1_roc_auc.png}
-        % \caption{Split 1}
-        % \label{fig:roc_split1}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        % \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_features_importances.png}
-        \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_roc_auc.png}
-        % \caption{Split 2}
-        % \label{fig:roc_split2}
-    \end{subfigure}
-    % \captionsetup{font=footnotesize}
-    \caption{ROC-AUC across 3 splits}
-    \label{fig:roc}
-\end{figure*}
+% \begin{figure*}[h]
+%     \centering
+%     \begin{subfigure}[b]{0.32\textwidth}
+%         \centering
+%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split0_roc_auc.png}
+%         \caption{Split 0}
+%         % \label{fig:roc_split0}
+%     \end{subfigure}
+%     \begin{subfigure}[b]{0.32\textwidth}
+%         \centering        
+%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split1_roc_auc.png}
+%         \caption{Split 1}
+%         % \label{fig:roc_split1}
+%     \end{subfigure}
+%     \begin{subfigure}[b]{0.32\textwidth}
+%         \centering
+%         % \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_features_importances.png}
+%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_roc_auc.png}
+%         \caption{Split 2}
+%         % \label{fig:roc_split2}
+%     \end{subfigure}
+%     % \captionsetup{font=footnotesize}
+%     \caption{Receiver Operating Characteristic (ROC) curves of the CatBoost model across three data splits. The panels illustrate the relationship between the True Positive Rate (Sensitivity) and False Positive Rate (1 - Specificity) evaluated on three separate data partitions: (a) Split 0, (b) Split 1, and (c) Split 2. The solid blue curve depicts the model's predictive capability compared to the dashed diagonal line, which represents random chance. The model exhibits exceptional and consistent discriminative performance across all evaluated folds, achieving Area Under the Curve (AUC) scores of 0.98, 0.99, and 0.94, respectively. This consistently high AUC across multiple splits demonstrates robust model generalization and a high degree of reliability in distinguishing between the target classes with minimal variance.}
+% \label{fig:roc}
+% \end{figure*}
 
 %=======================================
 % Feature Importances
 %=======================================
-\begin{figure*}[h]
-    \centering
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{figures/explainability/catboost_split0_features_importances.png}
-        % \caption{Split 0}
-        % \label{fig:fimp_split0}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{figures/explainability/catboost_split1_features_importances.png}
-        % \caption{Split 1}
-        % \label{fig:fimp_split1}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_features_importances.png}
-        % \caption{Split 2}
-        % \label{fig:fimp_split2}
-    \end{subfigure}
-    % \captionsetup{font=footnotesize}
-    \caption{Feature Importances across 3 splits}
-    \label{fig:fimp}
-\end{figure*}
+% \begin{figure*}[h]
+%     \centering
+%     \begin{subfigure}[b]{0.32\textwidth}
+%         \centering
+%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split0_features_importances.png}
+%         \caption{Split 0}
+%         % \label{fig:fimp_split0}
+%     \end{subfigure}
+%     \begin{subfigure}[b]{0.32\textwidth}
+%         \centering
+%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split1_features_importances.png}
+%         \caption{Split 1}
+%         % \label{fig:fimp_split1}
+%     \end{subfigure}
+%     \begin{subfigure}[b]{0.32\textwidth}
+%         \centering
+%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_features_importances.png}
+%         \caption{Split 2}
+%         % \label{fig:fimp_split2}
+%     \end{subfigure}
+%     % \captionsetup{font=footnotesize}
+%     \caption{CatBoost feature importance rankings across three experimental data splits. The horizontal bar charts display the relative importance scores of the variables utilized by the CatBoost model in each data partition. Features are color-coded by their clinical category to illustrate the varying contributions of different data modalities, such as Nerve Conduction Studies, Patient Profile, and Sudoscan. Variables derived from Nerve Conduction Studies (blue bars) unequivocally drive the CatBoost model's predictions across all three folds. Electrophysiological metrics—specifically, Compound Muscle Action Potential at the knee (CMAPKNE\_L, CMAPKNE\_R) and ankle (CMAPANK\_L, CMAPANK\_R), alongside Sural Sensory Amplitude (SSA\_L, SSA\_R)—consistently occupy the top ranks. While the dominant feature shifts slightly by laterality between the splits (e.g., the left-sided CMAPKNE\_L strongly leads the first two splits, whereas the right-sided CMAPKNE\_R and SSA\_R lead the third), the core predictive measurements remain entirely stable. Conversely, features related to Comorbidities (red) and Neurology Examinations (pink) exhibit near-zero importance. The model's persistent reliance on a tight cluster of electrophysiological measurements confirms that these specific nerve conduction metrics are the most robust and informative biomarkers for the predicted outcome. This consistency across multiple splits validates the model's structural stability and underscores the clinical superiority of objective, device-derived nerve assessments over subjective examinations or secondary comorbidities for this specific diagnostic task.
+%     \textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}
+%     }
+%     \label{fig:fimp}
+% \end{figure*}
 
 %=======================================
 % SHAP
 %=======================================
-\begin{figure*}[h]
-    \centering
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{figures/explainability/catboost_split0_shap.png}
-        % \caption{Split 0}
-        % \label{fig:shap_split0}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering        
-        \includegraphics[width=\textwidth]{figures/explainability/catboost_split1_shap.png}
-        % \caption{Split 1}
-        % \label{fig:shap_split1}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        % \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_features_importances.png}
-        \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_shap.png}
-        % \caption{Split 2}
-        % \label{fig:shap_split2}
-    \end{subfigure}
-    % \captionsetup{font=footnotesize}
-    \caption{SHAP values across 3 splits}
-    \label{fig:shap}
-\end{figure*}
+% \begin{figure*}[h]
+%     \centering
+%     \begin{subfigure}[b]{0.32\textwidth}
+%         \centering
+%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split0_shap.png}
+%         % \caption{Split 0}
+%         % \label{fig:shap_split0}
+%     \end{subfigure}
+%     \begin{subfigure}[b]{0.32\textwidth}
+%         \centering        
+%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split1_shap.png}
+%         % \caption{Split 1}
+%         % \label{fig:shap_split1}
+%     \end{subfigure}
+%     \begin{subfigure}[b]{0.32\textwidth}
+%         \centering
+%         % \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_features_importances.png}
+%         \includegraphics[width=\textwidth]{figures/explainability/catboost_split2_shap.png}
+%         % \caption{Split 2}
+%         % \label{fig:shap_split2}
+%     \end{subfigure}
+%     % \captionsetup{font=footnotesize}
+%     \caption{SHAP (SHapley Additive exPlanations) feature importance across three experimental data splits. The bar charts illustrate the mean absolute SHAP values for the top predictive features in each split, quantifying their average impact on the model's output magnitude. Features are color-coded according to their clinical category, such as Nerve Conduction Studies, Sudoscan, and patient Profile. Echoing the previous Feature Importance analysis, Across all three data splits, variables derived from Nerve Conduction Studies (indicated by the blue bars) consistently dominate the top rankings. Specific electrophysiological measurements—most notably Compound Muscle Action Potential at the knee and ankle (e.g., CMAPKNE\_L, CMAPKNE\_R, CMAPANK\_L) and Sural Sensory Amplitude (e.g., SSA\_L, SSA\_R)—exhibit the highest SHAP values by a substantial margin. Conversely, features from other groups like Sudoscan or Neurology Examinations show relatively minimal impact. The model's heavy and consistent reliance on Nerve Conduction Studies demonstrates that objective electrophysiological data are the primary drivers of its predictive performance. This provides strong clinical interpretability, suggesting that the model is grounding its decisions in robust, direct physiological biomarkers of nerve function rather than secondary demographic or subjective clinical profile features.
+%     \textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}    
+%     }
+%     \label{fig:shap}
+% \end{figure*}
 
 %=======================================
 % Performance Summary
 %=======================================
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{lll}
-\toprule
-Item & Statistic & Values \\
-\midrule
-threshold & mean ± std & 0.635 ± 0.123 \\
-roc-auc & mean ± std & 0.972 ± 0.020 \\
-roc-auc  & confidence interval &  0.966 - 0.979 \\
-youden index &  mean ± std & 0.852 ± 0.068 \\
-youden index &  confidence interval & 0.831 - 0.873 \\
-specificity  & mean ± std  &  0.918 ± 0.0675\\
-sensitivity  &  mean ± std  & 0.934 ± 0.054 \\
-\bottomrule
-\end{tabular}
-\caption{Result of a 3-fold hyperparameter optimization on CatBoost algorithm}
-\label{tab:hpo}
-\end{table}
-
-
+% \begin{table}[t]
+% \centering
+% \small
+% \begin{tabular}{lll}
+% \toprule
+% Item & Statistic & Values \\
+% \midrule
+% threshold & mean ± std & 0.635 ± 0.123 \\
+% roc-auc & mean ± std & 0.972 ± 0.020 \\
+% roc-auc  & confidence interval &  0.966 - 0.979 \\
+% youden index &  mean ± std & 0.852 ± 0.068 \\
+% youden index &  confidence interval & 0.831 - 0.873 \\
+% specificity  & mean ± std  &  0.918 ± 0.0675\\
+% sensitivity  &  mean ± std  & 0.934 ± 0.054 \\
+% \bottomrule
+% \end{tabular}
+% \caption{Result of a 3-fold hyperparameter optimization on CatBoost algorithm}
+% \label{tab:hpo}
+% \end{table}
 
 %=======================================
-% Performance Summary
+% Global Importances 
 %=======================================
 \begin{table}[t]
 \centering
@@ -819,74 +821,74 @@ CKD & 0.157 & 0.231 & 0.360 & 0.249 \\
 PAOD & 0.050 & 0.110 & 0.100 & 0.086 \\
 \bottomrule
 \end{tabular}
-\caption{Global Importances}
+\caption{Global Importances across 3 splits}
 \label{tab:global_imp}
 \end{table}
 
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{cccccccc}
-\toprule
-Model & # Instances  & # Misclassified & # Instances with CF & Sparsity Mean & L1 Mean & L2 Mean \\
-\midrule
-Split 0 & 6 & 4 & 6 & 25.669 & 106.291 & 30.464 \\
-Split 1 & 7 & 4 & 6 & 25.970 & 104.365 & 29.863 \\
-Split 2 & 9 & 6 & 8 & 25.543 & 101.207 & 29.327 \\
-\bottomrule
-\end{tabular}
-\caption{Local Counterfactual Analysis}
-\label{tab:localcf_summary_all}
-\end{table}
+% \begin{table}[t]
+% \centering
+% \small
+% \begin{tabular}{cccccccc}
+% \toprule
+% Model & # Instances  & # Misclassified & # Instances with CF & Sparsity Mean & L1 Mean & L2 Mean \\
+% \midrule
+% Split 0 & 6 & 4 & 6 & 25.669 & 106.291 & 30.464 \\
+% Split 1 & 7 & 4 & 6 & 25.970 & 104.365 & 29.863 \\
+% Split 2 & 9 & 6 & 8 & 25.543 & 101.207 & 29.327 \\
+% \bottomrule
+% \end{tabular}
+% \caption{Local Counterfactual Analysis}
+% \label{tab:localcf_summary_all}
+% \end{table}
 
 
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{lrrrrrrrrrr}
-\toprule
-model & ID & prediction & actual & misclassified & probability & margin & CF Count & Sparsity & L1 Mean & L2 Mean \\
-\midrule
-Split 0 & 4 & Confirmed & Confirmed & No & 0.719 & 0.083 & 4 & 28.250 & 116.995 & 30.669 \\
- & 55 & Confirmed & Confirmed & No & 0.767 & 0.131 & 22 & 27.545 & 107.345 & 29.713 \\
- & 67 & Unconfirmed & Confirmed & Yes & 0.187 & 0.449 & 20 & 24.000 & 92.632 & 28.135 \\
- & 106 & Unconfirmed & Confirmed & Yes & 0.524 & 0.111 & 4 & 25.250 & 114.363 & 34.028 \\
- & 128 & Unconfirmed & Confirmed & Yes & 0.275 & 0.360 & 35 & 22.829 & 93.903 & 28.710 \\
- & 158 & Unconfirmed & Confirmed & Yes & 0.037 & 0.598 & 35 & 26.143 & 112.511 & 31.527 \\
-\midrule
-Split 1 & 12 & Confirmed & Confirmed & No & 0.666 & 0.031 & 38 & 27.605 & 111.169 & 30.800 \\
- & 54 & Confirmed & Confirmed & No & 0.751 & 0.116 & 45 & 28.267 & 121.284 & 32.891 \\
- & 73 & Confirmed & Unconfirmed & Yes & 0.934 & 0.298 & 39 & 28.308 & 122.743 & 32.733 \\
- & 94 & Unconfirmed & Unconfirmed & No & 0.481 & 0.154 & 11 & 18.364 & 56.315 & 20.650 \\
- & 119 & Confirmed & Unconfirmed & Yes & 0.725 & 0.090 & 25 & 26.360 & 110.292 & 31.537 \\
- & 178 & Confirmed & Unconfirmed & Yes & 0.701 & 0.066 & 35 & 26.914 & 104.387 & 30.569 \\
-\midrule
-Split 2 & 22 & Unconfirmed & Confirmed & Yes & 0.171 & 0.464 & 31 & 25.161 & 94.326 & 28.951 \\
- & 45 & Confirmed & Unconfirmed & Yes & 0.900 & 0.265 & 15 & 25.933 & 107.987 & 30.173 \\
- & 68 & Unconfirmed & Confirmed & Yes & 0.007 & 0.629 & 25 & 24.160 & 114.459 & 34.346 \\
- & 88 & Confirmed & Confirmed & No & 0.826 & 0.191 & 19 & 25.684 & 92.409 & 26.595 \\
- & 96 & Unconfirmed & Confirmed & Yes & 0.512 & 0.123 & 23 & 25.478 & 94.640 & 27.299 \\
- & 136 & Confirmed & Confirmed & No & 0.648 & 0.013 & 12 & 24.250 & 91.867 & 28.033 \\
- & 155 & Confirmed & Confirmed & No & 0.745 & 0.110 & 8 & 30.875 & 136.090 & 35.099 \\
- & 167 & Unconfirmed & Confirmed & Yes & 0.127 & 0.508 & 25 & 22.800 & 77.874 & 24.117 \\
-\bottomrule
-\end{tabular}
-\caption{Local Counterfactual Analysis for Model 0}
-\label{tab:localcf_summary_0}
-\end{table}
+% \begin{table}[t]
+% \centering
+% \small
+% \begin{tabular}{lrrrrrrrrrr}
+% \toprule
+% model & ID & prediction & actual & misclassified & probability & margin & CF Count & Sparsity & L1 Mean & L2 Mean \\
+% \midrule
+% Split 0 & 4 & Confirmed & Confirmed & No & 0.719 & 0.083 & 4 & 28.250 & 116.995 & 30.669 \\
+%  & 55 & Confirmed & Confirmed & No & 0.767 & 0.131 & 22 & 27.545 & 107.345 & 29.713 \\
+%  & 67 & Unconfirmed & Confirmed & Yes & 0.187 & 0.449 & 20 & 24.000 & 92.632 & 28.135 \\
+%  & 106 & Unconfirmed & Confirmed & Yes & 0.524 & 0.111 & 4 & 25.250 & 114.363 & 34.028 \\
+%  & 128 & Unconfirmed & Confirmed & Yes & 0.275 & 0.360 & 35 & 22.829 & 93.903 & 28.710 \\
+%  & 158 & Unconfirmed & Confirmed & Yes & 0.037 & 0.598 & 35 & 26.143 & 112.511 & 31.527 \\
+% \midrule
+% Split 1 & 12 & Confirmed & Confirmed & No & 0.666 & 0.031 & 38 & 27.605 & 111.169 & 30.800 \\
+%  & 54 & Confirmed & Confirmed & No & 0.751 & 0.116 & 45 & 28.267 & 121.284 & 32.891 \\
+%  & 73 & Confirmed & Unconfirmed & Yes & 0.934 & 0.298 & 39 & 28.308 & 122.743 & 32.733 \\
+%  & 94 & Unconfirmed & Unconfirmed & No & 0.481 & 0.154 & 11 & 18.364 & 56.315 & 20.650 \\
+%  & 119 & Confirmed & Unconfirmed & Yes & 0.725 & 0.090 & 25 & 26.360 & 110.292 & 31.537 \\
+%  & 178 & Confirmed & Unconfirmed & Yes & 0.701 & 0.066 & 35 & 26.914 & 104.387 & 30.569 \\
+% \midrule
+% Split 2 & 22 & Unconfirmed & Confirmed & Yes & 0.171 & 0.464 & 31 & 25.161 & 94.326 & 28.951 \\
+%  & 45 & Confirmed & Unconfirmed & Yes & 0.900 & 0.265 & 15 & 25.933 & 107.987 & 30.173 \\
+%  & 68 & Unconfirmed & Confirmed & Yes & 0.007 & 0.629 & 25 & 24.160 & 114.459 & 34.346 \\
+%  & 88 & Confirmed & Confirmed & No & 0.826 & 0.191 & 19 & 25.684 & 92.409 & 26.595 \\
+%  & 96 & Unconfirmed & Confirmed & Yes & 0.512 & 0.123 & 23 & 25.478 & 94.640 & 27.299 \\
+%  & 136 & Confirmed & Confirmed & No & 0.648 & 0.013 & 12 & 24.250 & 91.867 & 28.033 \\
+%  & 155 & Confirmed & Confirmed & No & 0.745 & 0.110 & 8 & 30.875 & 136.090 & 35.099 \\
+%  & 167 & Unconfirmed & Confirmed & Yes & 0.127 & 0.508 & 25 & 22.800 & 77.874 & 24.117 \\
+% \bottomrule
+% \end{tabular}
+% \caption{Local Counterfactual Analysis for Model 0}
+% \label{tab:localcf_summary_0}
+% \end{table}
 
 
-\begin{figure*}
-  \centering
-  \includegraphics[width=\textwidth]{figures/counterfactuals/22/catboost_split2_local_cf_qidx022_000-014.png}
-    \caption{Counterfactuals for Patient 22 (page 1/2)}
-\end{figure*}
+% \begin{figure*}
+%   \centering
+%   \includegraphics[width=\textwidth]{figures/counterfactuals/22/catboost_split2_local_cf_qidx022_000-014.png}
+%     \caption{Counterfactuals for Patient 22 (page 1/2)}
+% \end{figure*}
 
-\begin{figure*}
-  \centering
-  \includegraphics[width=\textwidth]{figures/counterfactuals/22/catboost_split2_local_cf_qidx022_015-029.png}
-    \caption{Counterfactuals for Patient 22 (page 2/2)}
-\end{figure*}
+% \begin{figure*}
+%   \centering
+%   \includegraphics[width=\textwidth]{figures/counterfactuals/22/catboost_split2_local_cf_qidx022_015-029.png}
+%     \caption{Counterfactuals for Patient 22 (page 2/2)}
+% \end{figure*}
 
 % \begin{sidewaysfigure}
 %     \centering

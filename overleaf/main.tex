@@ -7,6 +7,7 @@
 \usepackage{rotating}
 \usepackage{xcolor}
 \usepackage{multirow}
+\usepackage{cleveref}
 
 \title{Application of Machine Learning and Counterfactuals on the Prediction and Explanation of Diabetic Peripheral Neuropathy}
 
@@ -47,7 +48,26 @@ Example s Abstract.
 
 % \noindent Please note: Abbreviations should be introduced at the first mention in the main text – no abbreviations lists. Suggested structure of main text (not enforced) is provided below.
 
-\textcolor{blue}{NOTE: All text in blue color comes from the original article of Montemayor et al.}
+\section*{Preliminary Notes}
+%%%%%%%%%%%%%%%%%%%%%%%
+This is an explanatory section \textbf{for the authors' use only} -- it won't appear in the final draft.
+
+\textbf{NOTE on font colors}
+\begin{itemize}
+\itemsep0em
+\item \textcolor{blue}{All text in blue color comes from the original article of Montemayor et al.}
+\item \textcolor{red}{Notes in red indicate things to be inputted, clarified, or resolved by EAMC.}
+\item \textcolor{violet}{Notes in violet indicate things to be inputted or resolved by EAMC / Tony.} 
+\item \textcolor{green}{Notes in violet indicate things to be inputted or resolved by Tony.} 
+\end{itemize}
+
+\textbf{Important tasks}
+\begin{itemize}
+\itemsep0em
+\item Describe dataset
+\item description and observation on these plots
+\end{itemize}
+
 
 \section*{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%
@@ -60,7 +80,7 @@ Characterized by progressive nerve damage, DPN often presents with symptoms such
 DPN is underdiagnosed in up to 81\% of patients \cite{vinik2012neuropathy, ziegler2018painful}. Hurdles in the early diagnosis of DPN includes the insidious progression, inconsistent disease presentation and the need for complicated equipment for definitive diagnosis \cite{vinik2012neuropathy, ziegler2018painful, casellini2013sudoscan}.
 }
 
-\textcolor{red}{[NOTE: This paragraph talks about the diagnostic procedures for DPN. May be good to include a sentence on Nerve Conduction Studies]} \textcolor{blue}{Skin biopsy with quantitation of intraepidermal nerve fiber density is still the gold standard in detecting small fiber neuropathy, while sudorimetry is a rapidly evolving technology that can easily be integrated into clinical practice. The development of such technologies like the Sudoscan allows noninvasive and easy-to-perform tests for detection of small fiber neuropathy based on reverse iontophoresis and chronoamperometry to measure sudomotor function \cite{mayaudon:2010newsimple, vinik2015newage}.
+\textcolor{red}{<EAMC: This paragraph talks about the diagnostic procedures for DPN. May be good to include a sentence on Nerve Conduction Studies>} \textcolor{blue}{Skin biopsy with quantitation of intraepidermal nerve fiber density is still the gold standard in detecting small fiber neuropathy, while sudorimetry is a rapidly evolving technology that can easily be integrated into clinical practice. The development of such technologies like the Sudoscan allows noninvasive and easy-to-perform tests for detection of small fiber neuropathy based on reverse iontophoresis and chronoamperometry to measure sudomotor function \cite{mayaudon:2010newsimple, vinik2015newage}.
 }
 
 Early detection and management of DPN are therefore critical, yet remain challenging due to the multifactorial nature of the disease and the heterogeneity of patient profiles. In recent years, machine learning (ML) has emerged as a powerful tool for modeling complex, nonlinear relationships in medical data. By leveraging large clinical datasets, ML algorithms can identify patterns and interactions among risk factors that may not be readily apparent through traditional statistical approaches. 
@@ -76,7 +96,6 @@ Counterfactual explanations represent a more recent and clinically meaningful ap
 The integration of machine learning and counterfactual explanations offers a promising framework for both the prediction and interpretation of diabetic peripheral neuropathy. By combining high predictive accuracy with actionable, patient-specific insights, this approach has the potential to support clinicians in early diagnosis, risk assessment, and treatment planning. Moreover, it bridges the gap between advanced computational models and practical clinical utility, fostering greater trust and adoption of AI-driven tools in healthcare. 
 
 This study aims to investigate the application of machine learning models in conjunction with counterfactual explanation techniques for the prediction and interpretation of diabetic peripheral neuropathy (DPN) risk, thereby contributing to the growing body of research on interpretable and actionable artificial intelligence in medicine. The study also examines the potential insights derived from incorporating nerve conduction study results and Sudoscan measurements—modalities that are comparatively underrepresented in many AI-based DPN studies, which often rely primarily on routine clinical and demographic variables. Furthermore, by utilizing data collected within the Philippine clinical context, this work enhances the geographic diversity of current studies and provides context-specific insights into the application of explainable AI for DPN.
-
 
 % Sudoscan is a new, simple, noninvasive, validated test for autonomic neuropathy that can be used
 % for early detection of DPN with sensitivity and specificity of up to 75% and 100% respectively6, 9, 10, 11, 12.
@@ -121,6 +140,7 @@ setting at 200 $\mu$V/div, and sweep speed of 10 ms/div.
 \textcolor{blue}{
 The following nerve attributes were measured: 
 \begin{itemize}
+\itemsep0em 
 \item Sural sensory nerve action potentials (SNAP) and conduction velocities (CV)
 \item Superficial peroneal SNAP and CV
 \item Tibial motor nerve compound muscle action potentials (CMAP), CV, distal latencies (DL) and
@@ -133,11 +153,12 @@ All NCV testing was done by a single trained technician on the same day as other
 neurological examinations. Finally, sudomotor testing using Sudoscan was performed on each participant. Subjects placed palms of their hands and the soles of their feet on stainless steel electrodes and an incremental low direct voltage (<4V) was applied for about 2 minutes. The device produced an average electrochemical skin conductance (ESC) result for both hands and feet which is based on stimulation of sweat glands by the low-level voltage, allowing evidence of sweat dysfunction \cite{garcia2022detection}.
 }
 
-The patients were classified into four categories: Confirmed, Probable, Possible and No DPN. \textcolor{red}{<May be good to add here explanation of Probable and Possible categories>}. Given the limited number of samples from the latter three categories, this study combined the last three categories to form a larger group  labeled as Unconfirmed. Table~\ref{tab:data_categ} shows the breakdown among the different categories or labels.
+Statistical tables of the data are shown in categorical and continuous features are shown in \Cref{tab:categorical,tab:continuous} while plots are shown for categorical features, profile and MNSI, Nerve Conduction Studies and Sudoscan in \Cref{fig:categ,fig:profile_mnsi,fig:ncs,fig:sudo}. \textcolor{violet}{<EAMC/TONY: add description and observation on these plots>} 
 
+The patients were classified into four categories: Confirmed, Probable, Possible and No DPN. \textcolor{red}{<EAMC: May be good to add here explanation of Probable and Possible categories>}. Given the limited number of samples from the latter three categories, this study combined the last three categories to form a larger group  labeled as Unconfirmed. Table~\ref{tab:data_categ} shows the breakdown among the different categories or labels.
 
 %=======================================
-% Performance Summary
+% Data and Categories
 %=======================================
 \begin{table}[t]
 \centering
@@ -165,58 +186,60 @@ Overall Total & & 190 \\
 \begin{table}[ht]
 \centering
 \small
-\begin{tabular}{lll}
+\begin{tabular}{llll}
 \toprule
-GROUP & CODE & DESCRIPTION  \\
+GROUP & CODE & DESCRIPTION  & TYPE\\
 \midrule
-Profile      & SEX & Patient's sex (M or F) \\
-             & AGE & Patient's age  \\
-             & SUBJ & Other symptoms  \\
-             & DM DUR & Diabetes Mellitus duration (years)  \\
-             & INSULIN & Patient is taking insulin treatments \\
-             & HBA1C & Hemoglobin A1c  \\
+Profile      & SEX & Patient's sex (M or F) & binary \\
+             & AGE & Patient's age  & continuous \\
+             & SUBJ & Other symptoms  & binary \\
+             & DM DUR & Diabetes Mellitus duration (years) & continuous \\
+             & INSULIN & Patient is taking insulin treatments & binary \\
+             & HBA1C & Hemoglobin A1c & continuous  \\
 \midrule
-Commorbidity & HPN & Hypertension  \\
-             & PAOD & Peripheral Arterial Occulsive Disease  \\
-             & DSLPDMIA & Dyslipidemia \\
-             & CKD & Chronic Kidney Disease  \\
-             & GBS & Guillain-Barre Syndrome  \\
+Commorbidity & HPN & Hypertension  & binary \\
+             & PAOD & Peripheral Arterial Occulsive Disease  & binary \\
+             & DSLPDMIA & Dyslipidemia & binary \\
+             & CKD & Chronic Kidney Disease  & binary \\
+             & GBS & Guillain-Barre Syndrome  & binary \\
 \midrule
-Neurology Test   & DEC\_VS & Decreased Vibration Sensation \\
-                 & DEC\_PPS & Decreased Pinprick Sensation  \\
-                 & DEC\_LTS & Decreased Light Touch Sensation  \\
-                 & DEC\_AR & Decreased Ankle Reflex  \\
+Neurology Test   & DEC\_VS & Decreased Vibration Sensation & binary \\
+                 & DEC\_PPS & Decreased Pinprick Sensation  & binary \\
+                 & DEC\_LTS & Decreased Light Touch Sensation  & binary \\
+                 & DEC\_AR & Decreased Ankle Reflex  & binary \\
 \midrule
-MNSI            & MNSI & Michigan Neuropathy Screening Instrument  \\
+MNSI            & MNSI & Michigan Neuropathy Screening Instrument  & continuous \\
 \midrule
-Nerve Conduction Study   & SSA\_L & Left Sural Sap Nerve Sensory Amplitude (Uv)  \\
-                         & SSC\_L & Left Sural Nerve Sensory Conduction (m/s)  \\
-                         & SPSA\_L & Left Superficial Peroneal Nerve Sensory Amplitude (Uv)  \\
-                         & SPSC\_L & Left Superficial Peroneal Sensory Conductivity Velocity (m/s)  \\
-                         & MCV\_L & Left Posterior Tibial Nerve Conduction Velocity  \\
-                         & DL\_L & Left Posterior Tibial Nerve Distal Latency  \\
-                         & CMAPANK\_L & Left Ankle Compound Muscle Action Potential  \\
-                         & CMAPKNE\_L & Left Knee Compound Muscle Action Potential  \\
-                         & FWAVE\_L & Left F-wave latency  \\
-                         & SSA\_R & Right Sural sap Nerve Sensory Amplitude (Uv)  \\
-                         & SSC\_R & Right Sural Nerve Sensory Conduction (m/s)  \\
-                         & SPSA\_R & Right Superficial Peroneal Nerve Sensory Amplitude (Uv)  \\
-                         & SPSC\_R & Right Superficial Peroneal Sensory Conductivity Velocity (m/s)  \\
-                         & MCV\_R & Right Posterior Tibial Nerve Conduction Velocity  \\
-                         & DL\_R & Right Posterior Tibial Nerve Distal Latency  \\
-                         & CMAPANK\_R & Right Ankle Compound Muscle Action Potential  \\
-                         & CMAPKNE\_R & Right Knee Compound Muscle Action Potential  \\
-                         & FWAVE\_R & Right F-wave Latency  \\
+Nerve Conduction Study   & SSA\_L & Left Sural Sap Nerve Sensory Amplitude (Uv)  & continuous \\
+                         & SSC\_L & Left Sural Nerve Sensory Conduction (m/s)  & continuous \\
+                         & SPSA\_L & Left Superficial Peroneal Nerve Sensory Amplitude (Uv)  & continuous \\
+                         & SPSC\_L & Left Superficial Peroneal Sensory Conductivity Velocity (m/s)  & continuous \\
+                         & MCV\_L & Left Posterior Tibial Nerve Conduction Velocity  & continuous \\
+                         & DL\_L & Left Posterior Tibial Nerve Distal Latency  & continuous \\
+                         & CMAPANK\_L & Left Ankle Compound Muscle Action Potential  & continuous \\
+                         & CMAPKNE\_L & Left Knee Compound Muscle Action Potential  & continuous \\
+                         & FWAVE\_L & Left F-wave latency  & continuous \\
+                         & SSA\_R & Right Sural sap Nerve Sensory Amplitude (Uv)  & continuous \\
+                         & SSC\_R & Right Sural Nerve Sensory Conduction (m/s)  & continuous \\
+                         & SPSA\_R & Right Superficial Peroneal Nerve Sensory Amplitude (Uv) & continuous  \\
+                         & SPSC\_R & Right Superficial Peroneal Sensory Conductivity Velocity (m/s) & continuous  \\
+                         & MCV\_R & Right Posterior Tibial Nerve Conduction Velocity & continuous  \\
+                         & DL\_R & Right Posterior Tibial Nerve Distal Latency & continuous  \\
+                         & CMAPANK\_R & Right Ankle Compound Muscle Action Potential & continuous  \\
+                         & CMAPKNE\_R & Right Knee Compound Muscle Action Potential & continuous  \\
+                         & FWAVE\_R & Right F-wave Latency & continuous  \\
 \midrule
-Sudoscan & FEET\_MEAN\_ESC & Feet Mean Electrochemical Skin Conductance  \\
-         & FEET\_PCT\_ASYM & Feet Percentage of Asymmetry (\%)  \\
-         & HAND\_MEAN\_ESC & Hands Mean Electrochemical Skin Conductance  \\
-         & HAND\_PCT\_ASYM & Hands Percentage of Asymmetry (\%)  \\
-         & NS & Neuropathy Score  \\
-         & CAS & Cardiac Autonomic Neuropathy Score (\%)  \\
+Sudoscan & FEET\_MEAN\_ESC & Feet Mean Electrochemical Skin Conductance & continuous  \\
+         & FEET\_PCT\_ASYM & Feet Percentage of Asymmetry (\%) & continuous  \\
+         & HAND\_MEAN\_ESC & Hands Mean Electrochemical Skin Conductance & continuous  \\
+         & HAND\_PCT\_ASYM & Hands Percentage of Asymmetry (\%) & continuous  \\
+         & NS & Neuropathy Score & continuous  \\
+         & CAS & Cardiac Autonomic Neuropathy Score (\%) & continuous  \\
 \bottomrule
 \end{tabular}
-\caption{A listing of features, their code, description, and grouping.}
+\caption{A listing of features, their grouping, code, description, and data type.
+    \textcolor{red}{<EAMC: Please confirm if descriptions are correct>}.
+}
 \label{tab:features}
 \end{table}
 
@@ -249,7 +272,9 @@ DEC\_AR & 51 & 45 & 96 & 50.5 && 9 & 85 & 94 & 49.5 && 39.70 & 1 & 0.0000 & 0.45
 \bottomrule
 \end{tabular}
 % \captionsetup{font=footnotesize}
-\caption{Frequency distribution of categorical features stratified by binary outcome.} 
+\caption{Frequency distribution of categorical features stratified by binary outcome.
+    \textcolor{violet}{<EAMC/TONY: Add explanations and observations>}.
+} 
 \label{tab:categorical}
 \end{table}
 
@@ -300,14 +325,14 @@ CAS & 0.00 & 49.00 &  & 26.22 ± 10.87 & 31.02 ± 7.62 & 29.50 ± 9.03 &  & -0.6
 \end{tabular}
 % \captionsetup{font=footnotesize}
 \caption{Statistics for continuous features.
-    \textcolor{red}{There may be too much statistics here. If needed we can drop a column or two. Table width will be fixed later}.
+    \textcolor{violet}{<EAMC/TONY: Add explanations and observations. There may be too much statistics here, if needed we can drop some columns. Table width will be fixed later>
+    }.
     }
-\label{tab:categorical}
+\label{tab:continuous}
 \end{table}
 
-
 %=======================================
-% Histogram of Profile MSI 
+% Categorical Plots
 %=======================================
 \begin{figure*}[ht]
     % \centering
@@ -322,7 +347,7 @@ CAS & 0.00 & 49.00 &  & 26.22 ± 10.87 & 31.02 ± 7.62 & 29.50 ± 9.03 &  & -0.6
     \caption{
     Count distributions of categorical clinical variables comparing Unconfirmed (blue) and Confirmed (red) groups across demographic, comorbidity, and diagnostic subcategory features. Variables are organized into three rows: (1) patient profile — Sex (SEX), Subjective Neuropathy Complaint (SUBJ), and Insulin Use (INSULIN); (2) comorbidities — Hypertension (HPN), Peripheral Arterial Occlusive Disease (PAOD), Dyslipidemia (DSLPDMIA), Chronic Kidney Disease (CKD), and Guillain-Barré Syndrome (GBS); and (3) neurological test — Decreased Vibration Sense (DEC\_VS), Decreased Pinprick Sensation (DEC\_PPS), Decreased Light Touch Sensation (DEC\_LTS), and Decreased Ankle Reflex (DEC\_AR).
     Across nearly all variables, the Confirmed group consistently exhibited higher counts in the affirmative ("Yes") category relative to the Unconfirmed group, suggesting a broader and more severe clinical profile. Notably, the Confirmed group showed a strong male predominance, a substantially higher rate of subjective neuropathy complaints, and greater insulin use, potentially reflecting more advanced or insulin-dependent diabetes. Among comorbidities, HPN, DSLPDMIA, and CKD showed markedly higher affirmative counts in the Confirmed group, while PAOD and GBS affirmative cases were nearly absent in both groups, suggesting these may be rare in the study population. In the diagnostic subcategory variables, the Confirmed group consistently reported higher rates of sensory and reflex deficits across all four measures (DEC\_VS, DEC\_PPS, DEC\_LTS, DEC\_AR), consistent with a more pronounced neuropathic presentation and supporting the clinical validity of the group classification.
-    \textcolor{red}{Please confirm these observations and include other significant observations here}.
+    \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
     }
     \label{fig:categ}
 \end{figure*}
@@ -335,9 +360,9 @@ CAS & 0.00 & 49.00 &  & 26.22 ± 10.87 & 31.02 ± 7.62 & 29.50 ± 9.03 &  & -0.6
     \includegraphics[width=0.66\textwidth]{figures/eda/cont_profile_mnsi_distributions.png}
     \\[2ex] % Adds a line break and some extra vertical space
     \includegraphics[width=0.66\textwidth]{figures/eda/cont_profile_mnsi_boxplots.png}
-    \label{fig:profile_mnsi}
     \caption{Stacked density distributions (top) and boxplots (bottom) of clinical and demographic variables comparing Unconfirmed (blue) and Confirmed (red) groups. Variables presented include Age (AGE; median: 52.0 vs. 61.0), Diabetes Duration in years (DM\_DUR; median: 2.0 vs. 7.0), Glycated Hemoglobin (HBA1C; median: 7.1 vs. 7.6), and Michigan Neuropathy Screening Instrument score (MNSI; median: 4.0 vs. 6.0). Three of the four variables showed statistically significant group differences (p < 0.001 for AGE, DM\_DUR, and MNSI), while HBA1C did not reach significance (p = 0.256), suggesting that glycemic control levels alone may not distinguish the two groups. The Confirmed group was notably older and had a substantially longer diabetes duration, consistent with the known association between prolonged diabetes and increased neuropathy risk. The wider interquartile range and heavier right tail observed in DM\_DUR for the Confirmed group further suggests considerable heterogeneity in disease chronicity within this group. The significantly higher MNSI scores in the Confirmed group align with expected clinical presentation, reinforcing MNSI as a potentially useful screening variable, while the marginal HBA1C difference warrants caution against over-relying on glycemic markers alone in neuropathy risk stratification.
-    \textcolor{red}{Please confirm these observations and include other significant observations here}.
+    \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
+    \label{fig:profile_mnsi}
     }
 \end{figure*}
 
@@ -357,10 +382,10 @@ CAS & 0.00 & 49.00 &  & 26.22 ± 10.87 & 31.02 ± 7.62 & 29.50 ± 9.03 &  & -0.6
     \includegraphics[width=1\textwidth]{figures/eda/cont_ncs3_distributions.png}
     \\[2ex] % Adds a line break and some extra vertical space
     \includegraphics[width=1\textwidth]{figures/eda/cont_ncs3_boxplots.png}
-    \label{fig:ncs}
     \caption{
     Density distributions and boxplots of Nerve Conduction Study (NCS) variables comparing Unconfirmed (blue) and Confirmed (red) groups, encompassing Sural Peak Sensory Conduction (SPSC\_L, SPSC\_R), Motor Conduction Velocity (MCV\_L, MCV\_R), Distal Latency (DL\_L, DL\_R), Sural Sensory Amplitude (SSA\_L, SSA\_R), Sural Sensory Conduction (SSC\_L, SSC\_R), and Sural Peak Sensory Amplitude (SPSA\_L, SPSA\_R). All variables demonstrated statistically significant group differences (p < 0.001 for most; DL\_R: p = 0.003). The Confirmed group consistently showed lower median values across all conduction velocity and sensory amplitude measures, with density distributions revealing a pronounced clustering near zero in SPSC and MCV variables, indicative of a substantial subset with absent or severely reduced nerve conduction responses. Sensory amplitude variables were most dramatically reduced in the Confirmed group, with compressed interquartile ranges approaching zero across SSA and SPSA measures bilaterally, strongly suggestive of axonal loss or severe sensory nerve compromise. Modest but consistent increases in distal latency in the Confirmed group further corroborate slowed nerve conduction, collectively underscoring the discriminative utility of NCS variables in characterizing neuropathic severity between groups.
-    \textcolor{red}{Please confirm these observations and include other significant observations here}.
+    \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
+    \label{fig:ncs}
     }
 \end{figure*}
 
@@ -373,16 +398,18 @@ CAS & 0.00 & 49.00 &  & 26.22 ± 10.87 & 31.02 ± 7.62 & 29.50 ± 9.03 &  & -0.6
     \\[2ex] % Adds a line break and some extra vertical space
     \includegraphics[width=1\textwidth]{figures/eda/cont_sudo_boxplots.png}
     \caption{Stacked density distributions (top) and boxplots (bottom) of all SUDOSCAN-derived variables comparing Unconfirmed (blue) and Confirmed (red) groups. Variables presented include Feet Mean Electrochemical Skin Conductance (FEET\_MEAN\_ESC; median: 60.5 vs. 47.5), Feet Percent Asymmetry (FEET\_PCT\_ASYM; median: 3.0 vs. 6.5), Hand Mean ESC (HAND\_MEAN\_ESC; median: 63.0 vs. 56.0), Hand Percent Asymmetry (HAND\_PCT\_ASYM; median: 6.0 vs. 10.0), Nerve Score (NS; median: 60.5 vs. 50.5), and Composite Autonomic Score (CAS; median: 28.0 vs. 31.0). Nearly all variables demonstrated statistically significant group differences (p < 0.001 for FEET\_MEAN\_ESC, FEET\_PCT\_ASYM, and CAS; p= 0.003 for NS; p = 0.016 for HAND\_MEAN\_ESC), with the exception of p = 0.077 for HAND\_PCT\_ASYM) potentially reflecting greater lateralized nerve impairment in the hands. Notably, the Confirmed group exhibited lower mean ESC values in both feet and hands, consistent with reduced sudomotor function. The elevated CAS in the Confirmed group, despite lower NS values, warrants further investigation into the composite scoring methodology and its constituent variables.
-    \textcolor{red}{Please confirm these observations and include other significant observations here}.
+    \textcolor{red}{<EAMC: Please confirm these observations and include other significant observations here>}.
+    \label{fig:sudo}
     }
 \end{figure*}
 
 
 \section*{Methodology}
 %%%%%%%%%%%%%%%%%%%%%%
-This section describes the machine learning model and counterfactual generation methodology.
+This section describes the machine learning model development pipeline and the counterfactual generation methodology.
 
 \subsection*{Machine Learning Modeling}
+In this section, we describe the machine learning models used, stratified cross-validation, feature selection and hyperparameter optimization.
 
 \subsubsection*{Models}
 %%%%%%%%%%%%%%%%%%%%%%%
@@ -415,9 +442,10 @@ Given the relatively limited number of unconfirmed cases in the dataset, a robus
 
 Stratification ensures that each fold preserves the class distribution of the dataset, which is particularly important in imbalanced classification settings. Repetition further reduces variance in performance estimates by averaging results across multiple random partitions.
 
+\subsubsection*{Performance Metrics}
 For each validation run, key performance metrics were recorded, including Receiver Operating Characteristic Area Under the Curve (ROC-AUC), Youden Index, Sensitivity (Recall), and Specificity. These metrics were selected to provide a balanced evaluation of discriminative ability and clinical relevance, particularly in distinguishing between confirmed and unconfirmed cases.
 
-\subsubsection*{Feature Selection and Ablation Analysis}
+\subsubsection*{Feature Selection}
 
 To assess the contribution of different feature subsets, a structured feature selection and ablation strategy was implemented.
 
@@ -479,61 +507,62 @@ Nerve \newline Conduction \newline Study   & All & Observational & These are bio
 Sudoscan & All & Observational &  Similar to Nerve Conduction Features, these are physiological biomarkers, not direct interventions and are thus considered Observational counterfactuals. \\
 \bottomrule
 \end{tabular}
-\caption{Suitability of features for counterfactual analysis. Counterfactual analysis asks "what if this feature were different?" — so suitable features must be actionable, modifiable, and clinically meaningful to change. Unsuitable features are those that cannot be changed, reversed, or acted on. Conditional features are outcomes or downstream measurements — more useful as targets of counterfactuals than as inputs.}
+\caption{Suitability of features for counterfactual analysis. Counterfactual analysis asks "what if this feature were different?" — so suitable features must be actionable, modifiable, and clinically meaningful to change. Unsuitable features are those that cannot be changed, reversed, or acted on. Conditional and observational features are outcomes or downstream measurements — more useful as targets of counterfactuals than as inputs. For the counterfactual analysis done in this study, all features except those marked as unsuitable (\textit{No} in the third column) are included in the generation of counterfactuals.
+\textcolor{red}{<EAMC: This categorization is crucial in the generation of counterfactuals and is the may carry half of the value of the paper.  Please confirm if you agree with this classification and observations.>}
+}
 \label{tab:cf_features}
 \end{table}
 
 
-
 \subsubsection*{General Setup}
 
-\textbf{Global Permitted Range}
-To ensure feasibility of generated counterfactuals, a global permitted range was defined for all continuous features. The bounds were computed as follows:
+\paragraph{Global Permitted Range}
+To ensure feasibility of generated counterfactuals, a global permitted range was defined for all continuous features. The bounds were computed as follow:
 \begin{itemize}
+    \itemsep0em 
     \item Minimum: $min(0,x_{min} - \sigma)$
     \item Maximum: $x_{max} + \sigma)$
 \end{itemize}
-where $x_{min}$ and $x_{max}$ denote the observed minimum and maximum values of each feature, respectively, and $\sigma)$ is the standard deviation. This formulation prevents unrealistic values while allowing controlled extrapolation beyond the observed data.
+where $x_{min}$ and $x_{max}$ denote the observed minimum and maximum values respectively of each feature for the entire dataset, while $\sigma)$ is the standard deviation. This formulation prevents unrealistic values while allowing controlled extrapolation beyond the observed data.
+\textcolor{red}{<EAMC: Please confirm if you agree with this range. We previously consulted this with Doc Levs.>}
 
-\textbf{DiCE Configuration Parameters}
-The configuration of the DiCE framework is summarized in Table~\ref{tab:dice_setup}. The genetic algorithm was selected as the optimization method because of the presence of multiple categorical features which renders the use of gradients for optimization not feasible. Genetic algorithm is also effectivene in exploring high-dimensional feature spaces and generating diverse counterfactuals under multiple constraints.
+\paragraph{DiCE Configuration Parameters}
+The configuration of the DiCE framework is summarized in Table~\ref{tab:dice_setup}. The genetic algorithm was selected as the optimization method because of the presence of multiple categorical features which renders the use of gradients for optimization not feasible. Genetic algorithm is also effectiveness in exploring high-dimensional feature spaces and generating diverse counterfactuals under multiple constraints.
 
 % =======================================
 % DICE General Configuration
 % =======================================
 \begin{table}[htbp]
 \centering
-\caption{DiCE General Configuration}
-\label{tab:dice_setup}
 \begin{tabular}{lll}
 \hline
 \textbf{Component} & \textbf{Parameter} & \textbf{Value / Description} \\
 \hline
 \multirow{3}{*}{Data (dice\_ml.Data)} 
-& continuous\_features & as defined in Table~\ref{tab:cf_features} \\
-& categorical\_features & as defined in Table~\ref{tab:cf_features} \\
-& permitted\_range & global permitted range \\
+& continuous\_features & continuous features as defined in Table~\ref{tab:features} \\
+& categorical\_features & binary categorical features as defined in Table~\ref{tab:features} \\
+& permitted\_range & global permitted range as defined in the section \textit{General Setup}\\
 \hline
 \multirow{3}{*}{Model (dice\_ml.Model)} 
 & model & trained model under the mean threshold \\
 & backend & sklearn \\
 & model\_type & classifier \\
 \hline
-Dice (dice\_ml.Dice) 
+DiCE object(dice\_ml.Dice) 
 & method & genetic \\
 \hline
+\label{tab:dice_setup}
+\caption{DiCE General Configuration. This table shows the parameters used for create the DiCE Data, Model, and Instance objects.}
 \end{tabular}
 \end{table}
 
 \subsubsection*{Global Feature Importance}
-\textbf{Parameter Configuration}
+\paragraph{Parameter Configuration}
 Global feature importance was computed using DiCE’s $global\_feature\_importance$ method, which identifies features that are most frequently altered across counterfactuals, thereby indicating their influence on model predictions.
 
 The parameters used are summarized in Table~\ref{tab:global_cf}.
 \begin{table}[htbp]
 \centering
-\caption{Global Counterfactual Importance Parameters}
-\label{tab:global_cf}
 \begin{tabular}{ll}
 \hline
 \textbf{Parameter} & \textbf{Value / Description} \\
@@ -545,30 +574,31 @@ stopping\_threshold & mean threshold from hyperparameter optimization \\
 posthoc\_sparsity\_algorithm & binary \\
 \hline
 \end{tabular}
+\label{tab:global_cf}
+\caption{Global Counterfactual Importance Parameters. These are the parameters for computing the global importance with a call to \textit{global\_feature\_importance}}
 \end{table}
 
 \subsubsection*{Local Counterfactual Analysis}
 
-\textbf{Targeted Instance Selection}
-Local counterfactual explanations were generated for instances whose predicted probabilities lie within ±0.2 of the mean decision threshold obtained during hyperparameter optimization. These instances represent borderline cases, where small feature changes may alter the predicted outcome, making them particularly informative for analysis.
+\paragraph{Targeted Instance Selection}
+Local counterfactual explanations were generated from borderline and misclassified cases. Borderline cases are for instances whose predicted probabilities lie within ±0.2 of the mean decision threshold obtained during hyperparameter optimization. These instances represent cases where small feature changes may alter the predicted outcome, making them particularly informative for analysis.
 
-\textbf{Local Permitted Range}
-For each selected instance, an instance-specific permitted range was defined for each feature. This ensures that generated counterfactuals remain both realistic and tailored to the data distribution.
+\paragraph{Local Permitted Range}
+For each selected instance, an instance-specific permitted range was defined for each feature. Similar to the global permitted range, this ensures that generated counterfactuals remain both realistic and tailored to the specific instance.
 
 \begin{itemize}
     \itemsep0em 
     \item Minimum: $min(0, instance\_value - \sigma)$
     \item Maximum: $ instance\_value + \sigma)$
 \end{itemize}
+\textcolor{red}{<EAMC: Please confirm if you agree with this range. We previously consulted this with Doc Levs.>}
 
-
-\subsubsection{Local Counterfactual Parameters}
-The parameters used for generating local counterfactuals via $generate_counterfactuals$ are summarized in Table~\ref{tab:local_cf}.
+\subsubsection*{Local Counterfactual Parameters}
+The parameters used for generating local counterfactuals via $generate\_counterfactuals$ are summarized in Table~\ref{tab:local_cf}.
 
 \begin{table}[htbp]
 \centering
 \caption{Local Counterfactual Generation Parameters}
-\label{tab:local_cf}
 \begin{tabular}{ll}
 \hline
 \textbf{Parameter} & \textbf{Value / Description} \\
@@ -587,6 +617,7 @@ categorical\_penalty & 0.1 \\
 algorithm & DiverseCF \\
 \hline
 \end{tabular}
+\label{tab:local_cf}
 \end{table}
 
 The selected parameters balance proximity, diversity, and sparsity, ensuring that generated counterfactuals are close to the original instances, sufficiently varied, and involve minimal feature changes. This results in actionable and interpretable explanations suitable for clinical applications.
@@ -739,54 +770,51 @@ sensitivity  &  mean ± std  & 0.934 ± 0.054 \\
 
 
 
-
+%=======================================
+% Performance Summary
+%=======================================
 \begin{table}[t]
 \centering
 \small
-\begin{tabular}{lr}
+\begin{tabular}{lrrrr}
 \toprule
-Feature & Importance \\
+Feature & Split 0 & Split 1 & Split 2 & Mean \\
 \midrule
-CMAPKNE\_L & 1.000 \\
-SSA\_L & 1.000 \\
-CMAPANK\_L & 0.999 \\
-CMAPANK\_R & 0.998 \\
-CMAPKNE\_R & 0.996 \\
-MCV\_L & 0.996 \\
-SSA\_R & 0.996 \\
-SPSA\_L & 0.994 \\
-FWAVE\_L & 0.993 \\
-FWAVE\_R & 0.992 \\
-HBA1C & 0.992 \\
-SSC\_L & 0.989 \\
-MCV\_R & 0.988 \\
-FEET\_MEAN\_ESC & 0.987 \\
-SPSA\_R & 0.985 \\
-SSC\_R & 0.982 \\
-SPSC\_L & 0.980 \\
-NS & 0.979 \\
-SPSC\_R & 0.979 \\
-DL\_L & 0.977 \\
-HAND\_MEAN\_ESC & 0.973 \\
-CAS & 0.963 \\
-DL\_R & 0.960 \\
-HAND\_PCT\_ASYM & 0.947 \\
-FEET\_PCT\_ASYM & 0.933 \\
-MNSI & 0.873 \\
-DEC\_VS & 0.512 \\
-DEC\_AR & 0.492 \\
-DEC\_LTS & 0.446 \\
-DEC\_PPS & 0.442 \\
-DSLPDMIA & 0.439 \\
-HPN & 0.398 \\
-INSULIN & 0.387 \\
-CKD & 0.360 \\
-PAOD & 0.100 \\
-SEX & 0.000 \\
-SUBJ & 0.000 \\
-GBS & 0.000 \\
-AGE & 0.000 \\
-DM\_DUR & 0.000 \\
+SSA\_L & 0.999 & 1.000 & 1.000 & 1.000 \\
+CMAPKNE\_L & 1.000 & 0.999 & 1.000 & 1.000 \\
+CMAPANK\_L & 0.999 & 1.000 & 0.999 & 0.999 \\
+CMAPKNE\_R & 1.000 & 1.000 & 0.996 & 0.999 \\
+CMAPANK\_R & 0.997 & 0.999 & 0.998 & 0.998 \\
+FWAVE\_L & 0.996 & 0.996 & 0.993 & 0.995 \\
+MCV\_L & 0.994 & 0.991 & 0.996 & 0.994 \\
+FWAVE\_R & 0.996 & 0.993 & 0.992 & 0.994 \\
+SSA\_R & 0.983 & 0.998 & 0.996 & 0.993 \\
+SPSA\_L & 0.997 & 0.985 & 0.994 & 0.992 \\
+MCV\_R & 0.994 & 0.992 & 0.988 & 0.991 \\
+NS & 0.988 & 0.988 & 0.979 & 0.985 \\
+HBA1C & 0.986 & 0.968 & 0.992 & 0.982 \\
+FEET\_MEAN\_ESC & 0.983 & 0.974 & 0.987 & 0.981 \\
+SPSA\_R & 0.983 & 0.973 & 0.985 & 0.980 \\
+SSC\_R & 0.978 & 0.979 & 0.982 & 0.980 \\
+HAND\_MEAN\_ESC & 0.977 & 0.987 & 0.973 & 0.979 \\
+SPSC\_L & 0.975 & 0.977 & 0.980 & 0.977 \\
+SSC\_L & 0.963 & 0.973 & 0.989 & 0.975 \\
+SPSC\_R & 0.970 & 0.968 & 0.979 & 0.972 \\
+DL\_L & 0.967 & 0.966 & 0.977 & 0.970 \\
+DL\_R & 0.973 & 0.967 & 0.960 & 0.967 \\
+CAS & 0.947 & 0.947 & 0.963 & 0.952 \\
+HAND\_PCT\_ASYM & 0.929 & 0.940 & 0.947 & 0.939 \\
+FEET\_PCT\_ASYM & 0.913 & 0.887 & 0.933 & 0.911 \\
+MNSI & 0.874 & 0.851 & 0.873 & 0.866 \\
+DEC\_VS & 0.469 & 0.423 & 0.512 & 0.468 \\
+DEC\_AR & 0.432 & 0.414 & 0.492 & 0.446 \\
+DSLPDMIA & 0.414 & 0.435 & 0.439 & 0.429 \\
+DEC\_PPS & 0.419 & 0.417 & 0.442 & 0.426 \\
+INSULIN & 0.467 & 0.378 & 0.387 & 0.411 \\
+DEC\_LTS & 0.383 & 0.381 & 0.446 & 0.403 \\
+HPN & 0.418 & 0.349 & 0.398 & 0.388 \\
+CKD & 0.157 & 0.231 & 0.360 & 0.249 \\
+PAOD & 0.050 & 0.110 & 0.100 & 0.086 \\
 \bottomrule
 \end{tabular}
 \caption{Global Importances}
@@ -796,47 +824,54 @@ DM\_DUR & 0.000 \\
 \begin{table}[t]
 \centering
 \small
-\begin{tabular}{lrrr}
+\begin{tabular}{cccccccc}
 \toprule
-Counterfactual & Sparsity & L1 distance & L2 distance \\
+Model & # Instances  & # Misclassified & # Instances with CF & Sparsity Mean & L1 Mean & L2 Mean \\
 \midrule
-0 & 25 & 46.990 & 12.852 \\
-1 & 25 & 67.680 & 21.406 \\
-2 & 18 & 81.980 & 27.084 \\
-3 & 22 & 67.930 & 25.011 \\
-4 & 19 & 72.630 & 25.913 \\
-5 & 27 & 113.300 & 37.079 \\
-6 & 24 & 82.570 & 28.921 \\
-7 & 27 & 63.900 & 18.338 \\
-8 & 27 & 111.790 & 36.644 \\
-9 & 23 & 70.100 & 21.845 \\
-10 & 22 & 72.820 & 20.561 \\
-11 & 26 & 69.370 & 21.204 \\
-12 & 29 & 61.070 & 19.342 \\
-13 & 26 & 74.300 & 21.554 \\
-14 & 27 & 89.890 & 28.652 \\
-15 & 28 & 115.530 & 33.567 \\
-16 & 22 & 133.440 & 44.312 \\
-17 & 28 & 87.280 & 26.307 \\
-18 & 26 & 175.780 & 45.684 \\
-19 & 29 & 83.480 & 24.937 \\
-20 & 24 & 107.490 & 32.858 \\
-21 & 28 & 112.890 & 33.634 \\
-22 & 25 & 102.630 & 30.828 \\
-23 & 24 & 162.830 & 46.963 \\
-24 & 25 & 146.850 & 43.472 \\
-25 & 25 & 123.960 & 37.215 \\
-26 & 28 & 105.700 & 31.910 \\
-27 & 25 & 72.990 & 22.513 \\
-28 & 25 & 69.630 & 20.737 \\
-29 & 25 & 80.040 & 27.028 \\
-30 & 26 & 97.270 & 29.111 \\
+Split 0 & 6 & 4 & 6 & 25.669 & 106.291 & 30.464 \\
+Split 1 & 7 & 4 & 6 & 25.970 & 104.365 & 29.863 \\
+Split 2 & 9 & 6 & 8 & 25.543 & 101.207 & 29.327 \\
 \bottomrule
 \end{tabular}
 \caption{Local Counterfactual Analysis}
-\label{tab:local_cf_ana}
+\label{tab:localcf_summary_all}
 \end{table}
 
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+model & ID & prediction & actual & misclassified & probability & margin & CF Count & Sparsity & L1 Mean & L2 Mean \\
+\midrule
+Split 0 & 4 & Confirmed & Confirmed & No & 0.719 & 0.083 & 4 & 28.250 & 116.995 & 30.669 \\
+ & 55 & Confirmed & Confirmed & No & 0.767 & 0.131 & 22 & 27.545 & 107.345 & 29.713 \\
+ & 67 & Unconfirmed & Confirmed & Yes & 0.187 & 0.449 & 20 & 24.000 & 92.632 & 28.135 \\
+ & 106 & Unconfirmed & Confirmed & Yes & 0.524 & 0.111 & 4 & 25.250 & 114.363 & 34.028 \\
+ & 128 & Unconfirmed & Confirmed & Yes & 0.275 & 0.360 & 35 & 22.829 & 93.903 & 28.710 \\
+ & 158 & Unconfirmed & Confirmed & Yes & 0.037 & 0.598 & 35 & 26.143 & 112.511 & 31.527 \\
+\midrule
+Split 1 & 12 & Confirmed & Confirmed & No & 0.666 & 0.031 & 38 & 27.605 & 111.169 & 30.800 \\
+ & 54 & Confirmed & Confirmed & No & 0.751 & 0.116 & 45 & 28.267 & 121.284 & 32.891 \\
+ & 73 & Confirmed & Unconfirmed & Yes & 0.934 & 0.298 & 39 & 28.308 & 122.743 & 32.733 \\
+ & 94 & Unconfirmed & Unconfirmed & No & 0.481 & 0.154 & 11 & 18.364 & 56.315 & 20.650 \\
+ & 119 & Confirmed & Unconfirmed & Yes & 0.725 & 0.090 & 25 & 26.360 & 110.292 & 31.537 \\
+ & 178 & Confirmed & Unconfirmed & Yes & 0.701 & 0.066 & 35 & 26.914 & 104.387 & 30.569 \\
+\midrule
+Split 2 & 22 & Unconfirmed & Confirmed & Yes & 0.171 & 0.464 & 31 & 25.161 & 94.326 & 28.951 \\
+ & 45 & Confirmed & Unconfirmed & Yes & 0.900 & 0.265 & 15 & 25.933 & 107.987 & 30.173 \\
+ & 68 & Unconfirmed & Confirmed & Yes & 0.007 & 0.629 & 25 & 24.160 & 114.459 & 34.346 \\
+ & 88 & Confirmed & Confirmed & No & 0.826 & 0.191 & 19 & 25.684 & 92.409 & 26.595 \\
+ & 96 & Unconfirmed & Confirmed & Yes & 0.512 & 0.123 & 23 & 25.478 & 94.640 & 27.299 \\
+ & 136 & Confirmed & Confirmed & No & 0.648 & 0.013 & 12 & 24.250 & 91.867 & 28.033 \\
+ & 155 & Confirmed & Confirmed & No & 0.745 & 0.110 & 8 & 30.875 & 136.090 & 35.099 \\
+ & 167 & Unconfirmed & Confirmed & Yes & 0.127 & 0.508 & 25 & 22.800 & 77.874 & 24.117 \\
+\bottomrule
+\end{tabular}
+\caption{Local Counterfactual Analysis for Model 0}
+\label{tab:localcf_summary_0}
+\end{table}
 
 
 \begin{figure*}

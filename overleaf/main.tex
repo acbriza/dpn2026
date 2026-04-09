@@ -14,22 +14,22 @@
 \title{Application of Machine Learning and Counterfactuals on the Prediction and Explanation of Diabetic Peripheral Neuropathy}
 
 \author[1,2,*]{Antonio C. Briza}
-\author[3,+]{Elizer M. Montemayor}
 \author[3,+]{Niven Fernan}
+\author[3]{Elizer M. Montemayor}
 \author[3]{Levin Danganan}
 \author[3]{Dan Neftalie A. Juangco}
 \author[3]{Evelyn O. Chua-Ley}
 \author[4]{Roy Raoul Felipe}
 \author[3]{Deborah A. Bernardo}
 \author[3]{Levi S. Rejuso Jr}
-\author[5]{Josiah Raziel S. Lluch}
+% \author[5]{Daniel Stanley Y. Tan}
 \author[3]{Marissa T. Ong}
 \author[2]{Christopher P. Monterola}
 \affil[1]{DOST-Advanced Science and Technology Institute, Computer Software Division, 1101, Quezon City, Philippines}
 \affil[2]{Asian Institute of Management, Analytics, Computing, and Complex Systems Lab, Makati City, 1229, Philippines}
 \affil[3]{East Avenue Medical Center, Department of Neurosciences, Quezon City, 1100, Philippines}
 \affil[4]{East Avenue Medical Center, Section of Endocrinology, Quezon City, 1100, Philippines}
-\affil[5]{Mindanao State University – Iligan Institute of Technology, College of Computer Studies, 9200, Iligan City, 1100, Philippines}
+\affil[5]{Open Universiteit Nederland,  Heerlen, Limburg, The Netherlands}
  
 \affil[*]{antonio.briza@asti.dost.gov.ph, AntonioBriza.PhDinDS2024@aim.edu}
 \affil[+]{these authors contributed equally to this work}
@@ -55,11 +55,11 @@ The findings demonstrate that combining high-performing ML models with counterfa
 
 % \noindent Please note: Abbreviations should be introduced at the first mention in the main text – no abbreviations lists. Suggested structure of main text (not enforced) is provided below.
 
-\section*{Preliminary Notes}
+\section*{Explanatory Notes}
 %%%%%%%%%%%%%%%%%%%%%%%
-This is an explanatory section \textbf{for the authors' use only} -- it won't appear in the final draft.
+This is an explanatory section \textbf{for the authors' use only} -- it won't appear in the final version of the paper.
 
-\textbf{NOTE on font colors}
+\subsubsection*{Note on font colors}
 \begin{itemize}
 \itemsep0em
 \item \textcolor{magenta}{All text in magenta color comes from the original article of Montemayor et al.}
@@ -68,14 +68,28 @@ This is an explanatory section \textbf{for the authors' use only} -- it won't ap
 \item \textcolor{violet}{Notes in violet indicate things to be inputted or resolved by EAMC / Tony.} 
 \end{itemize}
 
-\textbf{Important tasks}
+All notes and font colors will be removed in the final version.
+
+\subsubsection*{Important sections to review}
+
+These are the important sections to review and to add analysis and observations:
 \begin{itemize}
 \itemsep0em
-\item Describe dataset
-\item description and observation on these plots
-
+\item Results and Discussion
+\item Detailed Counterfactual Analysis of a Confident Misclassification
+\item Detailed counterfactual analysis of a correct but borderline classification
+\item Conclusion
 \end{itemize}
-For the entirety of the Results and Discussion section, please add any further observations, explanations or clinical consequence of these observations. More valuable than the metrics and results are the interpretations and clinical consequences or possible action points for the results.
+
+For the entirety of the above  sections, please add any further observations, explanations or clinical implications and interventions. More valuable than the metrics and results are the interpretations and clinical consequences or possible medical interventions that can be done.
+
+\subsubsection*{Author List and Contributions}
+Kindly review the names and the order. 
+\begin{enumerate}
+    \item Kindly let me know who I should tag as co-first author(s). Two first authors would be ideal, although having 3 first authors is also acceptable. 
+    \item By default, I added all co-authors in the draft of the original paper by Dr.Montemayor. There is an Author Contribution Statement section at the end of the paper. Kindly help me edit that section.
+    \item Advisers are usually added at the last of the list to indicate prominence, that is the reason why Dr.Ong is second to the last.  Dr.Monterola is my adviser for my graduate studies. Their supervision role is indicated in the Author Contribution section.
+\end{enumerate}
 
 \section*{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%
@@ -855,7 +869,7 @@ SPSC\_L & 0.975 & 0.977 & 0.980 & 0.977 & & & & & \\
 \end{table}
 
 \subsection*{Instance-Level Local Counterfactual Analysis}
-%========================================================
+%=========================================================
 Local  counterfactuals are incredibly valuable for clinical interpretation. For a borderline or misclassified patient, this analysis explicitly tells the clinician: "If this patient's feature X was lower by amount Y, the model would have classified them as healthy." This helps doctors understand exactly where a patient sits on the DPN spectrum.
 
 By isolating the misclassified instances and examining their counterfactuals, clinicians and data scientists can audit why the AI failed. It can reveal if the model was confused by conflicting electrophysiological signals or if the patient simply presents an atypical, rare manifestation of diabetic neuropathy.
@@ -897,7 +911,6 @@ Split 2 & 22 & Unconfirmed & Confirmed & Yes & 0.171 & 0.464 & 31 & 25.161 & 94.
 \label{tab:localcf-listing}
 \end{table}
 
-
 From this table, the following observations and recommendations can be made.
 \begin{itemize}
     \item \textcolor{blue}{\textit{High Variability in CF Count}. Unlike the stable perturbation averages seen in global metrics, the number of feasible counterfactuals generated for individual patients varies drastically (e.g., ranging from 4 for ID 106 to 45 for ID 54). This indicates that some patients sit in highly complex, dense regions of the feature space where many different minor physiological changes could alter their diagnosis, while others have very limited pathways to a different classification.}
@@ -911,12 +924,47 @@ From this table, the following observations and recommendations can be made.
     \item \textcolor{blue}{\textit{Personalized Preventative Care}. For patients who are correctly classified but have a very narrow decision margin (e.g., ID 12 in Split 1 with a margin of just 0.031), the counterfactuals act as a highly personalized warning system. Clinicians can view the specific CF pathways to see exactly which minor physiological shifts would push this specific patient into a "Confirmed" DPN status, allowing for highly targeted preventative treatments.}
 \end{itemize}
 
-
 \textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}
 
+\subsection*{Detailed Counterfactual Analysis of a Confident Misclassification}
+\label{ssec:cf_misclassification}
+%==============================================================================
+ Here we study further the counterfactuals for Patient with ID=73, an instance representing a highly confident misclassification wherein the model predicted the patient to be "Confirmed" with a very high probability (0.934) but was actually "Unconfirmed." For this instance a total of 39 counterfactuals were generated. Figure~\ref{tab:localcf_misclassification} shows these counterfactuals as a heatmap of feature value changes.  \textcolor{red}
+ {<EAMC: Please add observations here after carefully reviewing the counterfactuals for Patient 73 in Figure~\ref{tab:localcf_misclassification}. If still possible, check again the patient's files. The goal is to uncover whether the patient has a rare condition (e.g. comorbidity) confusing the model, or if there is a fundamental flaw in how the AI weighs certain nerve conduction parameters for specific demographics. These observations strengthen the usefulness of counterfactuals and is worth highlighting in this research.>}
+
+\begin{figure}[p] % [p] puts it on its own page
+    \centering
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/counterfactuals/73/catboost_split1_local_cf_qidx073_000-014.png}
+        % \caption{First set - Top}
+    \end{subfigure}
+    \vspace{-10pt}
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/counterfactuals/73/catboost_split1_local_cf_qidx073_015-029.png}
+        % \caption{First set - Middle}
+    \end{subfigure}
+    \vspace{-10pt}]
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/counterfactuals/73/catboost_split1_local_cf_qidx073_030-038.png}
+        % \caption{First set - Bottom}
+    \end{subfigure}
+    \caption{Counterfactuals generated for Patient with ID=73 presented as a heatmap of changes in values. This instance represents a highly confident misclassification wherein the model predicted the patient to be "Confirmed" with a very high probability (0.934) but was actually "Unconfirmed."}
+    \label{tab:localcf_misclassification}
+\end{figure}
+
+    
+\subsection*{Detailed counterfactual analysis of a correct but borderline classification}
+\label{ssec:cf_borderline}
+%========================================================================================
+ We now analyze Patient with ID=12, an instance that represents a correct but borderline classification. This instance was correctly classified as "Confirmed" but with a margin of just 0.031. For this instance a total of 37 counterfactuals were generated. Figure~\ref{tab:localcf_borderline} shows these counterfactuals as a heatmap of feature value changes. 
+   
+\textcolor{red}{EAMC: Please add observations here after carefully reviewing the counterfactuals for Patient 12 in this image: Figure~\ref{tab:localcf_borderline}. The changes suggested by the counterfactuals indicate what should change in the patient for it to be predicted as "Unconfirmed" by the AI model. In this way, the counterfactuals act as a highly personalized warning system. Clinicians can view the specific CF pathways to see exactly which minor physiological shifts would push this specific patient into an "Unconfirmed" DPN status, allowing for highly targeted preventative treatments or interventions. Again, these observations strengthens the usefulness of counterfactuals and is worth highlighting in this research.}
 
 \subsection*{Summary of Local counterfactual analysis across the models}
-%==========================================
+%=======================================================================
 Table~\ref{tab:local_cf} shows a summary of the local counterfactual analysis for the 3 models for each data split. It shows that the DiCE framework is highly effective at generating counterfactuals. It successfully produced counterfactuals for nearly all evaluated instances (6 of 6 in Split 0; 6 of 7 in Split 1; 8 of 9 in Split 2), proving the method works robustly even on difficult or misclassified cases. 
 
 The perturbation metrics are remarkably stable across all three splits. The Sparsity Mean (~25.5 to 25.9), L1 Mean (~101 to 106), and L2 Mean (~29.3 to 30.4) show very little variance. This indicates that the "distance" to cross the AI's decision boundary is uniform regardless of how the training data was divided. 
@@ -954,112 +1002,32 @@ Split 2 & 9 & 6 & 8 & 25.543 & 101.207 & 29.327 \\
 \label{tab:localcf-summary-all}
 \end{table}
 
-% \begin{figure}[p]
-%     \centering
-%     % Top Image
-%     \begin{subfigure}[b]{1.\textwidth}
-%         \centering
-%         \includegraphics[width=\textwidth]{figures/counterfactuals/73/catboost_split1_local_cf_qidx073_000-014.png}
-%         % \caption{Description of the top image}
-%     \end{subfigure}
-    
-%     \vfill % Adds flexible vertical space between images
-    
-%     % Bottom Image
-%     \begin{subfigure}[b]{1.\textwidth}
-%         \centering
-%         \includegraphics[width=\textwidth]{figures/counterfactuals/73/catboost_split1_local_cf_qidx073_015-029.png}
-%         % \caption{Description of the bottom image}
-%     \end{subfigure}
-    
-%     % Bottom Image
-%     \begin{subfigure}[b]{1.\textwidth}
-%         \centering
-%         \includegraphics[width=\textwidth]{figures/counterfactuals/73/catboost_split1_local_cf_qidx073_030-038.png}
-%         % \caption{Description of the bottom image}
-%     \end{subfigure}
-    
-%     \caption{Counterfactuals generated for Patient with ID=128 presented as a heatmap of changes in values. The patient is 
-%     Features that are not suitable as counterfactuals are noticeably white indicating they are unchanged. \textcolor{red}{<EAMC: This image shows what needs to 
-%     This is an important aspect of the study - one that is rarely seen in ML applications on medical data. .>}
-%     \label{fig:vertical_stack}
-% \end{figure}
 
 
-% --- Page 1: First 3 Images ---
-\begin{figure}[p] % [p] puts it on its own page
-    \centering
-    \begin{subfigure}{\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{figures/counterfactuals/73/catboost_split1_local_cf_qidx073_000-014.png}
-        \caption{First set - Top}
-    \end{subfigure}
-    \\[1ex]
-    \begin{subfigure}{\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{figures/counterfactuals/73/catboost_split1_local_cf_qidx073_015-029.png}
-        \caption{First set - Middle}
-    \end{subfigure}
-    \\[1ex]
-    \begin{subfigure}{\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{figures/counterfactuals/73/catboost_split1_local_cf_qidx073_030-038.png}
-        \caption{First set - Bottom}
-    \end{subfigure}
-    \caption{Analysis of Dataset X (Part I)}
-\end{figure}
-
-% --- Page 2: Next 3 Images ---
 \begin{figure}[p]
     \ContinuedFloat % <--- CRITICAL: Keeps the figure number as "1"
     \centering
     \begin{subfigure}{\textwidth}
         \centering
         \includegraphics[width=\linewidth]{figures/counterfactuals/12/catboost_split1_local_cf_qidx012_000-014.png}
-        \caption{Second set - Top}
+        % \caption{Second set - Top}
     \end{subfigure}
-    \\[1ex]
+    \vspace{-10pt}
     \begin{subfigure}{\textwidth}
         \centering
         \includegraphics[width=\linewidth]{figures/counterfactuals/12/catboost_split1_local_cf_qidx012_015-029.png}
-        \caption{Second set - Middle}
+        % \caption{Second set - Middle}
     \end{subfigure}
-    \\[1ex]
+    \vspace{-10pt}
     \begin{subfigure}{\textwidth}
         \centering
         \includegraphics[width=\linewidth]{figures/counterfactuals/12/catboost_split1_local_cf_qidx012_030-037.png}
-        \caption{Second set - Bottom}
+        % \caption{Second set - Bottom}
     \end{subfigure}
-    \caption{Analysis of Dataset X (Part II)}
+    \caption{Counterfactuals generated for Patient with ID=12 presented as a heatmap of changes in values. This instance represents a correct but borderline classification having a very narrow decision margin of just 0.031.}
+    \label{tab:localcf_borderline}
 \end{figure}
 
-
-% \begin{figure*}
-%   \centering
-%   \includegraphics[width=\textwidth]{figures/counterfactuals/22/catboost_split2_local_cf_qidx022_015-029.png}
-%     \caption{Counterfactuals for Patient 22 (page 2/2)}
-% \end{figure*}
-
-% \begin{sidewaysfigure}
-%     \centering
-%     \includegraphics[width=\textwidth]{figures/counterfactuals/22/catboost_split2_local_cf_qidx022_000-014.png}
-%     \caption{Counterfactuals for Patient 22 (page 1/3)}
-%     \label{fig:cf22p1}
-% \end{sidewaysfigure}
-
-% \begin{sidewaysfigure}
-%     \centering
-%     \includegraphics[width=\textwidth]{figures/counterfactuals/22/catboost_split2_local_cf_qidx022_015-029.png}
-%     \caption{Counterfactuals for Patient 22 (page 2/2)}
-%     \label{fig:cf22p2}
-% \end{sidewaysfigure}
-
-% \begin{sidewaysfigure}
-%     \centering
-%     \includegraphics[width=\textwidth]{figures/counterfactuals/22/catboost_split2_local_cf_qidx022_030-030.png}
-%     \caption{Counterfactuals for Patient 22 (page 3/3)}
-%     \label{fig:cf22p3}
-% \end{sidewaysfigure}
 
 \section*{Conclusion}
 %%%%%%%%%%%%%%%%%%%%%
@@ -1079,11 +1047,20 @@ Split 2 & 9 & 6 & 8 & 25.543 & 101.207 & 29.327 \\
 %%%%%%%%%%%%%%%%%%%%%
 
 \section*{Acknowledgements}
-Not compulsory. Acknowledgements should be brief, and should not include thanks to anonymous referees and editors, or effusive comments. Grant or contribution numbers may be acknowledged.
+The authors would like to thank Josiah Raziel S. Lluch of Mindanao State University – Iligan Institute of Technology for his assistance with software implementation.
+This work is funded and monitored by the Department of Science and Technology (DOST) – Philippine Council for Industry, Energy, and Emerging Technology Research and Development (PCIEERD) with Project No. 1213385.
+\textcolor{red}{<EAMC: Please add here any acknowlegements you may want ot make.>}
+\\
+
 
 \section*{Author contributions statement}
-Must include all authors, identified by initials, for example:
-A.A. conceived the experiment(s),  A.A. and B.A. conducted the experiment(s), C.A. and D.A. analysed the results.  All authors reviewed the manuscript. 
+\textcolor{red}{<EAMC: Kindly help fill the contributions of the co-authors. Co-authors are identified by their initials. This is just a draft and example. Please feel free to make suggestions to this section.>}
+A.C.B. conducted the AI modeling and counterfactual generations and wrote the draft,  
+E.M.M. and N.F co-wrote portions of the draft, 
+D.A.J., E.O.C., R.R.F.,D.A.B, L.S.R and M.T.O, designed and implemented the data collection process,
+N.F., L.D., and M.T.O. provided medical interpretations and insights,  
+M.T.O and C.P.M. provided research supervision.
+All authors reviewed the manuscript. 
 
 \section*{Additional information}
 To include, in this order: \textbf{Accession codes} (where applicable); \textbf{Competing interests} (mandatory statement). 

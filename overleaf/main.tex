@@ -2,12 +2,14 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 % custom packages
+\usepackage[font=footnotesize]{caption}
 \usepackage{graphicx}
 \usepackage{subcaption}
 \usepackage{rotating}
 \usepackage{xcolor}
 \usepackage{multirow}
 \usepackage{cleveref}
+\usepackage{float}
 
 \title{Application of Machine Learning and Counterfactuals on the Prediction and Explanation of Diabetic Peripheral Neuropathy}
 
@@ -35,10 +37,14 @@
 \keywords{Diabetic Neuropathy, Machine Learning, Explainable AI, Counterfactuals}
 
 \begin{abstract}
-Example s Abstract. 
 % Abstract must not include subheadings or citations. 
+Diabetic peripheral neuropathy (DPN) remains a highly prevalent yet underdiagnosed complication of diabetes mellitus, particularly in resource-constrained settings. This study investigates the integration of machine learning (ML) and counterfactual explanation techniques to enhance both the predictive performance and interpretability of DPN diagnosis. A dataset of 190 Filipino patients was analyzed, incorporating clinical, neurological, nerve conduction study (NCS), and Sudoscan-derived features. Multiple ML models —including linear, distance-based, and ensemble tree-based algorithms— were evaluated using repeated stratified k-fold cross-validation. We utilized Explainable AI (XAI) techniques, specifically Shapley Additive Explanations (SHAP) and the Diverse Counterfactual Explanations (DiCE) framework, to provide actionable, patient-specific insights.CatBoost emerged as a top performing model achieving a mean ROC-AUC of 0.975 and a Youden index of 0.867 for the repeated k-fold. Separate hyperparameter optimization of CatBoost models on three data splits yielded $ROC-AUC$ of $0.972 \pm 0.020$ and a Youden Index of $0.852 \pm 0.068$.
 
+Feature ablation experiments demonstrated that NCS variables are the most discriminative predictors, with their removal significantly degrading model performance, while Sudoscan features showed limited predictive capability. Explainability analyses using feature importance and SHAP confirmed the dominant role of electrophysiological biomarkers, aligning with established clinical understanding of neuropathy. DiCE framework successfully generated diverse counterfactuals for nearly all evaluated instances, offering clinicians a "what-if" tool to identify minimal physiological shifts required to alter a patient's diagnostic status. By bridging the gap between high-accuracy computation and practical clinical utility within the Philippine context, this framework supports early diagnosis and personalized intervention strategies for DPN.
+
+The findings demonstrate that combining high-performing ML models with counterfactual explanations offers a robust and clinically meaningful framework for DPN prediction and interpretation. This approach not only improves diagnostic accuracy but also supports personalized, actionable decision-making, thereby bridging the gap between advanced AI models and real-world clinical application.
 \end{abstract}
+
 
 \begin{document}
 
@@ -56,10 +62,10 @@ This is an explanatory section \textbf{for the authors' use only} -- it won't ap
 \textbf{NOTE on font colors}
 \begin{itemize}
 \itemsep0em
-\item \textcolor{blue}{All text in blue color comes from the original article of Montemayor et al.}
+\item \textcolor{magenta}{All text in magenta color comes from the original article of Montemayor et al.}
 \item \textcolor{red}{Notes in red indicate things to be inputted, clarified, or resolved by EAMC.}
+\item \textcolor{blue}{Text in blue indicate text that is important to be validated and interpreted by EAMC.} 
 \item \textcolor{violet}{Notes in violet indicate things to be inputted or resolved by EAMC / Tony.} 
-\item \textcolor{green}{Notes in violet indicate things to be inputted or resolved by Tony.} 
 \end{itemize}
 
 \textbf{Important tasks}
@@ -67,20 +73,21 @@ This is an explanatory section \textbf{for the authors' use only} -- it won't ap
 \itemsep0em
 \item Describe dataset
 \item description and observation on these plots
-\end{itemize}
 
+\end{itemize}
+For the entirety of the Results and Discussion section, please add any further observations, explanations or clinical consequence of these observations. More valuable than the metrics and results are the interpretations and clinical consequences or possible action points for the results.
 
 \section*{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%
-\textcolor{blue}{Diabetic peripheral neuropathy (DPN) is the most common type of polyneuropathy affecting 42-58\% of Filipinos \cite{ropper2019adams, araneta2006hyperglycemia, dagang2016validation}.
+\textcolor{magenta}{Diabetic peripheral neuropathy (DPN) is the most common type of polyneuropathy affecting 42-58\% of Filipinos \cite{ropper2019adams, araneta2006hyperglycemia, dagang2016validation}.
 }
 Characterized by progressive nerve damage, DPN often presents with symptoms such as pain, numbness, and loss of sensation in the extremities, particularly the feet. Beyond its direct impact on quality of life, DPN is a major risk factor for foot ulcers, infections, and lower-limb amputations, contributing significantly to healthcare burden.
 
-\textcolor{blue}{Despite being associated with reduced quality of life and debilitating complications,
+\textcolor{magenta}{Despite being associated with reduced quality of life and debilitating complications,
 DPN is underdiagnosed in up to 81\% of patients \cite{vinik2012neuropathy, ziegler2018painful}. Hurdles in the early diagnosis of DPN includes the insidious progression, inconsistent disease presentation and the need for complicated equipment for definitive diagnosis \cite{vinik2012neuropathy, ziegler2018painful, casellini2013sudoscan}.
 }
 
-\textcolor{red}{<EAMC: This paragraph talks about the diagnostic procedures for DPN. May be good to include a sentence on Nerve Conduction Studies>} \textcolor{blue}{Skin biopsy with quantitation of intraepidermal nerve fiber density is still the gold standard in detecting small fiber neuropathy, while sudorimetry is a rapidly evolving technology that can easily be integrated into clinical practice. The development of such technologies like the Sudoscan allows noninvasive and easy-to-perform tests for detection of small fiber neuropathy based on reverse iontophoresis and chronoamperometry to measure sudomotor function \cite{mayaudon:2010newsimple, vinik2015newage}.
+\textcolor{red}{<EAMC: This paragraph talks about the diagnostic procedures for DPN. May be good to include a sentence on Nerve Conduction Studies>} \textcolor{magenta}{Skin biopsy with quantitation of intraepidermal nerve fiber density is still the gold standard in detecting small fiber neuropathy, while sudorimetry is a rapidly evolving technology that can easily be integrated into clinical practice. The development of such technologies like the Sudoscan allows noninvasive and easy-to-perform tests for detection of small fiber neuropathy based on reverse iontophoresis and chronoamperometry to measure sudomotor function \cite{mayaudon:2010newsimple, vinik2015newage}.
 }
 
 Early detection and management of DPN are therefore critical, yet remain challenging due to the multifactorial nature of the disease and the heterogeneity of patient profiles. In recent years, machine learning (ML) has emerged as a powerful tool for modeling complex, nonlinear relationships in medical data. By leveraging large clinical datasets, ML algorithms can identify patterns and interactions among risk factors that may not be readily apparent through traditional statistical approaches. 
@@ -113,9 +120,9 @@ This study aims to investigate the application of machine learning models in con
 % associated with increasing DPN signs and symptoms using Neurological Symptom Score, Neuropathy
 % Disability Score, and vibration perception threshold tests26.
 
-\subsection*{Data Collection}
+\section*{Data Collection}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\textcolor{blue}{
+\textcolor{magenta}{
 A total of 201 adult Filipino patients diagnosed with Diabetes Mellitus (DM) were recruited
 between 2022 and 2023. Subjects with limb amputation, gangrenous/ necrotic foot, with implanted
 cardiac pacemakers or defibrillators, and patients with other known causes of polyneuropathy were
@@ -125,19 +132,19 @@ examination to detect the presence of DPN. Subjects were then classified based o
 consensus criteria as confirmed, probable, possible or no DPN \cite{tesfaye2010diabetic}. This study was approved by the local Institutional Ethics Review Board and all subjects gave their written consent prior to participating.
 }
 
-\textcolor{blue}{
+\textcolor{magenta}{
 Neuropathic symptoms were documented by subjectively asking patients for presence of any
 distal extremity numbness, paresthesia, or pain, and by asking them to answer the Filipino validated
 version of MNSI \cite{dagang2016validation}. Abnormal neurologic signs were detected using the standard 10g Semmes Weinstein monofilament examination (SWME) and standard 128-Hz clanging tuning fork tests \cite{feng2009semmes,oyer2007quantitative}. Additional examination for pinprick sensation was done using the same criteria for SWME. Achilles tendon reflex testing was also done and dichotomized subjects as either normal or hypo/areflexive. All neurological examinations were conducted by a single trained physician.
 }
 
-\textcolor{blue}{
+\textcolor{magenta}{
 Nerve conduction studies were performed at a stable skin temperature of 32°C and a room
 temperature of 24°C using Nihon Kohen EMG equipment with a filter width of 20 Hz to 3 kHz, amplifier
 setting at 200 $\mu$V/div, and sweep speed of 10 ms/div. 
 }
 
-\textcolor{blue}{
+\textcolor{magenta}{
 The following nerve attributes were measured: 
 \begin{itemize}
 \itemsep0em 
@@ -148,21 +155,19 @@ F-wave latencies
 \end{itemize}
 }
 
-\textcolor{blue}{
+\textcolor{magenta}{
 All NCV testing was done by a single trained technician on the same day as other
 neurological examinations. Finally, sudomotor testing using Sudoscan was performed on each participant. Subjects placed palms of their hands and the soles of their feet on stainless steel electrodes and an incremental low direct voltage (<4V) was applied for about 2 minutes. The device produced an average electrochemical skin conductance (ESC) result for both hands and feet which is based on stimulation of sweat glands by the low-level voltage, allowing evidence of sweat dysfunction \cite{garcia2022detection}.
 }
 
-Statistical tables of the data are shown in categorical and continuous features are shown in \Cref{tab:categorical,tab:continuous} while plots are shown for categorical features, profile and MNSI, Nerve Conduction Studies and Sudoscan in \Cref{fig:categ,fig:profile_mnsi,fig:ncs,fig:sudo}. \textcolor{violet}{<EAMC/TONY: add description and observation on these plots>} 
-
-The patients were classified into four categories: Confirmed, Probable, Possible and No DPN. \textcolor{red}{<EAMC: May be good to add here explanation of Probable and Possible categories>}. Given the limited number of samples from the latter three categories, this study combined the last three categories to form a larger group  labeled as Unconfirmed. Table~\ref{tab:data_categ} shows the breakdown among the different categories or labels.
+The patients were classified into four categories: Confirmed, Probable, Possible and No DPN.  Given the limited number of samples from the latter three categories, this study combined the last three categories to form a larger group  labeled as Unconfirmed. Table~\ref{tab:data_categ} shows the breakdown among the different categories or labels.\textcolor{red}{<EAMC: May be good to add here explanation of Probable and Possible categories. Also, an explanation or defense of the clinical usefulness of Confirmed and Unconfirmed grouping to provide better grounding for the study.>}. The full list of features, their groupings, description and code are shown in Table~\ref{tab:features}.
 
 %=======================================
 % Data and Categories
 %=======================================
-\begin{table}[t]
+\begin{table}[h!]
 \centering
-% \small
+\small
 \begin{tabular}{lrr}
 \toprule
 Label & \multicolumn{2}{c}{Support}  \\
@@ -170,22 +175,21 @@ Label & \multicolumn{2}{c}{Support}  \\
 Negative  &  9 \\
 Possible  & 22 \\
 Probable  & 28  \\
-Unconfirmed Subtotal (Negative+Possible+Probable) & &59 \\
+Unconfirmed (Negative+Possible+Probable) & &59 \\
 Confirmed & & 131 \\
 Overall Total & & 190 \\
 \bottomrule
 \end{tabular}
-\caption{Dataset and categories. The patients were classified into four categories: Confirmed, Probable, Possible and No DPN. Given the limited number of samples from the latter three categories, this study combined the last three categories to form a larger group  labeled as Unconfirmed}
+\caption{Dataset and categories. The patients were classified into four categories: Confirmed, Probable, Possible and No DPN. Given the limited number of samples from the latter three categories, study on machine learning models and counterfactuals combined the last three categories to form a larger group labeled as Unconfirmed}
 \label{tab:data_categ}
 \end{table}
-
 
 % =======================================
 % Table of Features, Codes, Description
 % =======================================
-\begin{table}[ht]
+\begin{table}[h!]
 \centering
-\small
+\footnotesize
 \begin{tabular}{llll}
 \toprule
 GROUP & CODE & DESCRIPTION  & TYPE\\
@@ -243,12 +247,15 @@ Sudoscan & FEET\_MEAN\_ESC & Feet Mean Electrochemical Skin Conductance & contin
 \label{tab:features}
 \end{table}
 
+Statistical tables of the data are shown for categorical and continuous features in \Cref{tab:categorical,tab:continuous} while plots are shown for categorical features, profile plus MNSI, Nerve Conduction Studies, and Sudoscan in \Cref{fig:categ,fig:profile_mnsi,fig:ncs,fig:sudo}. 
+
+
 % =======================================
 % Categorical Table
 % =======================================
-\begin{table}[t]
+\begin{table}[h!]
 \centering
-\small
+\footnotesize
 \begin{tabular}{lcccccccccccccc}
 \toprule
 & \multicolumn{4}{c}{Confirmed} && \multicolumn{4}{c}{Unconfirmed} && \multicolumn{4}{c}{Statistics} \\       
@@ -283,7 +290,7 @@ DEC\_AR & 51 & 45 & 96 & 50.5 && 9 & 85 & 94 & 49.5 && 39.70 & 1 & 0.0000 & 0.45
 % =======================================
 \begin{table}[t]
 \centering
-\small
+\footnotesize
 \begin{tabular}{lccccccccccc}
 \toprule
 & \multicolumn{2}{c}{Range} &&  \multicolumn{3}{c}{Mean ± STD} && \multicolumn{4}{c}{Distribution Statistics} \\       
@@ -333,7 +340,7 @@ CAS & 0.00 & 49.00 &  & 26.22 ± 10.87 & 31.02 ± 7.62 & 29.50 ± 9.03 &  & -0.6
 
 % Categorical Plots
 %=======================================
-\begin{figure*}[ht]
+\begin{figure*}[h!]
     % \centering
     \hspace*{0.085\textwidth}
     \includegraphics[width=0.5\textwidth]{figures/eda/categ_profile_histogram.png}
@@ -353,7 +360,7 @@ CAS & 0.00 & 49.00 &  & 26.22 ± 10.87 & 31.02 ± 7.62 & 29.50 ± 9.03 &  & -0.6
 
 % Histogram of Profile MSI 
 % =======================================
-\begin{figure*}[ht]
+\begin{figure*}[h!]
     \centering
     \includegraphics[width=0.66\textwidth]{figures/eda/cont_profile_mnsi_distributions.png}
     \\[2ex] % Adds a line break and some extra vertical space
@@ -366,7 +373,7 @@ CAS & 0.00 & 49.00 &  & 26.22 ± 10.87 & 31.02 ± 7.62 & 29.50 ± 9.03 &  & -0.6
 
 % Distribution and Boxplot of NCS 
 %=======================================
-\begin{figure*}[ht]
+\begin{figure*}[h!]
     \centering
     \includegraphics[width=1\textwidth]{figures/eda/cont_ncs1_distributions.png}
     \\[2ex] % Adds a line break and some extra vertical space
@@ -405,29 +412,29 @@ CAS & 0.00 & 49.00 &  & 26.22 ± 10.87 & 31.02 ± 7.62 & 29.50 ± 9.03 &  & -0.6
 This section describes the machine learning model development pipeline and the counterfactual generation methodology.
 
 \subsection*{Machine Learning Modeling}
-In this section, we describe the machine learning models used, stratified cross-validation, feature selection and hyperparameter optimization.
+In this section, we describe the machine learning models used, stratified cross-validation, feature selection, and hyperparameter optimization.
 
 \subsubsection*{Models}
 %%%%%%%%%%%%%%%%%%%%%%%
 
 A diverse set of machine learning algorithms was evaluated in this study using default or standard parameter settings to ensure a consistent and unbiased baseline comparison. These models can be broadly grouped according to their underlying learning paradigms:
 
-\textbf{(a) Linear and Probabilistic Models}.
+\textit{(a) Linear and Probabilistic Models}.
 This group includes Logistic Regression, Linear Discriminant Analysis (LDA), Quadratic Discriminant Analysis (QDA), Stochastic Gradient Descent (SGDClassifier), Naive Bayes (GaussianNB), and Linear Support Vector Machine (Linear SVM). These models are generally characterized by strong interpretability and computational efficiency. Logistic Regression and Linear SVM are effective in high-dimensional spaces and provide robust linear decision boundaries. LDA and QDA model class-conditional distributions, with QDA allowing nonlinear decision boundaries through class-specific covariance matrices. Naive Bayes is particularly efficient and performs well under conditional independence assumptions, while SGDClassifier enables scalable optimization for large datasets.
 
-\textbf{(b) Distance-Based and Instance-Based Learning}.
+\textit{(b) Distance-Based and Instance-Based Learning}.
 The k-Nearest Neighbors (kNN) algorithm falls under this category. It is a non-parametric method that makes predictions based on the proximity of data points in feature space. Its strength lies in its simplicity and ability to capture complex decision boundaries without explicit model training, although it may be sensitive to feature scaling and noise.
 
-\textbf{(c) Tree-Based and Ensemble Methods}.
+\textit{(c) Tree-Based and Ensemble Methods}.
 This group includes Decision Tree, Random Forest, Extra Trees, and Gradient Boosting. Decision Trees are intuitive and capable of capturing nonlinear relationships and feature interactions. Random Forest and Extra Trees extend this capability through ensemble learning, improving generalization and reducing variance via bagging and randomized feature selection. Gradient Boosting builds models sequentially to correct previous errors, often achieving strong predictive performance.
 
-\textbf{(d) Advanced Gradient Boosting Frameworks}.
+\textit{(d) Advanced Gradient Boosting Frameworks}.
 More sophisticated implementations of boosting are represented by XGBoost, LightGBM, and CatBoost. These algorithms are optimized for efficiency and performance on structured/tabular data. XGBoost incorporates regularization and efficient handling of sparse data; LightGBM employs histogram-based learning and leaf-wise tree growth for speed and scalability; CatBoost is particularly effective in handling categorical variables and mitigating overfitting through ordered boosting techniques.
 
-\textbf{(e) Kernel-Based Models}.
+\textit{(e) Kernel-Based Models}.
 The RBF Support Vector Machine (RBF SVM) extends linear SVM by applying a radial basis function kernel, enabling the modeling of nonlinear decision boundaries. This makes it powerful for complex datasets where linear separability is not sufficient.
 
-\textbf{(f) Baseline Model}.
+\textit{(f) Baseline Model}.
 A Naive classifier that predicts the majority class was included as a baseline to contextualize the performance of all other models.
 
 Overall, this diverse selection of models allows for a comprehensive evaluation across linear, nonlinear, probabilistic, and ensemble-based learning paradigms, each with distinct strengths in terms of interpretability, flexibility, robustness, and predictive power.
@@ -439,13 +446,38 @@ Given the relatively limited number of unconfirmed cases in the dataset, a robus
 Stratification ensures that each fold preserves the class distribution of the dataset, which is particularly important in imbalanced classification settings. Repetition further reduces variance in performance estimates by averaging results across multiple random partitions.
 
 \subsubsection*{Performance Metrics}
-For each validation run, key performance metrics were recorded, including Receiver Operating Characteristic Area Under the Curve (ROC-AUC), Youden Index, Sensitivity (Recall), and Specificity. These metrics were selected to provide a balanced evaluation of discriminative ability and clinical relevance, particularly in distinguishing between confirmed and unconfirmed cases.
+For each validation run, key performance metrics were recorded, including Receiver Operating Characteristic Area Under the Curve (ROC-AUC), Youden Index, Sensitivity (Recall), and Specificity. These metrics were selected to provide a balanced evaluation of discriminative ability and clinical relevance, particularly in distinguishing between Confirmed and Unconfirmed cases.
 
-\subsubsection*{Feature Selection}
+\subsubsection*{Feature Sets}
 
 To assess the contribution of different feature subsets, a structured feature selection and ablation strategy was implemented.
 
-First, all models were trained using the complete set of available features to establish baseline performance. Subsequently, based on the feature groupings defined in Table 1, models were retrained while systematically removing each feature group. This ablation approach enables the identification of feature groups that contribute most significantly to predictive performance.
+First, all models were trained using the complete set of available features to establish baseline performance. Subsequently, based on the feature groupings defined in Table~\ref{tab:features}, models were retrained while systematically removing each feature group. This ablation approach enables the identification of feature groups that contribute most significantly to predictive performance.
+
+%=======================================
+% Feature Selection
+%=======================================
+\begin{table}[h!]
+\centering
+\small
+\begin{tabular}{ll}
+\toprule
+Feature Set & Code  \\
+\midrule
+All features (full feature set)&  All   \\
+No collinear features  &  NoCol\\
+No Nerve Conduction Studies features  & NoNCS \\
+No Neurological Test features & NoNeuro \\
+No Comorbidities features & NoCom \\
+No MSI feature & NoMSI  \\
+No Clinical Profile features  &  NoProf\\
+Nerve Conduction Studies features  only & NCS \\
+Sudoscan features only & Sudo \\
+\bottomrule
+\end{tabular}
+\caption{Feature sets explored for ML modeling}
+\label{tab:feature_sets}
+\end{table}
 
 In addition, multicollinearity was addressed using the Variance Inflation Factor (VIF). Features exhibiting a VIF greater than 5 were considered highly collinear and were removed, resulting in a reduced feature set aimed at improving model stability and interpretability.
 
@@ -464,73 +496,71 @@ This multi-stage optimization framework ensures that the final model is both wel
 
 \subsection*{Counterfactual Generation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 To provide interpretable insights into the predictions of the trained machine learning models, counterfactual explanations were generated using the DiCE (Diverse Counterfactual Explanations) framework \cite{mothilal2020explaining}. DiCE is well-suited for this study due to its model-agnostic capability, enabling its application across a wide range of classifiers, including complex ensemble models. Furthermore, it supports diversity-aware counterfactual generation, allowing the identification of multiple plausible feature modifications that can alter model predictions—an important requirement in clinical decision support. Its ability to incorporate feature constraints (e.g., permitted ranges and immutable variables) ensures that generated counterfactuals remain realistic and clinically meaningful.
 
 \subsubsection*{Feature Suitability as Counterfactuals}
-Table~\ref{tab:cf_features} shows the feature set and their suitability for counterfactual analysis. We note that nerve conduction studies and sudoscan features are marked as \textit{conditional} counterfactuals. These are biomarker outcomes of neuropathy. While these are not directly actionable inputs, they can be treated as counterfactuals that answer "what must change". Intervention is left to the physician. 
+Table~\ref{tab:cf_features} shows the feature set and their suitability for counterfactual analysis. We note that nerve conduction studies and Sudoscan features are marked as \textit{conditional} counterfactuals. These are biomarker outcomes of neuropathy. While these are not directly actionable inputs, they can be treated as counterfactuals that answer "what must change". Intervention is left to the physician. 
 
 % =======================================
 % Table of Counterfactual Features
 % =======================================
-% \begin{table}[ht]
-% \centering
-% \small
-% \begin{tabular}{p{0.1\linewidth} p{0.25\linewidth} p{0.1\linewidth} p{0.4\linewidth}}
-% \toprule
-% GROUP &  DESCRIPTION & SUITABLE? & REASON \\
-% \midrule
-% Profile      & Patient's sex (M or F) & No & Cannot be changed \\
-%              & Patient's age & No & Cannot be changed \\
-%              & Other symptoms & No & Too vague to act on \\
-%              & Diabetes Mellitus duration & No & Cannot be reversed \\
-%              & Patient is taking insulin treatments & Yes & Directly actionable — treatment can be started, stopped, or changed \\
-%              & Hemoglobin A1c & Yes & Modifiable through lifestyle, diet, and medication \\
-% \midrule
-% Commorbidity & Hypertension & Yes & Manageable through antihypertensives and lifestyle \\
-%              & Peripheral Arterial Occulsive Disease & Conditional & Partially treatable (revascularization, lifestyle) but not fully reversible \\
-%              & Dyslipidemia & Yes & Modifiable through statins, diet, exercise\\
-%              & Chronic Kidney Disease & Yes & Partially modifiable through nephroprotective interventions \\
-%              & Guillain-Barre Syndrome & Yes & Acute/post-infectious — not a modifiable long-term factor in this context \\
-% \midrule
-% Neurology \newline Test   & Decreased Vibration Sensation, Pinprick Sensation, Light Touch Sensation & Yes &  Can improve with glycemic control and neuropathy treatment \\
-%                  & Decreased Ankle Reflex & Yes &  Can improve with glycemic control and neuropathy treatment \\
-% \midrule
-% MNSI            & Michigan Neuropathy Screening Instrument & Yes & Can reflect treatable neuropathic progression \\
-% \midrule
-% Nerve \newline Conduction \newline Study   & All & Observational & These are biomarker outcomes of neuropathy. While these are not directly actionable inputs, they can be treated as counterfactuals that answer "what must change". Intervention is left to the physician. While the traditional counterfactual framing asks: "What should the patient change?", these observational ocounterfactuals ask: "What clinical targets must be achieved for the model to predict a different outcome?"\\
-% \midrule
-% Sudoscan & All & Observational &  Similar to Nerve Conduction Features, these are physiological biomarkers, not direct interventions and are thus considered Observational counterfactuals. \\
-% \bottomrule
-% \end{tabular}
-% \caption{Suitability of features for counterfactual analysis. Counterfactual analysis asks "what if this feature were different?" — so suitable features must be actionable, modifiable, and clinically meaningful to change. Unsuitable features are those that cannot be changed, reversed, or acted on. Conditional and observational features are outcomes or downstream measurements — more useful as targets of counterfactuals than as inputs. For the counterfactual analysis done in this study, all features except those marked as unsuitable (\textit{No} in the third column) are included in the generation of counterfactuals.
-% \textcolor{red}{<EAMC: This categorization is crucial in the generation of counterfactuals and is the may carry half of the value of the paper.  Please confirm if you agree with this classification and observations.>}
-% }
-% \label{tab:cf_features}
-% \end{table}
-
+\begin{table}[h!]
+\centering
+\footnotesize
+\begin{tabular}{p{0.1\linewidth} p{0.25\linewidth} p{0.1\linewidth} p{0.4\linewidth}}
+\toprule
+GROUP &  DESCRIPTION & SUITABLE? & REASON \\
+\midrule
+Profile      & Patient's sex (M or F) & No & Cannot be changed \\
+             & Patient's age & No & Cannot be changed \\
+             & Other symptoms & No & Too vague to act on \\
+             & Diabetes Mellitus duration & No & Cannot be reversed \\
+             & Patient is taking insulin treatments & Yes & Directly actionable — treatment can be started, stopped, or changed \\
+             & Hemoglobin A1c & Yes & Modifiable through lifestyle, diet, and medication \\
+\midrule
+Commorbidity & Hypertension & Yes & Manageable through antihypertensives and lifestyle \\
+             & Peripheral Arterial Occulsive Disease & Conditional & Partially treatable (revascularization, lifestyle) but not fully reversible \\
+             & Dyslipidemia & Yes & Modifiable through statins, diet, exercise\\
+             & Chronic Kidney Disease & Yes & Partially modifiable through nephroprotective interventions \\
+             & Guillain-Barre Syndrome & Yes & Acute/post-infectious — not a modifiable long-term factor in this context \\
+\midrule
+Neurology \newline Test   & Decreased Vibration Sensation, Pinprick Sensation, Light Touch Sensation & Yes &  Can improve with glycemic control and neuropathy treatment \\
+                 & Decreased Ankle Reflex & Yes &  Can improve with glycemic control and neuropathy treatment \\
+\midrule
+MNSI            & Michigan Neuropathy Screening Instrument & Yes & Can reflect treatable neuropathic progression \\
+\midrule
+Nerve \newline Conduction \newline Study   & All & Observational & These are biomarker outcomes of neuropathy. While these are not directly actionable inputs, they can be treated as counterfactuals that answer "what must change". Intervention is left to the physician. While the traditional counterfactual framing asks: "What should the patient change?", these observational ocounterfactuals ask: "What clinical targets must be achieved for the model to predict a different outcome?"\\
+\midrule
+Sudoscan & All & Observational &  Similar to Nerve Conduction Features, these are physiological biomarkers, not direct interventions and are thus considered Observational counterfactuals. \\
+\bottomrule
+\end{tabular}
+\caption{Suitability of features for counterfactual analysis. Counterfactual analysis asks "what if this feature were different?" — so suitable features must be actionable, modifiable, and clinically meaningful to change. Unsuitable features are those that cannot be changed, reversed, or acted on. Conditional and observational features are outcomes or downstream measurements — more useful as targets of counterfactuals than as inputs. For the counterfactual analysis done in this study, all features except those marked as unsuitable (\textit{No} in the third column) are included in the generation of counterfactuals.
+\textcolor{red}{<EAMC: This categorization is crucial in the generation of counterfactuals and is the may carry half of the value of the paper.  Please confirm if you agree with this classification and observations.>}
+}
+\label{tab:cf_features}
+\end{table}
 
 \subsubsection*{General Setup}
+Here we discuss the global permitted range and configuration parameters to be used by the DiCE object.
 
-\paragraph{Global Permitted Range}
-To ensure feasibility of generated counterfactuals, a global permitted range was defined for all continuous features. The bounds were computed as follow:
+\textit{Global Permitted Range}.
+To ensure feasibility of generated counterfactuals, a global permitted range was defined for all continuous features. The bounds were computed as follows:
 \begin{itemize}
     \itemsep0em 
     \item Minimum: $min(0,x_{min} - \sigma)$
-    \item Maximum: $x_{max} + \sigma)$
+    \item Maximum: $x_{max} + \sigma$
 \end{itemize}
-where $x_{min}$ and $x_{max}$ denote the observed minimum and maximum values respectively of each feature for the entire dataset, while $\sigma)$ is the standard deviation. This formulation prevents unrealistic values while allowing controlled extrapolation beyond the observed data.
+where $x_{min}$ and $x_{max}$ denote the observed minimum and maximum values, respectively, of each feature in the entire dataset, while $\sigma)$ is the standard deviation. This formulation prevents unrealistic values while allowing controlled extrapolation beyond the observed data.
 \textcolor{red}{<EAMC: Please confirm if you agree with this range. We previously consulted this with Doc Levs.>}
 
-\paragraph{DiCE Configuration Parameters}
-The configuration of the DiCE framework is summarized in Table~\ref{tab:dice_setup}. The genetic algorithm was selected as the optimization method because of the presence of multiple categorical features which renders the use of gradients for optimization not feasible. Genetic algorithm is also effectiveness in exploring high-dimensional feature spaces and generating diverse counterfactuals under multiple constraints.
+\textit{DiCE Configuration Parameters}. The configuration of the DiCE framework is summarized in Table~\ref{tab:dice_setup}. The genetic algorithm was selected as the optimization method because of the presence of multiple categorical features which renders the use of gradients for optimization not feasible. Genetic algorithm is also effectiveness in exploring high-dimensional feature spaces and generating diverse counterfactuals under multiple constraints.
 
 % =======================================
 % DICE General Configuration
 % =======================================
-\begin{table}[t]
+\begin{table}[h!]
 \centering
-% \small
+\small
 \begin{tabular}{lll}
 \toprule
 Component & Parameter & Value / Description \\
@@ -548,20 +578,17 @@ Model (dice\_ml.Model) & model & trained model under the mean threshold \\
 DiCE object(dice\_ml.Dice)  & method & genetic \\
 \bottomrule
 \end{tabular}
-\label{tab:dice_setup}
 \caption{DiCE General Configuration. These are the parameters used to create the DiCE data, model, and instance objects.}
+\label{tab:dice_setup}
 \end{table}
 
 
 \subsubsection*{Global Feature Importance}
-\paragraph{Parameter Configuration}
-Global feature importance was computed using DiCE’s $global\_feature\_importance$ method, which identifies features that are most frequently altered across counterfactuals, thereby indicating their influence on model predictions.
+Global feature importance was computed using DiCE’s $global\_feature\_importance$ method, which identifies features that are most frequently altered across counterfactuals, thereby indicating their influence on model predictions. The parameters used are summarized in Table~\ref{tab:global_cf}.
 
-The parameters used are summarized in Table~\ref{tab:global_cf}.
-
-\begin{table}[t]
+\begin{table}[h!]
 \centering
-% \small
+\small
 \begin{tabular}{ll}
 \toprule
 \textbf{Parameter} & \textbf{Value / Description} \\
@@ -573,16 +600,17 @@ stopping\_threshold & mean threshold from hyperparameter optimization \\
 posthoc\_sparsity\_algorithm & binary \\
 \bottomrule
 \end{tabular}
-\label{tab:global_cf}
 \caption{Global Counterfactual Importance Parameters. These are the parameters for computing the global importance with a call to \textit{global\_feature\_importance}.}
+\label{tab:global_cf}
 \end{table}
 
 \subsubsection*{Local Counterfactual Analysis}
+We describe here how instances were chosen for counterfactual generation and how the permitted range was computed for each instance.
 
-\paragraph{Targeted Instance Selection}
-Local counterfactual explanations were generated from borderline and misclassified cases. Borderline cases are for instances whose predicted probabilities lie within ±0.2 of the mean decision threshold obtained during hyperparameter optimization. These instances represent cases where small feature changes may alter the predicted outcome, making them particularly informative for analysis.
+\textit{Targeted Instance Selection}.
+Local counterfactual explanations were generated from misclassified and borderline cases. Borderline cases are for instances whose predicted probabilities lie within ±0.2 of the mean decision threshold obtained during hyperparameter optimization. These instances represent cases where small feature changes may alter the predicted outcome, making them particularly informative for analysis.
 
-\paragraph{Local Permitted Range}
+\textit{Local Permitted Range}.
 For each selected instance, an instance-specific permitted range was defined for each feature. Similar to the global permitted range, this ensures that generated counterfactuals remain both realistic and tailored to the specific instance.
 
 \begin{itemize}
@@ -592,16 +620,17 @@ For each selected instance, an instance-specific permitted range was defined for
 \end{itemize}
 \textcolor{red}{<EAMC: Please confirm if you agree with this range. We previously consulted this with Doc Levs.>}
 
-\subsubsection*{Local Counterfactual Parameters}
-The parameters used for generating local counterfactuals via $generate\_counterfactuals$ are summarized in Table~\ref{tab:local_cf}.
+\subsubsection*{Local Counterfactual Generation Parameters}
+The parameters used for generating local counterfactuals via $generate\_counterfactuals$ are summarized in Table~\ref{tab:local_cf}. The selected parameters balance proximity, diversity, and sparsity, ensuring that generated counterfactuals are close to the original instances, sufficiently varied, and involve minimal feature changes. This results in actionable and interpretable explanations suitable for clinical applications.
 
-\begin{table}[htbp]
+\begin{table}[h!]
 \centering
+\small
 \begin{tabular}{ll}
 \hline
 \textbf{Parameter} & \textbf{Value / Description} \\
 \hline
-instances & Selected borderline instances \\
+instances & Selected misclassified and borderline instances \\
 total\_CFs & 20 \\
 desired\_class & opposite \\
 permitted\_range & local permitted range \\
@@ -619,13 +648,16 @@ algorithm & DiverseCF \\
 \label{tab:local_cf}
 \end{table}
 
-The selected parameters balance proximity, diversity, and sparsity, ensuring that generated counterfactuals are close to the original instances, sufficiently varied, and involve minimal feature changes. This results in actionable and interpretable explanations suitable for clinical applications.
 
 \section*{Results and Discussion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ \textcolor{red}{<EAMC: For the entirety of this section, please add any further observations and explanations. More valuable than the metrics and results are the interpretations and clinical consequences or possible interventions suggested by the results.
+ >}  
+ 
+In this section, we discuss the performance of the machine learning models, the hyperparameter optimization and local explainability of features through feature importance and SHAP specifically for CatBoost, the selected ML model for counterfactual generation. We then proceed to an analysis of the counterfactuals by discussing the  global feature importances, describing local counterfactual instances per model split, and finally, providing metrics for the counterfactuals per split.
 
 \subsection*{Performance of ML Models}
-The distribution of ROC-AUC (left) and Youden Index (right) scores across multiple runs for sixteen classification models are shown in Figure~\ref{fig:violins_model}. For both ROC-AUC and Youden Index, ensemble tree-based methods consistently achieved the highest median values. These results suggest that ensemble tree-based methods as the most robust candidates for this classification task. For the succeeding steps, CatBoost is chosen as the model to undergo hyperparameter optimization and counterfactual generation.
+The distribution of ROC-AUC and Youden Index scores for repeated k-fold runs for the different classification models are shown in Figure~\ref{fig:violins_model}. For ROC-AUC, ensemble tree-based methods (Extra Trees, CatBoost, Random Forest, XGBoost, and LightGBM) consistently achieved the highest median ROC-AUC values ($ 0.97 - 0.98 $) with compact distributions, indicating stable and reproducible performance. For the Youden index, ensemble tree-based methods again achieved the highest median values ($ 0.81 - 0.87$) with relatively compact distributions, indicating consistently balanced sensitivity and specificity.
 
 % Violin Plots
 %-------------
@@ -645,11 +677,11 @@ The distribution of ROC-AUC (left) and Youden Index (right) scores across multip
     \end{subfigure}
     % \captionsetup{font=footnotesize}
     % \captionsetup{font=small}
-    \caption{Distribution of ROC-AUC (left) and Youden Index (right) scores across multiple runs for sixteen classification models. For ROC-AUC, ensemble tree-based methods (Extra Trees, CatBoost, Random Forest, and XGBoost) consistently achieved the highest median ROC-AUC values ($\geq 0.96$ ) with compact distributions, indicating stable and reproducible performance. For the Youden Index, ensemble tree-based methods again achieved the highest median values ($ \approx 0.80 - 0.87$) with relatively compact distributions, indicating consistently balanced sensitivity and specificity. }
+    \caption{Distribution of ROC-AUC (left) and Youden index (right) scores across multiple runs for the sixteen classification models. For both both ROC-AUC and the Youden index, the ensemble tree-based methods consistently achieved the highest median values with relatively compact distributions.}
     \label{fig:violins_model}
 \end{figure*}
 
-Figure~\ref{fig:youden_summary} shows the actual values of the youden index across multiple models and datasets. Ensemble tree-based methods (CatBoost, Random Forest, XGBoost, Extra Trees, and LightGBM) consistently achieved the highest Youden Index values across most feature sets ($ \geq 0.80$), with the full feature set (All) and features sets with NCS performing best. Notably, performance dropped substantially across nearly all models when NCS features were excluded (NoNCS), suggesting NCS readings carry significant discriminative information. This is confirmed with the NCS-only set produced surprisingly competitive results for several top models (e.g., Extra Trees: 0.86, RBF SVM: 0.82, kNN: 0.82), again showing that NCS data as particularly informative. Surprisingly, removing collinear features significantly dropped the performance of the models, suggesting that a full feature set is worth using. The Sudo-only feature set yielded uniformly poor performance across all models.
+A heatmap with the mean Youden index across multiple models and feature sets for the repeated k-fold runs is shown in Figure~\ref{fig:youden_summary}. Ensemble tree-based methods consistently achieved the highest Youden index values across most feature sets ($ \geq 0.80$), with the full feature set (All) and features sets containing NCS features performing best. The the best Youden index of 0.87 was achieved by CatBoost on the full feature set. Notably, the performance dropped substantially across nearly all models when NCS features were excluded (NoNCS), suggesting NCS readings carry significant discriminative information. This is confirmed with the NCS-only set produced surprisingly competitive results for several models (e.g., CatBoost and Extra Trees at 0.86), again showing that NCS data as particularly informative. Surprisingly, removing collinear features significantly dropped the performance of the models, suggesting that a full feature set is worth using. The Sudoscan-only (Sudo) feature set yielded uniformly poor performance across all models, while its exclusion from the full feature set resulting in an increase in the Youden index for most models, suggesting that it may not be a sufficient tool for diagnosing DPN. \textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}
 
 % Youden Table
 %------------------------------
@@ -657,11 +689,14 @@ Figure~\ref{fig:youden_summary} shows the actual values of the youden index acro
     \centering
     \includegraphics[width=1\textwidth]{figures/modeling/youden_summary_table.png}
     % \captionsetup{font=footnotesize}
-    \caption{Heatmap of average Youden Index scores across sixteen classification models and ten feature sets, where feature sets represent systematic exclusions of feature groups: All (full feature set), NoCol (No collinear features), NoNCS (No NCS features), NoSudo (NO SUDOSCAN features), NoNeuro (No Neurology Examinationfeatures), NoCom (No Commorbidity features), NoMSI (No MSI feature), NoProf (No Clinical Profile), NCS (NCS feautures only), and Sudo (Sudoscan features only). Ensemble tree-based methods (CatBoost, Random Forest, XGBoost, Extra Trees, and LightGBM) consistently achieved the highest Youden Index values across most feature sets ($ \geq 0.80$), with the full feature set (All) and features sets with NCS performing best.}
+    \caption{Heatmap of average Youden Index scores across sixteen classification models and ten feature sets. Ensemble tree-based methods (CatBoost, Random Forest, XGBoost, Extra Trees, and LightGBM) consistently achieved the highest Youden Index values across most feature sets ($ \geq 0.80$), with the full feature set (All) and features sets with NCS features performing best having a Youden index of 0.87.}
     \label{fig:youden_summary}
 \end{figure*}
 
-Figure~\ref{fig:roc} shows the ROC-AUC plots for the 3 model splits.  The model exhibits exceptional and consistent discriminative performance across all evaluated folds, achieving Area Under the Curve (AUC) scores of 0.98, 0.99, and 0.94, respectively. This consistently high AUC across multiple splits demonstrates robust model generalization and a high degree of reliability in distinguishing between the target classes with minimal variance.
+\subsection*{Hyperparameter Optimization of CatBoost}
+We chose CatBoost as the model to undergo hyperparameter optimization and counterfactual generation for the subsequent steps since it achieved the highest Youden index and has the second highest ROC-AUC value. As described in the methodology section, the data was split into 3 and a CatBoost model was trained and optimized for each split.
+
+Table~\ref{tab:hpo} shows the a summary of the performance statistics of CatBoost across 3 splits. The model achieves a near-perfect Area Under the Receiver Operating Characteristic Curve (ROC-AUC) of 0.972 ± 0.020. The tight confidence interval (0.966 - 0.979) indicates that this high performance is extremely stable and reliable across different data folds. The optimization successfully balanced the model's ability to detect both positive and negative cases. With a sensitivity of 0.934 ± 0.054 and a specificity of 0.918 ± 0.0675, the model is highly adept at identifying DPN without an excessive rate of false alarms. The Youden Index (0.852 ± 0.068) is very high. This confirms that the chosen mean probability threshold (0.635) effectively maximizes the trade-off between true positives and false positives, anchoring the model's high sensitivity and specificity.
 
 % ROC-AUC
 %------------------------------
@@ -687,16 +722,39 @@ Figure~\ref{fig:roc} shows the ROC-AUC plots for the 3 model splits.  The model 
         % \label{fig:roc_split2}
     \end{subfigure}
     % \captionsetup{font=footnotesize}
-    \caption{Receiver Operating Characteristic (ROC) curves of the CatBoost model across three data splits. The panels illustrate the relationship between the True Positive Rate (Sensitivity) and False Positive Rate (1 - Specificity) evaluated on three separate data partitions: (a) Split 0, (b) Split 1, and (c) Split 2. The solid blue curve depicts the model's predictive capability compared to the dashed diagonal line, which represents random chance. The model exhibits exceptional and consistent discriminative performance across all evaluated folds, achieving Area Under the Curve (AUC) scores of 0.98, 0.99, and 0.94, respectively. This consistently high AUC across multiple splits demonstrates robust model generalization and a high degree of reliability in distinguishing between the target classes with minimal variance.}
+    \caption{Receiver Operating Characteristic (ROC) curves of 3 CatBoost models trained and optimized for 3 data splits. The panels illustrate the relationship between the True Positive Rate (Sensitivity) and False Positive Rate (1 - Specificity) of models trained on three separate data partitions: (a) Split 0, (b) Split 1, and (c) Split 2. The solid blue curve depicts the model's predictive capability compared to the dashed diagonal line, which represents random chance. The models for each data split exhibit exceptional and consistent discriminative performance, achieving Area Under the Curve (AUC) scores of 0.98, 0.99, and 0.94.}
 \label{fig:roc}
 \end{figure*}
 
-Figure~\ref{fig:fimp} shows the SHAP (SHapley Additive exPlanations) feature importance across three experimental data splits.
-Echoing the previous Feature Importance analysis, Across all three data splits, variables derived from Nerve Conduction Studies (indicated by the blue bars) consistently dominate the top rankings. Specific electrophysiological measurements—most notably Compound Muscle Action Potential at the knee and ankle (e.g., CMAPKNE\_L, CMAPKNE\_R, CMAPANK\_L) and Sural Sensory Amplitude (e.g., SSA\_L, SSA\_R)—exhibit the highest SHAP values by a substantial margin. Conversely, features from other groups like Sudoscan or Neurology Examinations show relatively minimal impact. The model's heavy and consistent reliance on Nerve Conduction Studies demonstrates that objective electrophysiological data are the primary drivers of its predictive performance. This provides strong clinical interpretability, suggesting that the model is grounding its decisions in robust, direct physiological biomarkers of nerve function rather than secondary demographic or subjective clinical profile features. \textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}    
+Figure~\ref{fig:roc} shows the ROC-AUC plots for the 3 models for each split.  The 3 models exhibits exceptional and consistent discriminative performance, achieving Area Under the Curve (AUC) scores of 0.98, 0.99, and 0.94, respectively. This consistently high AUC scores for CatBoost across multiple data splits show that it is robust and has a high degree of reliability in distinguishing between the target classes with minimal variance.
 
-\subsection*{Explainability through Feature Importance and SHAP}
+% CatBoost  Performance Metrics
+%------------------------------
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+Item & Statistic & Values \\
+\midrule
+threshold & mean ± std & 0.635 ± 0.123 \\
+roc-auc & mean ± std & 0.972 ± 0.020 \\
+roc-auc  & confidence interval &  0.966 - 0.979 \\
+youden index &  mean ± std & 0.852 ± 0.068 \\
+youden index &  confidence interval & 0.831 - 0.873 \\
+specificity  & mean ± std  &  0.918 ± 0.0675\\
+sensitivity  &  mean ± std  & 0.934 ± 0.054 \\
+\bottomrule
+\end{tabular}
+\caption{Performance metrics following a 3-fold hyperparameter optimization of the CatBoost algorithm for Diabetic Peripheral Neuropathy (DPN) classification. The table summarizes the mean, standard deviation, and confidence intervals for key diagnostic threshold and accuracy metrics, demonstrating exceptional discriminative ability (ROC-AUC) and a highly balanced sensitivity-specificity profile.}
+\label{tab:hpo}
+\end{table}
 
-Figure~\ref{fig:fimp} shows the feature importance plots  for the 3 model splits.  Variables derived from Nerve Conduction Studies (blue bars) unequivocally drive the CatBoost model's predictions across all three folds. Electrophysiological metrics—specifically, Compound Muscle Action Potential at the knee (CMAPKNE\_L, CMAPKNE\_R) and ankle (CMAPANK\_L, CMAPANK\_R), alongside Sural Sensory Amplitude (SSA\_L, SSA\_R)—consistently occupy the top ranks. While the dominant feature shifts slightly by laterality between the splits (e.g., the left-sided CMAPKNE\_L strongly leads the first two splits, whereas the right-sided CMAPKNE\_R and SSA\_R lead the third), the core predictive measurements remain entirely stable. Conversely, features related to Comorbidities (red) and Neurology Examinations (pink) exhibit near-zero importance. The model's persistent reliance on a tight cluster of electrophysiological measurements confirms that these specific nerve conduction metrics are the most robust and informative biomarkers for the predicted outcome. This consistency across multiple splits validates the model's structural stability and underscores the clinical superiority of objective, device-derived nerve assessments over subjective examinations or secondary comorbidities for this specific diagnostic task. \textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}
+\textcolor{blue}{In DPN screening, false negatives carry a heavy clinical cost, potentially leading to untreated progression, foot ulcers, or amputation. The high sensitivity (over 93\%) ensures that the vast majority of true DPN cases will be successfully flagged for early medical intervention. CatBoost is specifically designed to handle tabular data with categorical variables efficiently (which is standard for Electronic Health Records). Combined with the robust ROC-AUC and tight confidence intervals shown here, clinicians can have high confidence in integrating this specific algorithm as a reliable, second-opinion diagnostic aid.} \textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}  
+
+\subsection*{Local Explainability through Feature Importance and SHAP}
+
+Figure~\ref{fig:fimp} shows the feature importance plots  for the 3 models for each split.  \textcolor{blue}{Variables derived from Nerve Conduction Studies unequivocally drive the CatBoost model's predictions across all three folds. Electrophysiological metrics—specifically, Compound Muscle Action Potential at the knee (CMAPKNE\_L, CMAPKNE\_R) and ankle (CMAPANK\_L, CMAPANK\_R), alongside Sural Sensory Amplitude (SSA\_L, SSA\_R)—consistently occupy the top ranks. While the dominant feature shifts slightly by laterality between the splits (e.g., the left-sided CMAPKNE\_L strongly leads the first two splits, whereas the right-sided CMAPKNE\_R and SSA\_R lead the third), the core predictive measurements remain entirely stable. Conversely, features related to Comorbidities (red) and Neurology Examinations (pink) exhibit near-zero importance. The model's persistent reliance on a tight cluster of electrophysiological measurements confirms that these specific nerve conduction metrics are the most robust and informative biomarkers for the predicted outcome. This consistency across multiple splits validates the model's structural stability and underscores the clinical superiority of objective, device-derived nerve assessments over subjective examinations or secondary comorbidities for this specific diagnostic task.}\textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}
 
 % Feature Importances
 % ---------------------
@@ -721,10 +779,12 @@ Figure~\ref{fig:fimp} shows the feature importance plots  for the 3 model splits
         % \label{fig:fimp_split2}
     \end{subfigure}
     % \captionsetup{font=footnotesize}
-    \caption{CatBoost feature importance rankings across three experimental data splits. The horizontal bar charts display the relative importance scores of the variables utilized by the CatBoost model in each data partition. Features are color-coded by their clinical category to illustrate the varying contributions of different data modalities, such as Nerve Conduction Studies, Patient Profile, and Sudoscan.}
+    \caption{CatBoost feature importance rankings across three experimental data splits. The horizontal bar charts display the relative importance scores of the variables utilized by the CatBoost model in each data partition. Features are color-coded by their clinical category to illustrate the varying contributions of different data modalities, such as Nerve Conduction Studies, Patient Profile, and Sudoscan. Variables derived from Nerve Conduction Studies unequivocally drive the CatBoost model's predictions across all three folds.}
     \label{fig:fimp}
 \end{figure*}
 
+
+Figure~\ref{fig:fimp} shows the SHAP (SHapley Additive exPlanations) feature importance across three experimental data splits. \textcolor{blue}{Corroborating with the Feature Importance analysis above, across all three models, variables derived from Nerve Conduction Studies consistently dominate the top rankings. Specific electrophysiological measurements—most notably Compound Muscle Action Potential at the knee and ankle (e.g., CMAPKNE\_L, CMAPKNE\_R, CMAPANK\_L) and Sural Sensory Amplitude (e.g., SSA\_L, SSA\_R)—exhibit the highest SHAP values by a substantial margin. Conversely, features from other groups like Sudoscan or Neurology Examinations show relatively minimal impact. The model's heavy and consistent reliance on Nerve Conduction Studies demonstrates that objective electrophysiological data are the primary drivers of its predictive performance. This provides strong clinical interpretability, suggesting that the model is grounding its decisions in robust, direct physiological biomarkers of nerve function rather than secondary demographic or subjective clinical profile features.}\textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}
 
 % SHAP
 %------------------------------
@@ -750,48 +810,13 @@ Figure~\ref{fig:fimp} shows the feature importance plots  for the 3 model splits
         % \label{fig:shap_split2}
     \end{subfigure}
     % \captionsetup{font=footnotesize}
-    \caption{SHAP (SHapley Additive exPlanations) feature importance across three experimental data splits. The bar charts illustrate the mean absolute SHAP values for the top predictive features in each split, quantifying their average impact on the model's output magnitude. Features are color-coded according to their clinical category, such as Nerve Conduction Studies, Sudoscan, and patient Profile.} 
+    \caption{SHAP (SHapley Additive exPlanations) feature importance across three experimental data splits. The bar charts illustrate the mean absolute SHAP values for the top predictive features in each split, quantifying their average impact on the model's output magnitude. Features are color-coded according to their clinical category, such as Nerve Conduction Studies, Sudoscan, and patient Profile. Variables derived from Nerve Conduction Studies consistently dominate the top rankings.} 
     \label{fig:shap}
 \end{figure*}
 
-Table~\ref{tab:hpo} shows the a summary of the performance statistics of CatBoost across 3 splits. The model achieves a near-perfect Area Under the Receiver Operating Characteristic Curve (ROC-AUC) of 0.972 ± 0.020. The tight confidence interval (0.966 - 0.979) indicates that this high performance is extremely stable and reliable across different data folds. The optimization successfully balanced the model's ability to detect both positive and negative cases. With a sensitivity of 0.934 ± 0.054 and a specificity of 0.918 ± 0.0675, the model is highly adept at identifying DPN without an excessive rate of false alarms. The Youden Index (0.852 ± 0.068) is very high. This confirms that the chosen mean probability threshold (0.635) effectively maximizes the trade-off between true positives and false positives, anchoring the model's high sensitivity and specificity.
-
-Minimizing Missed Diagnoses: In DPN screening, false negatives carry a heavy clinical cost, potentially leading to untreated progression, foot ulcers, or amputation. The high sensitivity (over 93%) ensures that the vast majority of true DPN cases will be successfully flagged for early medical intervention.
-
-Reliability for Clinical Deployment: CatBoost is specifically designed to handle tabular data with categorical variables efficiently (which is standard for Electronic Health Records). Combined with the robust ROC-AUC and tight confidence intervals shown here, clinicians can have high confidence in integrating this specific algorithm as a reliable, second-opinion diagnostic aid.
-
-\textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}  
-
-% CatBoost  Performance Metrics
-%------------------------------
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{lll}
-\toprule
-Item & Statistic & Values \\
-\midrule
-threshold & mean ± std & 0.635 ± 0.123 \\
-roc-auc & mean ± std & 0.972 ± 0.020 \\
-roc-auc  & confidence interval &  0.966 - 0.979 \\
-youden index &  mean ± std & 0.852 ± 0.068 \\
-youden index &  confidence interval & 0.831 - 0.873 \\
-specificity  & mean ± std  &  0.918 ± 0.0675\\
-sensitivity  &  mean ± std  & 0.934 ± 0.054 \\
-\bottomrule
-\end{tabular}
-\caption{Performance metrics following a 3-fold hyperparameter optimization of the CatBoost algorithm for Diabetic Peripheral Neuropathy (DPN) classification. The table summarizes the mean, standard deviation, and confidence intervals for key diagnostic threshold and accuracy metrics, demonstrating exceptional discriminative ability (ROC-AUC) and a highly balanced sensitivity-specificity profile.}
-\label{tab:hpo}
-\end{table}
-
-
-\subsection*{Global Feature Importances}
-%=======================================
-Table~\ref{tab:global_imp} shows the Global feature importances across 3 model splits. The models demonstrates remarkable stability, achieving consistency across splits. The importance scores for the top features barely fluctuate across Split 0, Split 1, and Split 2, indicating that the AI is learning generalized patterns rather than overfitting to a specific subset of the training data. Nerve conduction study (NCS) parameters dominate the top of the hierarchy. Variables like SSA\_L (1.000), CMAPKNE\_L (1.000), and FWAVE\_L (0.995) are the primary drivers of the model's predictions. Core diabetic metrics like HBA1C (0.982) and standard screening tools like MNSI (0.866) maintain strong to moderate importance. Conversely, secondary comorbidities like Chronic Kidney Disease (CKD, 0.249) and Peripheral Arterial Occlusive Disease (PAOD, 0.086) contribute very little to the model's specific detection of DPN. 
-
-Validation of Clinical Ground Truth: The explainability (XAI) output heavily aligns with existing neurological principles—namely, that direct measures of nerve conduction (CMAP, F-waves) are the most reliable indicators of peripheral neuropathy. This alignment builds crucial clinician trust, proving the "black box" is using medically sound logic rather than spurious correlations.
-
-Streamlined Diagnostics: Because the model relies so heavily on specific electrophysiological parameters and HbA1c, clinics could potentially optimize their diagnostic pipelines by prioritizing these specific inputs, saving time and resources on less predictive screening measures when feeding data into the AI.
+\subsection*{Global Feature Importances through Counterfactuals}
+%===============================================================
+Table~\ref{tab:global_imp} shows the global feature importances of the 3 CatBoost models trained on 3 data splits. The models demonstrates remarkable stability, achieving consistency across splits. The importance scores for the top features barely fluctuate across models for Split 0, Split 1, and Split 2, indicating that the models are learning generalized patterns rather than overfitting to a specific subset of the training data. Nerve conduction study (NCS) parameters dominate the top of the hierarchy. Variables like SSA\_L (1.000), CMAPKNE\_L (1.000), and FWAVE\_L (0.995) are the primary drivers of the model's predictions. \textcolor{blue}{Core diabetic metrics like HBA1C (0.982) and standard screening tools like MNSI (0.866) maintain strong to moderate importance. Conversely, secondary comorbidities like Chronic Kidney Disease (CKD, 0.249) and Peripheral Arterial Occlusive Disease (PAOD, 0.086) contribute very little to the model's specific detection of DPN. The explainability (XAI) output heavily aligns with existing neurological principles—namely, that direct measures of nerve conduction (CMAP, F-waves) are the most reliable indicators of peripheral neuropathy. This alignment builds crucial clinician trust, proving the "black box" is using medically sound logic rather than spurious correlations. Because the model relies so heavily on specific electrophysiological parameters and HbA1c, clinics could potentially optimize their diagnostic pipelines by prioritizing these specific inputs, saving time and resources on less predictive screening measures when feeding data into the AI.}
 
 \textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}
 
@@ -799,7 +824,7 @@ Streamlined Diagnostics: Because the model relies so heavily on specific electro
 %-------------------
 \begin{table}[ht]
 \centering
-\small
+\footnotesize
 \begin{tabular}{lrrrr @{\hskip 0.3in} lrrrr}
 \toprule
 Feature & Split 0 & Split 1 & Split 2 & Mean & Feature & Split 0 & Split 1 & Split 2 & Mean \\
@@ -829,62 +854,20 @@ SPSC\_L & 0.975 & 0.977 & 0.980 & 0.977 & & & & & \\
 \label{tab:global_imp}
 \end{table}
 
-\subsection*{Local counterfactual analysis}
-%==========================================
-Table~\ref{tab:local_cf} shows Local counterfactual analysis evaluating model decision boundaries across three data splits.
-
-The Explainable AI (XAI) framework is highly effective at generating counterfactuals. It successfully produced CFs for nearly all evaluated instances (e.g., 6 of 6 in Split 0; 8 of 9 in Split 2), proving the method works robustly even on difficult or misclassified cases. 
-
-The perturbation metrics are remarkably stable across all three splits. The Sparsity Mean (~25.5 to 25.9), L1 Mean (~101 to 106), and L2 Mean (~29.3 to 30.4) show very little variance. This indicates that the "distance" to cross the AI's decision boundary is uniform regardless of how the training data was divided. 
-
-A mean sparsity of ~25 implies that, on average, roughly 25 different clinical or electrophysiological features must be slightly adjusted to change the model's prediction. This suggests a highly complex, multi-dimensional decision boundary rather than reliance on just one or two overriding variables.
-
-Actionable "What-If" Scenarios: Local counterfactuals are incredibly valuable for clinical interpretation. For a borderline or misclassified patient, this analysis explicitly tells the clinician: "If this patient's feature X was lower by amount Y, the model would have classified them as healthy." This helps doctors understand exactly where a patient sits on the DPN spectrum.
-
-Auditing Diagnostic Errors: By isolating the misclassified instances and examining their counterfactuals, clinicians and data scientists can audit why the AI failed. It can reveal if the model was confused by conflicting electrophysiological signals or if the patient simply presents an atypical, rare manifestation of diabetic neuropathy.
-\textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}   
-
-% Local counterfactual analysis
-%==============================
-\begin{table}[ht]
-\centering
-\small
-\begin{tabular}{cccccccc}
-\toprule
-Model & Instance  & Misclassified & Instances with CF & Sparsity Mean & L1 Mean & L2 Mean \\
-\midrule
-Split 0 & 6 & 4 & 6 & 25.669 & 106.291 & 30.464 \\
-Split 1 & 7 & 4 & 6 & 25.970 & 104.365 & 29.863 \\
-Split 2 & 9 & 6 & 8 & 25.543 & 101.207 & 29.327 \\
-\bottomrule
-\end{tabular}
-\caption{Local counterfactual (CF) analysis evaluating model decision boundaries across three data splits. The table presents the number of evaluated instances, the subset of misclassified cases, and the success rate of generating counterfactual explanations. Distance metrics—Mean Sparsity (number of altered features), L1 Mean (absolute change), and L2 Mean (Euclidean distance)—quantify the minimal feature perturbations required to flip the model's diagnostic prediction. 
-}
-\label{tab:localcf\_summary_all}
-\end{table}
-
 \subsection*{Instance-Level Local Counterfactual Analysis}
 %========================================================
+Local  counterfactuals are incredibly valuable for clinical interpretation. For a borderline or misclassified patient, this analysis explicitly tells the clinician: "If this patient's feature X was lower by amount Y, the model would have classified them as healthy." This helps doctors understand exactly where a patient sits on the DPN spectrum.
 
-Instance-level local counterfactual (CF) analysis across three model splits. This table details specific patient instances, comparing the model's prediction against the actual DPN diagnosis. It outlines the model's predictive confidence (probability), distance to the decision threshold (margin), and specific counterfactual metrics (CF Count, Sparsity, L1, and L2 Means) required to alter the diagnostic classification for both correctly and incorrectly classified cases.
+By isolating the misclassified instances and examining their counterfactuals, clinicians and data scientists can audit why the AI failed. It can reveal if the model was confused by conflicting electrophysiological signals or if the patient simply presents an atypical, rare manifestation of diabetic neuropathy.
 
-High Variability in CF Count: Unlike the stable perturbation averages seen in global metrics, the number of feasible counterfactuals generated for individual patients varies drastically (e.g., ranging from 4 for ID 106 to 45 for ID 54). This indicates that some patients sit in highly complex, dense regions of the feature space where many different minor physiological changes could alter their diagnosis, while others have very limited pathways to a different classification.
+An instance-level local counterfactual analysis across three model splits is shown in Table~\ref{tab:localcf-listing}. It lists the patient instances (misclassified and borderline cases) used for counterfactual generation by the model for each split. Also shown are the models' prediction against the actual DPN diagnosis,  the model's predictive confidence (probability), distance to the decision threshold (margin). Finally, specific counterfactual metrics are shown for each instance, namely the number of counterfactuals generated (CF count), and the mean sparsity (number of features altered to produce the counterfactual), L1 distance, and L2 distance for all the counterfactuals generated from the instance. 
 
-Auditing "Confident but Wrong" Predictions: The table exposes highly confident misclassifications. For example, Instance ID 73 (Split 1) was predicted as "Confirmed" with a very high probability (0.934) but was actually "Unconfirmed." Identifying these specific edge cases is a crucial function of the XAI layer.
-
-Stable Sparsity Despite Individual Differences: Even though the margin and CF counts vary wildly between patients, the Sparsity metric remains relatively stable (generally between 22 and 30 features). This reinforces that altering a DPN diagnosis mathematically requires a systemic shift across multiple variables, rather than a drastic change in just one or two metrics.
-
-Investigating Diagnostic Blind Spots: By isolating instances with high confidence but incorrect predictions (like ID 73), clinical researchers can manually review the patient's file. This helps uncover whether the patient has a rare comorbidity confusing the model, or if there is a fundamental flaw in how the AI weighs certain nerve conduction parameters for specific demographics.
-
-Personalized Preventative Care: For patients who are correctly classified but have a very narrow decision margin (e.g., ID 12 in Split 1 with a margin of just 0.031), the counterfactuals act as a highly personalized warning system. Clinicians can view the specific CF pathways to see exactly which minor physiological shifts would push this specific patient into a "Confirmed" DPN status, allowing for highly targeted preventative treatments.
-
-
-\begin{table}[t]
+\begin{table}[h]
 \centering
-\small
+\footnotesize
 \begin{tabular}{lrrrrrrrrrr}
 \toprule
-model & ID & prediction & actual & misclassified & probability & margin & CF Count & Sparsity & L1 Mean & L2 Mean \\
+model & ID & prediction & actual & misclassified & probability & margin & CF Count & sparsity mean & L1 mean & L2 mean \\
 \midrule
 Split 0 & 4 & Confirmed & Confirmed & No & 0.719 & 0.083 & 4 & 28.250 & 116.995 & 30.669 \\
  & 55 & Confirmed & Confirmed & No & 0.767 & 0.131 & 22 & 27.545 & 107.345 & 29.713 \\
@@ -910,16 +893,146 @@ Split 2 & 22 & Unconfirmed & Confirmed & Yes & 0.171 & 0.464 & 31 & 25.161 & 94.
  & 167 & Unconfirmed & Confirmed & Yes & 0.127 & 0.508 & 25 & 22.800 & 77.874 & 24.117 \\
 \bottomrule
 \end{tabular}
-\caption{Instance-level local counterfactual (CF) analysis across three model splits. This table details specific patient instances, comparing the model's prediction against the actual DPN diagnosis. It outlines the model's predictive confidence (probability), distance to the decision threshold (margin), and specific counterfactual metrics (CF Count, Sparsity, L1, and L2 Means) required to alter the diagnostic classification for both correctly and incorrectly classified cases.}
-\label{tab:localcf_summary_0}
+\caption{Instance-level local counterfactual analysis for the 3 models for each data split. This table details specific patient instances, comparing the model's prediction against the actual DPN diagnosis. It outlines the model's predictive confidence (probability), distance to the decision threshold (margin), and specific counterfactual metrics (CF Count, mean sparsity, L1 distance mean, and L2 distance mean) required to alter the diagnostic classification for both correctly and incorrectly classified cases.}
+\label{tab:localcf-listing}
 \end{table}
 
 
-% \begin{figure*}
-%   \centering
-%   \includegraphics[width=\textwidth]{figures/counterfactuals/22/catboost_split2_local_cf_qidx022_000-014.png}
-%     \caption{Counterfactuals for Patient 22 (page 1/2)}
-% \end{figure*}
+From this table, the following observations and recommendations can be made.
+\begin{itemize}
+    \item \textcolor{blue}{\textit{High Variability in CF Count}. Unlike the stable perturbation averages seen in global metrics, the number of feasible counterfactuals generated for individual patients varies drastically (e.g., ranging from 4 for ID 106 to 45 for ID 54). This indicates that some patients sit in highly complex, dense regions of the feature space where many different minor physiological changes could alter their diagnosis, while others have very limited pathways to a different classification.}
+    
+    \item \textcolor{blue}{\textit{Auditing "Confident but Wrong" Predictions}. The table exposes highly confident misclassifications. For example, Instance ID 73 (Split 1) was predicted as "Confirmed" with a very high probability (0.934) but was actually "Unconfirmed." Identifying these specific edge cases is a crucial function of the XAI layer.}
+
+    \item \textcolor{blue}{\textit{Stable Sparsity Despite Individual Differences}. Even though the margin and CF counts vary wildly between patients, the Sparsity metric remains relatively stable (generally between 22 and 30 features). This reinforces that altering a DPN diagnosis mathematically requires a systemic shift across multiple variables, rather than a drastic change in just one or two metrics.}
+
+    \item \textcolor{blue}{\textit{Investigating Diagnostic Blind Spots}. By isolating instances with high confidence but incorrect predictions (like ID 73), clinical researchers can manually review the patient's file. This helps uncover whether the patient has a rare comorbidity confusing the model, or if there is a fundamental flaw in how the AI weighs certain nerve conduction parameters for specific demographics.}
+
+    \item \textcolor{blue}{\textit{Personalized Preventative Care}. For patients who are correctly classified but have a very narrow decision margin (e.g., ID 12 in Split 1 with a margin of just 0.031), the counterfactuals act as a highly personalized warning system. Clinicians can view the specific CF pathways to see exactly which minor physiological shifts would push this specific patient into a "Confirmed" DPN status, allowing for highly targeted preventative treatments.}
+\end{itemize}
+
+
+\textcolor{red}{<EAMC: Please add any further observations, explanations or consequence of these observations.>}
+
+
+\subsection*{Summary of Local counterfactual analysis across the models}
+%==========================================
+Table~\ref{tab:local_cf} shows a summary of the local counterfactual analysis for the 3 models for each data split. It shows that the DiCE framework is highly effective at generating counterfactuals. It successfully produced counterfactuals for nearly all evaluated instances (6 of 6 in Split 0; 6 of 7 in Split 1; 8 of 9 in Split 2), proving the method works robustly even on difficult or misclassified cases. 
+
+The perturbation metrics are remarkably stable across all three splits. The Sparsity Mean (~25.5 to 25.9), L1 Mean (~101 to 106), and L2 Mean (~29.3 to 30.4) show very little variance. This indicates that the "distance" to cross the AI's decision boundary is uniform regardless of how the training data was divided. 
+
+A mean sparsity of ~25 implies that, on average, roughly 25 different features must be slightly adjusted to change the model's prediction. This suggests a highly complex, multi-dimensional decision boundary rather than reliance on just one or two overriding variables.
+
+\subsection*{Clinical Implications and Cost-Benefit Analysis}
+\textcolor{blue}{The findings of this study offer a clear pathway for optimizing diagnostic workflows in clinical settings, particularly in resource-constrained environments like the Philippines. Our analysis demonstrates that while multimodal data collection provides a comprehensive patient profile, the predictive power is heavily concentrated in a few key diagnostic modalities.}
+
+\subsection*{Prioritizing Nerve Conduction Studies (NCS)}
+\textcolor{blue}{The overwhelming dominance of NCS variables—specifically CMAPKNE and SSA—in driving model accuracy suggests that these tests should be the primary focus for DPN risk stratification. The model's performance remained high even when using NCS features exclusively, whereas excluding them resulted in a substantial drop in the Youden Index across all evaluated algorithms. For clinics with limited time, prioritizing these specific electrophysiological measurements can provide high-confidence screening without the need for exhaustive secondary testing. By focusing on the most informative biomarkers (CMAP and F-waves), diagnostic pipelines can be streamlined, reducing the per-patient assessment time and focusing technician effort on the most predictive signals.}
+
+\subsection*{The Role of Sudoscan in DPN Screening}
+\textcolor{blue}{While Sudoscan is a noninvasive and rapid tool for assessing sudomotor function, our results indicate it possesses relatively poor standalone predictive performance for DPN within this specific cohort. Although the Confirmed DPN group did exhibit lower electrochemical skin conductance (ESC) values in the feet and hands, these measurements were not as discriminative as direct nerve conduction metrics. While Sudoscan remains valuable for detecting early small fiber neuropathy, its inclusion in a general DPN prediction model may introduce noise rather than clarity. In clinical environments where procurement of specialized equipment is a factor, our data suggests that investment in NCS remains the "gold standard" for accurate DPN detection.}
+
+\subsection*{Actionable XAI and Patient Trust}
+\textcolor{blue}{The use of counterfactual explanations (DiCE) provides a unique bridge between high-level computation and bedside care. For patients identified as borderline or misclassified, the model explicitly identifies which physiological targets must be reached—such as specific improvements in sensory amplitude or glycemic control (HbA1c)—to move into a lower-risk category. This transparency is crucial for building clinician trust, as it confirms that the AI is utilizing medically sound logic grounded in physiological biomarkers rather than spurious correlations.}
+
+% Local counterfactual analysis
+%==============================
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{cccccccc}
+\toprule
+Model & Instance  & Misclassified & Instances with CF & Sparsity Mean & L1 Mean & L2 Mean \\
+\midrule
+Split 0 & 6 & 4 & 6 & 25.669 & 106.291 & 30.464 \\
+Split 1 & 7 & 4 & 6 & 25.970 & 104.365 & 29.863 \\
+Split 2 & 9 & 6 & 8 & 25.543 & 101.207 & 29.327 \\
+\bottomrule
+\end{tabular}
+\caption{local counterfactual analysis for the 3 models for each data split. The table presents the number of evaluated instances, the subset of misclassified cases, and the success rate of generating counterfactual explanations. Distance metrics—Mean Sparsity (number of altered features), L1 Mean (absolute change), and L2 Mean (Euclidean distance)—quantify the minimal feature perturbations required to flip the model's diagnostic prediction. 
+}
+\label{tab:localcf-summary-all}
+\end{table}
+
+% \begin{figure}[p]
+%     \centering
+%     % Top Image
+%     \begin{subfigure}[b]{1.\textwidth}
+%         \centering
+%         \includegraphics[width=\textwidth]{figures/counterfactuals/73/catboost_split1_local_cf_qidx073_000-014.png}
+%         % \caption{Description of the top image}
+%     \end{subfigure}
+    
+%     \vfill % Adds flexible vertical space between images
+    
+%     % Bottom Image
+%     \begin{subfigure}[b]{1.\textwidth}
+%         \centering
+%         \includegraphics[width=\textwidth]{figures/counterfactuals/73/catboost_split1_local_cf_qidx073_015-029.png}
+%         % \caption{Description of the bottom image}
+%     \end{subfigure}
+    
+%     % Bottom Image
+%     \begin{subfigure}[b]{1.\textwidth}
+%         \centering
+%         \includegraphics[width=\textwidth]{figures/counterfactuals/73/catboost_split1_local_cf_qidx073_030-038.png}
+%         % \caption{Description of the bottom image}
+%     \end{subfigure}
+    
+%     \caption{Counterfactuals generated for Patient with ID=128 presented as a heatmap of changes in values. The patient is 
+%     Features that are not suitable as counterfactuals are noticeably white indicating they are unchanged. \textcolor{red}{<EAMC: This image shows what needs to 
+%     This is an important aspect of the study - one that is rarely seen in ML applications on medical data. .>}
+%     \label{fig:vertical_stack}
+% \end{figure}
+
+
+% --- Page 1: First 3 Images ---
+\begin{figure}[p] % [p] puts it on its own page
+    \centering
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/counterfactuals/73/catboost_split1_local_cf_qidx073_000-014.png}
+        \caption{First set - Top}
+    \end{subfigure}
+    \\[1ex]
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/counterfactuals/73/catboost_split1_local_cf_qidx073_015-029.png}
+        \caption{First set - Middle}
+    \end{subfigure}
+    \\[1ex]
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/counterfactuals/73/catboost_split1_local_cf_qidx073_030-038.png}
+        \caption{First set - Bottom}
+    \end{subfigure}
+    \caption{Analysis of Dataset X (Part I)}
+\end{figure}
+
+% --- Page 2: Next 3 Images ---
+\begin{figure}[p]
+    \ContinuedFloat % <--- CRITICAL: Keeps the figure number as "1"
+    \centering
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/counterfactuals/12/catboost_split1_local_cf_qidx012_000-014.png}
+        \caption{Second set - Top}
+    \end{subfigure}
+    \\[1ex]
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/counterfactuals/12/catboost_split1_local_cf_qidx012_015-029.png}
+        \caption{Second set - Middle}
+    \end{subfigure}
+    \\[1ex]
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/counterfactuals/12/catboost_split1_local_cf_qidx012_030-037.png}
+        \caption{Second set - Bottom}
+    \end{subfigure}
+    \caption{Analysis of Dataset X (Part II)}
+\end{figure}
+
 
 % \begin{figure*}
 %   \centering
@@ -950,7 +1063,17 @@ Split 2 & 22 & Unconfirmed & Confirmed & Yes & 0.171 & 0.464 & 31 & 25.161 & 94.
 
 \section*{Conclusion}
 %%%%%%%%%%%%%%%%%%%%%
+\textcolor{blue}{This study demonstrates that the integration of advanced machine learning and counterfactual explanations provides a robust and interpretable framework for the early detection of diabetic peripheral neuropathy. Through a comprehensive evaluation of sixteen classification models, ensemble tree-based algorithms—particularly CatBoost—were identified as the most effective for DPN risk stratification, providing stable and reproducible performance across multiple data splits.}
 
+\textcolor{blue}{The findings underscore several critical clinical and technical insights:}
+\begin{itemize}
+    \item \textcolor{blue}{\textit{Dominance of Objective Biomarkers:} Model predictions are primarily driven by electrophysiological metrics from Nerve Conduction Studies, such as CMAP and SSA, which consistently outrank subjective clinical examinations and secondary comorbidities.}
+    \item \textcolor{blue}{\textit{Clinical Prioritization and Cost-Benefit:} A significant finding of this work is the disparity in predictive value between diagnostic modalities. While Sudoscan is noninvasive and remains valuable for detecting early small fiber neuropathy, its inclusion in a general DPN prediction model may introduce noise rather than clarity. For clinical implementation, especially in resource-limited settings, these results suggest that diagnostic pipelines should prioritize the "gold standard" NCS metrics to achieve the highest accuracy and cost-effectiveness.}
+    \item \textcolor{blue}{\textit{Actionability through Counterfactuals:} The use of the DiCE framework transforms the model from a static prediction tool into a dynamic clinical aid. By generating "observational counterfactuals," the system identifies specific clinical targets—such as necessary improvements in nerve conduction or glycemic control—required to transition a patient from a high-risk to a low-risk classification.}
+    \item \textcolor{blue}{\textit{Systemic Nature of DPN:} The stable mean sparsity of approximately 25 features across counterfactual instances suggests that altering a DPN diagnosis requires a systemic physiological shift rather than changes to isolated variables.}
+\end{itemize}
+
+\textcolor{blue}{By utilizing data specifically from the Philippine clinical context, this research enhances geographic diversity in AI-driven healthcare and provides a validated pathway for clinicians to adopt interpretable AI tools. Future work should focus on longitudinal validation of the suggested counterfactual interventions to confirm their efficacy in preventing DPN progression and associated complications like foot ulcers or amputations.}
 
 \bibliography{sample}
 %%%%%%%%%%%%%%%%%%%%%

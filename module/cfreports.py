@@ -167,7 +167,7 @@ def main():
                                 features_to_vary, threshold, global_permitted_range,   
                                 highlight_features=actionable_features, 
                                 filename_suffix="", savedir=split_output_dir)
-        print(time.strftime('End:', "%H:%M:%S", time.localtime()))
+        print('End:', time.strftime("%H:%M:%S", time.localtime()))
 
         # #### Instances of Interest
         ioi_df, display_cols = cf.get_instances_of_interest(

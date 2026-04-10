@@ -66,7 +66,8 @@ def main():
     # ## Iterative Group Feature Elimination
 
     # ### All Features
-    model_metrics['All'] = sel.benchmark_models(X, y, config) 
+    benchmark_cols = X.columns.to_list() 
+    model_metrics['All'] = sel.benchmark_models(X, y, benchmark_cols, config) 
     metrics_stats['All'] = sel.calculate_metric_statistics(model_metrics['All'], config)
 
     # #### Get youden and roc-auc scores

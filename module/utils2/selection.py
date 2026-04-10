@@ -74,12 +74,13 @@ models = {
 metric_fullname = {
     "accuracy": "Accuracy",
     "precision": "Precision",
-    "recall": "Recall",
+    "recall": "Sensitivity",
     "specificity": "Specificity",
     "f1": "F1-score",
     "f2": "F2-score",
     "youden": "Youden Index",
     "roc-auc": "ROC-AUC",
+    "auprc": "AUPRC",
 }
  
 
@@ -200,7 +201,7 @@ def benchmark_models(
     scoring = {
         "accuracy": "accuracy",
         "precision": "precision",
-        "recall": "recall",
+        "sensitivity": "recall",
         "specificity": get_specificity_scorer(),
         "youden": get_youden_scorer(),
         "f1": "f1",
@@ -220,7 +221,7 @@ def benchmark_models(
         algo_results = {
             "accuracy": scores["test_accuracy"],
             "precision": scores["test_precision"],
-            "sensitivity": scores["test_recall"],
+            "sensitivity": scores["test_sensitivity"],
             "specificity": scores["test_specificity"],
             "youden": scores["test_youden"],
             "f1": scores["test_f1"],
@@ -250,7 +251,7 @@ def calculate_metric_statistics(experiment_metrics, config, sorting_metric=None)
             }
     """
     if sorting_metric is None:
-        sorting_metric = config.feature_selection.cross_validation.scoring 
+        sorting_metric = config.feature_selection.cross_validation.sort_by 
     metric_stats = {}
     metric_stats['mean'] = pd.concat(
         [pd.DataFrame({algo['model']: algo['rcv_scores'].mean()}) for algo in experiment_metrics],
@@ -293,16 +294,18 @@ def plot_metric_scores(metric_scores, config, exp_code, sorted=True, target_metr
         target_metric = config.feature_selection.cross_validation.scoring    
     plt.figure(figsize=(8, 4))
     if sorted:
-        metric_scores_sorted = metric_scores[exp_code].mean().to_frame(name="avg").sort_values(by='avg', ascending=False)
+        metric_scores_sorted = metric_scores.mean().to_frame(name="avg").sort_values(by='avg', ascending=False)
         metric_scores_sorted_indices = metric_scores_sorted.index.to_list()
-        sns.violinplot(data=metric_scores[exp_code][metric_scores_sorted_indices])
+        sns.violinplot(data=metric_scores[metric_scores_sorted_indices])
     else:
-        sns.violinplot(data=metric_scores[exp_code])
+        sns.violinplot(data=metric_scores)
     plt.title(f'Distribution of {metric_fullname[target_metric]} Across Multiple Runs')
     plt.ylabel(metric_fullname[target_metric])
     plt.grid(True, axis='y', linestyle='--', alpha=0.7)
     plt.xticks(rotation=75)
     if savedir:
+        savedir = savedir / 'violins' / exp_code
+        savedir.mkdir(parents=True, exist_ok=True)
         plt.savefig(
         savedir / f'{target_metric}_violin.png',
             bbox_inches='tight',
@@ -338,7 +341,6 @@ def create_model_summary_table(metrics_stats, config, target_metric=None, topk=N
         target_metric = config.feature_selection.cross_validation.scoring  
     if topk is None:
         topk = config.figures.summary_table_topk  
-    print(target_metric, topk, 'target_metric, topk,')
     metric_table = pd.DataFrame()
     for feature_set_name, df in metrics_stats.items():
         if feature_set_name not in exclude_features:
@@ -356,6 +358,8 @@ def create_model_summary_table(metrics_stats, config, target_metric=None, topk=N
     plt.ylabel("Model")
     plt.xlabel("Feature Set")
     if savedir:
+        savedir = savedir / 'summaries'
+        savedir.mkdir(parents=True, exist_ok=True)
         savename = f'{target_metric}_summary_table'
         if include_mean:
             savename += f'_mean'

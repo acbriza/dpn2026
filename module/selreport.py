@@ -67,16 +67,95 @@ def main():
 
     # ### All Features
     benchmark_cols = X.columns.to_list() 
-    model_metrics['All'] = sel.benchmark_models(X, y, benchmark_cols, config) 
-    metrics_stats['All'] = sel.calculate_metric_statistics(model_metrics['All'], config)
+    benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config) 
+    model_metrics['All'] = benchmark_metrics
+    metrics_stats['All'] = sel.calculate_metric_statistics(benchmark_metrics, config)
 
-    # #### Get youden and roc-auc scores
-    youden_scores['All'] = sel.get_metric_scores(model_metrics, 'All', metrics_stats, 'youden')
-    rocauc_scores['All'] = sel.get_metric_scores(model_metrics, 'All', metrics_stats, 'roc-auc')
+    # ### NCS only
+    benchmark_cols = D.ncs_cols
+    benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
+    model_metrics['Ncs'] = benchmark_metrics
+    metrics_stats['Ncs'] = sel.calculate_metric_statistics(benchmark_metrics, config)
 
-    sel.plot_metric_scores(rocauc_scores, config, exp_code='All',  target_metric='roc-auc', savedir=outputdir)
-    sel.plot_metric_scores(rocauc_scores, config, exp_code='All',  target_metric='youden', savedir=outputdir)
-    sel.plot_metric_scores(rocauc_scores, config, exp_code='All',  target_metric='specificity', savedir=outputdir)
+    # ### Sudo only
+    benchmark_cols = D.sudo_cols
+    benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
+    model_metrics['Sudo'] = benchmark_metrics
+    metrics_stats['Sudo'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+    
+    # ### No NCS
+    Xnoncs = X.drop(columns=D.ncs_cols)
+    benchmark_cols = Xnoncs.columns.to_list() 
+    benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
+    model_metrics['NoNcs'] = benchmark_metrics
+    metrics_stats['NoNcs'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+
+    #### No NCS-derived studies: start using Xnoncs 
+
+    # ### No NCS and Collinear Features
+    high_vif = sel.get_high_vif(Xnoncs, config)
+    high_vif_features = high_vif.feature.values.tolist()[1:]
+    benchmark_cols = [c for c in Xnoncs.columns if c not in high_vif_features]
+    benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
+    model_metrics['NoNcsCol'] = benchmark_metrics
+    metrics_stats['NoNcsCol'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+
+    # ### No NCS and Profile
+    benchmark_cols = [c for c in Xnoncs.columns if c not in D.profile_cols]
+    benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
+    model_metrics['NoNcsProf'] = benchmark_metrics
+    metrics_stats['NoNcsProf'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+
+    # ### No NCS and Comorbidities
+    benchmark_cols = [c for c in Xnoncs.columns if c not in D.comorbidity_cols]
+    benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
+    model_metrics['NoNcsCom'] = benchmark_metrics
+    metrics_stats['NoNcsCom'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+    
+    # ### No NCS and Neurology Exam
+    benchmark_cols = [c for c in Xnoncs.columns if c not in D.neuro_cols]
+    benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
+    model_metrics['NoNcsNeuro'] = benchmark_metrics
+    metrics_stats['NoNcsNeuro'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+
+    # ### No NCS and MSI
+    benchmark_cols = [c for c in Xnoncs.columns if c not in D.mnsi_col]
+    benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
+    model_metrics['NoNcsMsi'] = benchmark_metrics
+    metrics_stats['NoNcsMsi'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+
+    # ### No NCS and Sudoscan
+    benchmark_cols = [c for c in Xnoncs.columns if c not in D.sudo_cols]
+    benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
+    model_metrics['NoNcsSudo'] = benchmark_metrics
+    metrics_stats['NoNcsSudo'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+
+    report_metrics = ['accuracy', 'precision', 'specificity', 'f1', 'f2', 'youden', 'roc-auc', 'auprc']
+    
+    for metric in report_metrics:
+        # Summary: including all columns and stats
+        sel.create_model_summary_table(metrics_stats, config,
+                                target_metric=metric, 
+                                exclude_features=[],
+                                include_mean=True, 
+                                show_plot=True,
+                                savedir=outputdir)
+
+
+        # Summary: clean table without mean, topk
+        sel.create_model_summary_table(metrics_stats, config,
+                                target_metric=metric, 
+                                topk=0, 
+                                exclude_features=[],
+                                include_mean=False, 
+                                show_plot=False,
+                                savedir=outputdir);                           
+
+    #### Make violin plots of Best Feature Set
+    for feature_group in model_metrics:
+        for metric in report_metrics:
+            scores= sel.get_metric_scores(model_metrics, feature_group, metrics_stats, metric)
+            sel.plot_metric_scores(scores, config, exp_code=feature_group,  target_metric=metric, savedir=outputdir)
 
 if __name__ == "__main__":
     main()

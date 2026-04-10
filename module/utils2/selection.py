@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from tqdm import tqdm
+from types import SimpleNamespace
 
 from sklearn.dummy import DummyClassifier
 from sklearn.pipeline import Pipeline
@@ -38,7 +39,7 @@ sys.path.append('..')
 
 from sklearn.model_selection import StratifiedKFold, cross_validate
 from sklearn.metrics import (
-    accuracy_score, precision_score, recall_score, f1_score, roc_auc_score,
+    accuracy_score, precision_score, recall_score, f1_score, fbeta_score, roc_auc_score,
     confusion_matrix, make_scorer
 )
 
@@ -69,6 +70,18 @@ models = {
     "Linear SVM": SVC(kernel="linear", probability=True),
     "RBF SVM": SVC(kernel="rbf", probability=True),
 }
+
+metric_fullname = {
+    "accuracy": "Accuracy",
+    "precision": "Precision",
+    "recall": "Recall",
+    "specificity": "Specificity",
+    "f1": "F1-score",
+    "f2": "F2-score",
+    "youden": "Youden Index",
+    "roc-auc": "ROC-AUC",
+}
+ 
 
 def get_column_types(X):
     """
@@ -159,11 +172,23 @@ def get_specificity_scorer():
     return make_scorer(specificity_score)
 
 
-def benchmark_models(X, y, config, verbosity=None):
+
+def benchmark_models(
+    X: pd.DataFrame,
+    y: pd.Series,
+    include_cols: list[str],
+    config: SimpleNamespace,
+    *,
+    verbosity: int | None = None
+):
     """
-    Model benchmarking
-    Uses repeated stratified k-fold 
+    Model benchmarking using repeated stratified k-fold 
+    Returns:
+        A list of dictionary with kv-pairs:
+            model:      <string> (e.g. all, ncs), 
+            rcv_cores:  <Dataframe> Perfomance metrics of repeated k-fold of algorithms
     """
+    X = X.copy()[include_cols]        
     if verbosity is None:
         verbosity = config.experiment.verbosity
     n_repeats = config.feature_selection.cross_validation.n_repeats
@@ -176,11 +201,13 @@ def benchmark_models(X, y, config, verbosity=None):
         "accuracy": "accuracy",
         "precision": "precision",
         "recall": "recall",
-        "f1": "f1",
-        "roc_auc": "roc_auc",
+        "specificity": get_specificity_scorer(),
         "youden": get_youden_scorer(),
-        "specificity": get_specificity_scorer()
-    }
+        "f1": "f1",
+        'f2': make_scorer(fbeta_score, beta=2),
+        "roc_auc": "roc_auc",
+        'auprc': 'average_precision',        
+        }
 
     results = []
     if verbosity>0:
@@ -197,7 +224,9 @@ def benchmark_models(X, y, config, verbosity=None):
             "specificity": scores["test_specificity"],
             "youden": scores["test_youden"],
             "f1": scores["test_f1"],
+            "f2": scores["test_f2"],
             "roc-auc": scores["test_roc_auc"],
+            "auprc": scores["test_auprc"],
         }
         results.append({
             "model": name,
@@ -210,15 +239,6 @@ def benchmark_models(X, y, config, verbosity=None):
     # sort by Youden Index instead of ROC-AUC
     return results
 
-metric_fullname = {
-    "accuracy": "Accuracy",
-    "precision": "Precision",
-    "recall": "Recall",
-    "f1": "F1",
-    "roc-auc": "ROC-AUC",
-    "youden": "Youden Index",
-    "specificity": "Specificity"
-}
 
 def calculate_metric_statistics(experiment_metrics, config, sorting_metric=None):
     """
@@ -254,7 +274,7 @@ def calculate_metric_statistics(experiment_metrics, config, sorting_metric=None)
 
 def get_metric_scores(experiment_metrics, exp_code, metrics_stats, target_metric):
     """
-        Get the list of youden scores only
+        Get the list of target_metric scores only
         exp_code : e.g. 'all', 'ncs'
         target_metric : e.g. 'youden', 'roc-auc'
     """    

@@ -336,8 +336,8 @@ def get_high_vif(df, config):
         print(high_vif)
     return high_vif
 
-def create_model_summary_table(metrics_stats, config, target_metric=None, topk=None,  
-                               exclude_features=[], include_mean=True, show_plot=True, savedir=None):
+def create_model_summary_table(metrics_stats, config, *, target_metric=None, topk=None,  
+                               exclude_features=None, include_mean=True, include_topk=False, show_plot=True, savedir=None):
     if target_metric is None:
         target_metric = config.feature_selection.cross_validation.scoring  
     if topk is None:
@@ -346,7 +346,7 @@ def create_model_summary_table(metrics_stats, config, target_metric=None, topk=N
     for feature_set_name, df in metrics_stats.items():
         if feature_set_name not in exclude_features:
             metric_table[feature_set_name] = df['mean'][target_metric]
-    if topk > 0:
+    if include_topk and topk > 0:
         topk_avg = metric_table.apply(lambda col: col.nlargest(topk).mean())
         metric_table.loc[f"Top {topk} Avg"] = topk_avg
     if include_mean:
@@ -365,7 +365,7 @@ def create_model_summary_table(metrics_stats, config, target_metric=None, topk=N
         savename = f'{target_metric}_summary_table'
         if include_mean:
             savename += f'_mean'
-        if topk:
+        if include_topk:
             savename += f'_top{topk}'
         savename = savedir / f'{savename}.png'   
         plt.savefig(savename , bbox_inches='tight', dpi=300)

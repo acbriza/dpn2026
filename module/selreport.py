@@ -10,6 +10,7 @@ import joblib
 from pathlib import Path
 import shutil
 from datetime import datetime
+from tqdm import tqdm
 
 import sys 
 sys.path.append('..')  
@@ -99,110 +100,38 @@ def main():
     for code, cols in feature_sets.items():
         benchmark_featureset(feature_set_code=code, benchmark_cols=cols)
 
-    # # ### No NCS
-    # benchmark_cols = Xnoncs.columns.to_list() 
-    # benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
-    # model_metrics['All'] = benchmark_metrics
-    # metrics_stats['All'] = sel.calculate_metric_statistics(benchmark_metrics, config)
-
-    # #### No NCS-derived studies: start using Xnoncs 
-
-    # # ### No NCS and Collinear Features
-
-    # benchmark_cols = [c for c in Xnoncs.columns if c not in high_vif_features]
-    # benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
-    # model_metrics['NoCol'] = benchmark_metrics
-    # metrics_stats['NoCol'] = sel.calculate_metric_statistics(benchmark_metrics, config)
-
-    # # ### No NCS and Profile
-    # benchmark_cols = [c for c in Xnoncs.columns if c not in D.profile_cols]
-    # benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
-    # model_metrics['NoProf'] = benchmark_metrics
-    # metrics_stats['NoProf'] = sel.calculate_metric_statistics(benchmark_metrics, config)
-
-    # # ### No NCS and Comorbidities
-    # benchmark_cols = [c for c in Xnoncs.columns if c not in D.comorbidity_cols]
-    # benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
-    # model_metrics['NoCom'] = benchmark_metrics
-    # metrics_stats['NoCom'] = sel.calculate_metric_statistics(benchmark_metrics, config)
-    
-    # # ### No NCS and Neurology Exam
-    # benchmark_cols = [c for c in Xnoncs.columns if c not in D.neuro_cols]
-    # benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
-    # model_metrics['NoNeuro'] = benchmark_metrics
-    # metrics_stats['NoNeuro'] = sel.calculate_metric_statistics(benchmark_metrics, config)
-
-    # # ### No NCS and MSI
-    # benchmark_cols = [c for c in Xnoncs.columns if c not in D.mnsi_col]
-    # benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
-    # model_metrics['NoMsi'] = benchmark_metrics
-    # metrics_stats['NoMsi'] = sel.calculate_metric_statistics(benchmark_metrics, config)
-
-    # # ### No NCS and Sudoscan
-    # benchmark_cols = [c for c in Xnoncs.columns if c not in D.sudo_cols]
-    # benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
-    # model_metrics['NoSudo'] = benchmark_metrics
-    # metrics_stats['NoSudo'] = sel.calculate_metric_statistics(benchmark_metrics, config)
-    
-    # # ### Ablations for Sudoscan
-
-    # # ### Sudo only
-    # benchmark_cols = D.sudo_cols
-    # benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
-    # model_metrics['Sudo'] = benchmark_metrics
-    # metrics_stats['Sudo'] = sel.calculate_metric_statistics(benchmark_metrics, config)
-
-    # # ### Sudo +  Profile
-    # benchmark_cols = D.sudo_cols +  D.profile_cols
-    # benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
-    # model_metrics['SudoProf'] = benchmark_metrics
-    # metrics_stats['SudoProf'] = sel.calculate_metric_statistics(benchmark_metrics, config)
-
-    # # ### Sudo +  Comorbidity
-    # benchmark_cols = D.sudo_cols +  D.comorbidity_cols
-    # benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
-    # model_metrics['SudoCom'] = benchmark_metrics
-    # metrics_stats['SudoCom'] = sel.calculate_metric_statistics(benchmark_metrics, config)
-
-    # # ### Sudo Profile + Neurology
-    # benchmark_cols = D.sudo_cols +  D.neuro_cols
-    # benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
-    # model_metrics['SudoNeuro'] = benchmark_metrics
-    # metrics_stats['SudoNeuro'] = sel.calculate_metric_statistics(benchmark_metrics, config)
-
-    # # ### Sudo Profile + MNSI 
-    # benchmark_cols = D.sudo_cols +  D.mnsi_col
-    # benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
-    # model_metrics['SudoMnsi'] = benchmark_metrics
-    # metrics_stats['SudoMnsi'] = sel.calculate_metric_statistics(benchmark_metrics, config)
-
-
     report_metrics = list(sel.metric_fullname.keys()) 
-    
-    for metric in report_metrics:
+
+    print(f"Generating summaries...") 
+    for metric in tqdm(report_metrics):
         # Summary: including all columns and stats
         sel.create_model_summary_table(metrics_stats, config,
                                 target_metric=metric, 
                                 exclude_features=[],
                                 include_mean=True, 
+                                include_topk=True, 
                                 show_plot=True,
                                 savedir=outputdir)
 
 
-        # Summary: clean table without mean, topk
+        # Summary: clean table without topk
         sel.create_model_summary_table(metrics_stats, config,
                                 target_metric=metric, 
                                 topk=0, 
                                 exclude_features=[],
-                                include_mean=False, 
+                                include_mean=True, 
+                                include_topk=False, 
                                 show_plot=False,
                                 savedir=outputdir);                           
+    print(f"Generating summaries: Done.") 
 
     #### Make violin plots of Best Feature Set
-    for feature_group in model_metrics:
+    print(f"Plotting violin plots...") 
+    for feature_group in tqdm(model_metrics):
         for metric in report_metrics:
             scores= sel.get_metric_scores(model_metrics, feature_group, metrics_stats, metric)
             sel.plot_metric_scores(scores, config, exp_code=feature_group,  target_metric=metric, savedir=outputdir)
+    print(f"Plotting violin plots: Done.") 
 
 if __name__ == "__main__":
     main()

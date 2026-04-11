@@ -53,7 +53,7 @@ models = {
     "Naive": DummyClassifier(),
     "Logistic Regression": LogisticRegression(max_iter=500),
     "LDA": LinearDiscriminantAnalysis(),
-    # "QDA": QuadraticDiscriminantAnalysis(),
+    "QDA": QuadraticDiscriminantAnalysis(),
     "SGDClassifier": SGDClassifier(max_iter=1000, tol=1e-3),
 
     "Decision Tree": DecisionTreeClassifier(),
@@ -216,9 +216,18 @@ def benchmark_models(
         model_items=models.items()
     else: # show progress bar
         model_items=tqdm(models.items())
+    failed_models = []
     for i, (name, model) in enumerate(model_items):
+        if name in failed_models:
+            continue
         pipe = build_smart_pipeline(name, model, X, verbosity)
-        scores = cross_validate(pipe, X, y, cv=rcv, scoring=scoring, n_jobs=-1, error_score="raise", verbose=0)
+        try:
+            scores = cross_validate(pipe, X, y, cv=rcv, scoring=scoring, n_jobs=-1, error_score="raise", verbose=0)
+        except Exception as e:
+            print(f'Error cross validating {name}')
+            print(f"Error message: {e}")
+            continue
+
         algo_results = {
             "accuracy": scores["test_accuracy"],
             "precision": scores["test_precision"],
@@ -237,8 +246,8 @@ def benchmark_models(
         if experiment_tag in ['development', 'debug'] and i>1:
             # stop after 3rd algorithm
             break
-
-    # sort by Youden Index instead of ROC-AUC
+    if failed_models:
+        print(f'Error cross validating for these models {failed_models}.')
     return results
 
 

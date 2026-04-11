@@ -33,9 +33,11 @@ from catboost import CatBoostClassifier
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from pathlib import Path
 
 import sys 
 sys.path.append('..')  
+import joblib
 
 from sklearn.model_selection import StratifiedKFold, cross_validate
 from sklearn.metrics import (
@@ -175,11 +177,14 @@ def get_specificity_scorer():
 
 
 def benchmark_models(
+    code: str,
     X: pd.DataFrame,
     y: pd.Series,
     include_cols: list[str] | None,
     config: SimpleNamespace,
     *,
+    savedir: Path,
+    overwrite: bool = False, 
     verbosity: int | None = None
 ):
     """
@@ -189,6 +194,14 @@ def benchmark_models(
             model:      <string> (e.g. all, ncs), 
             rcv_cores:  <Dataframe> Perfomance metrics of repeated k-fold of algorithms
     """
+    savedir = savedir / 'benchmarking'
+    savedir.mkdir(parents=True, exist_ok=True)
+    filename = savedir / f'{code}_benchmarking_scores.joblib'
+    if not overwrite and filename.is_file():
+        print(f'{filename.name} exists. Returning values from contents.')
+        results = joblib.load(filename)
+        return results
+
     if include_cols:
         X = X.copy()[include_cols]        
     if verbosity is None:
@@ -264,10 +277,18 @@ def benchmark_models(
             break
     if failed_models:
         print(f'Error cross validating for these models {failed_models}.')
+    joblib.dump(results, filename)
+    print(f'Saved benchmarking results to {filename.name}.')
     return results
 
-
-def calculate_metric_statistics(experiment_metrics, config, sorting_metric=None):
+def calculate_metric_statistics(
+        code: str,
+        experiment_metrics, 
+        config: SimpleNamespace, 
+        savedir: Path, 
+        *,
+        overwrite: bool = False, 
+        sorting_metric=None):
     """
     scoring_list: list of metrics to calculate statistics (e.g. youden, roc-auc)
     Calculate statistics (e.g. mean and standard deviation) of repeated cross validation runs for an experiment
@@ -276,6 +297,14 @@ def calculate_metric_statistics(experiment_metrics, config, sorting_metric=None)
                 'std' : mean/std of all metrics, sorted by  youden
             }
     """
+    savedir = savedir / 'benchmarking'
+    savedir.mkdir(parents=True, exist_ok=True)
+    filename = savedir / f'{code}_benchmarking_stats.joblib'
+    if not overwrite and filename.is_file():
+        print(f'{filename.name} exists. Returning values from contents.')
+        metric_stats = joblib.load(filename)
+        return metric_stats
+        
     if sorting_metric is None:
         sorting_metric = config.feature_selection.cross_validation.sort_by 
     metric_stats = {}
@@ -297,6 +326,9 @@ def calculate_metric_statistics(experiment_metrics, config, sorting_metric=None)
     if sorting_metric:
         metric_stats['std'] = metric_stats['std'][column_order]
         
+    joblib.dump(metric_stats, filename)
+    print(f'Saved metrics statistics to {filename.name}.')
+    
     return metric_stats
 
 def get_metric_scores(experiment_metrics, exp_code, metrics_stats, target_metric):

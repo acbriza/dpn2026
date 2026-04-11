@@ -53,7 +53,7 @@ models = {
     "Naive": DummyClassifier(),
     "Logistic Regression": LogisticRegression(max_iter=500),
     "LDA": LinearDiscriminantAnalysis(),
-    "QDA": QuadraticDiscriminantAnalysis(),
+    # "QDA": QuadraticDiscriminantAnalysis(),
     "SGDClassifier": SGDClassifier(max_iter=1000, tol=1e-3),
 
     "Decision Tree": DecisionTreeClassifier(),
@@ -74,7 +74,7 @@ models = {
 metric_fullname = {
     "accuracy": "Accuracy",
     "precision": "Precision",
-    "recall": "Sensitivity",
+    "sensitivity": "Sensitivity",
     "specificity": "Specificity",
     "f1": "F1-score",
     "f2": "F2-score",
@@ -177,7 +177,7 @@ def get_specificity_scorer():
 def benchmark_models(
     X: pd.DataFrame,
     y: pd.Series,
-    include_cols: list[str],
+    include_cols: list[str] | None,
     config: SimpleNamespace,
     *,
     verbosity: int | None = None
@@ -189,7 +189,8 @@ def benchmark_models(
             model:      <string> (e.g. all, ncs), 
             rcv_cores:  <Dataframe> Perfomance metrics of repeated k-fold of algorithms
     """
-    X = X.copy()[include_cols]        
+    if include_cols:
+        X = X.copy()[include_cols]        
     if verbosity is None:
         verbosity = config.experiment.verbosity
     n_repeats = config.feature_selection.cross_validation.n_repeats
@@ -217,7 +218,7 @@ def benchmark_models(
         model_items=tqdm(models.items())
     for i, (name, model) in enumerate(model_items):
         pipe = build_smart_pipeline(name, model, X, verbosity)
-        scores = cross_validate(pipe, X, y, cv=rcv, scoring=scoring, n_jobs=-1, error_score="raise")
+        scores = cross_validate(pipe, X, y, cv=rcv, scoring=scoring, n_jobs=-1, error_score="raise", verbose=0)
         algo_results = {
             "accuracy": scores["test_accuracy"],
             "precision": scores["test_precision"],
@@ -350,6 +351,7 @@ def create_model_summary_table(metrics_stats, config, target_metric=None, topk=N
         metric_table.loc[f"Top {topk} Avg"] = topk_avg
     if include_mean:
         metric_table['mean'] = metric_table.mean(axis=1)
+        metric_table.sort_values(by='mean', ascending=False, inplace=True)
 
     # Plot heatmap
     plt.figure(figsize=(10, 6))

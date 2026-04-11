@@ -55,7 +55,7 @@ models = {
     "Naive": DummyClassifier(),
     "Logistic Regression": LogisticRegression(max_iter=500),
     "LDA": LinearDiscriminantAnalysis(),
-    "QDA": QuadraticDiscriminantAnalysis(),
+    # "QDA": QuadraticDiscriminantAnalysis(), # produces errors on some runs
     "SGDClassifier": SGDClassifier(max_iter=1000, tol=1e-3),
 
     "Decision Tree": DecisionTreeClassifier(),
@@ -63,7 +63,7 @@ models = {
     "Extra Trees": ExtraTreesClassifier(),
     "Gradient Boosting": GradientBoostingClassifier(),
     "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric="logloss"),
-    "LightGBM": LGBMClassifier(),
+    "LightGBM": LGBMClassifier(verbosity=-1),
     "CatBoost": CatBoostClassifier(verbose=0),
 
     "kNN": KNeighborsClassifier(),
@@ -253,7 +253,7 @@ def benchmark_models(
             }
             results.append({
                 "model": name,
-                "rcv_scores" : pd.DataFrame(algo_results)
+                "rcv_scores" : pd.DataFrame(algo_results, index=[0]) # needed since we're passing a dict of all NaNs
             })            
             continue
 
@@ -393,8 +393,9 @@ def get_high_vif(df, config):
         print(high_vif)
     return high_vif
 
-def create_model_summary_table(metrics_stats, config, *, target_metric=None, topk=None,  
-                               exclude_features=None, include_mean=True, include_topk=False, show_plot=True, savedir=None):
+def create_model_summary_table(metrics_stats, config, *, 
+                               target_metric=None,   exclude_features=None, include_mean=True, include_topk=False, topk=None, 
+                               sorting_field='All', show_plot=True, savedir=None):
     if target_metric is None:
         target_metric = config.feature_selection.cross_validation.scoring  
     if topk is None:
@@ -409,10 +410,12 @@ def create_model_summary_table(metrics_stats, config, *, target_metric=None, top
     if include_mean:
         metric_table['mean'] = metric_table.mean(axis=1)
         metric_table.sort_values(by='mean', ascending=False, inplace=True)
+    else:
+        metric_table.sort_values(by=sorting_field, ascending=False, inplace=True)
 
     # Plot heatmap
     plt.figure(figsize=(10, 6))
-    sns.heatmap(metric_table, annot=True, cmap="coolwarm", center=0)
+    sns.heatmap(metric_table, annot=True, cmap="viridis", center=0)
     plt.title(f"Average {metric_fullname[target_metric]} Across Models and Feature Sets")
     plt.ylabel("Model")
     plt.xlabel("Feature Set")

@@ -115,8 +115,9 @@ def main():
         sel.create_model_summary_table(metrics_stats, config,
                                 target_metric=metric, 
                                 exclude_features=[],
-                                include_mean=True, 
-                                include_topk=True, 
+                                include_mean=False, 
+                                include_topk=False,
+                                sorting_field='All', 
                                 show_plot=True,
                                 savedir=outputdir)
 
@@ -127,7 +128,8 @@ def main():
                                 topk=0, 
                                 exclude_features=[],
                                 include_mean=True, 
-                                include_topk=False, 
+                                include_topk=False,
+                                sorting_field='mean',
                                 show_plot=False,
                                 savedir=outputdir);                           
     print(f"Generating summaries: Done.") 

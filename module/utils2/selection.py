@@ -224,8 +224,24 @@ def benchmark_models(
         try:
             scores = cross_validate(pipe, X, y, cv=rcv, scoring=scoring, n_jobs=-1, error_score="raise", verbose=0)
         except Exception as e:
-            print(f'Error cross validating {name}')
-            print(f"Error message: {e}")
+            failed_models.append(name)
+            print(f'\nError cross validating {name}')
+            print(f"\nError message: {e}")
+            algo_results = {
+                "accuracy": np.NaN,
+                "precision": np.NaN,
+                "sensitivity": np.NaN,
+                "specificity": np.NaN,
+                "youden": np.NaN,
+                "f1": np.NaN,
+                "f2": np.NaN,
+                "roc-auc": np.NaN,
+                "auprc": np.NaN,
+            }
+            results.append({
+                "model": name,
+                "rcv_scores" : pd.DataFrame(algo_results)
+            })            
             continue
 
         algo_results = {

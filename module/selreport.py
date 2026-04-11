@@ -9,6 +9,7 @@ matplotlib.use('Agg')
 import joblib
 from pathlib import Path
 import shutil
+from datetime import datetime
 
 import sys 
 sys.path.append('..')  
@@ -60,77 +61,123 @@ def main():
     # ## Global Variables   
     model_metrics = {} # key: experiment code, value: {model: <string> (e.g. all, ncs), rcv_cores: <Dataframe> Perfomance metrics of repeated k-fold of algorithms}
     metrics_stats = {} # key: experiment code, value: {stat: <string> (e.g. mean, std), stat (mean/std) of the performance of all algorithms}
-    youden_scores = {} # key: experiment code, value: list of youden cv scores algorithms
-    rocauc_scores = {} # key: experiment code, value: list of roc-auc cv scores algorithms
 
     # ## Iterative Group Feature Elimination
-
-    # ### All Features
-    benchmark_cols = X.columns.to_list() 
-    benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config) 
-    model_metrics['All'] = benchmark_metrics
-    metrics_stats['All'] = sel.calculate_metric_statistics(benchmark_metrics, config)
-
-    # ### NCS only
-    benchmark_cols = D.ncs_cols
-    benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
-    model_metrics['Ncs'] = benchmark_metrics
-    metrics_stats['Ncs'] = sel.calculate_metric_statistics(benchmark_metrics, config)
-
-    # ### Sudo only
-    benchmark_cols = D.sudo_cols
-    benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
-    model_metrics['Sudo'] = benchmark_metrics
-    metrics_stats['Sudo'] = sel.calculate_metric_statistics(benchmark_metrics, config)
     
-    # ### No NCS
     Xnoncs = X.drop(columns=D.ncs_cols)
-    benchmark_cols = Xnoncs.columns.to_list() 
-    benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
-    model_metrics['NoNcs'] = benchmark_metrics
-    metrics_stats['NoNcs'] = sel.calculate_metric_statistics(benchmark_metrics, config)
 
-    #### No NCS-derived studies: start using Xnoncs 
+    def benchmark_featureset(*, feature_set_code, benchmark_cols, verbosity=0):
+        start_time = datetime.now()    
+        print(f'{feature_set_code} benchmarking models for feature set started at: ', start_time.strftime("%H:%M:%S"))
+        benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=verbosity)
+        model_metrics[feature_set_code] = benchmark_metrics
+        metrics_stats[feature_set_code] = sel.calculate_metric_statistics(benchmark_metrics, config)
+        end_time = datetime.now()
+        elapsed = end_time - start_time
+        print(f'{feature_set_code} benchmarking models for feature set took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%H:%M:%S"))
 
-    # ### No NCS and Collinear Features
+        print(f"Elapsed: {elapsed}") 
+
     high_vif = sel.get_high_vif(Xnoncs, config)
     high_vif_features = high_vif.feature.values.tolist()[1:]
-    benchmark_cols = [c for c in Xnoncs.columns if c not in high_vif_features]
-    benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
-    model_metrics['NoNcsCol'] = benchmark_metrics
-    metrics_stats['NoNcsCol'] = sel.calculate_metric_statistics(benchmark_metrics, config)
 
-    # ### No NCS and Profile
-    benchmark_cols = [c for c in Xnoncs.columns if c not in D.profile_cols]
-    benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
-    model_metrics['NoNcsProf'] = benchmark_metrics
-    metrics_stats['NoNcsProf'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+    feature_sets ={
+        'All' : None,
+        'NoCol' : [c for c in Xnoncs.columns if c not in high_vif_features],
+        'NoProf' : [c for c in Xnoncs.columns if c not in D.profile_cols],
+        'NoCom': [c for c in Xnoncs.columns if c not in D.comorbidity_cols],
+        'NoNeuro' : [c for c in Xnoncs.columns if c not in D.neuro_cols],
+        'NoMsi' : [c for c in Xnoncs.columns if c not in D.mnsi_col],
+        'NoSudo' : [c for c in Xnoncs.columns if c not in D.sudo_cols],
+        'Sudo': D.sudo_cols,
+        'SudoProf' : D.sudo_cols + D.profile_cols,
+        'SudoCom' : D.sudo_cols + D.comorbidity_cols,
+        'SudoNeuro' : D.sudo_cols + D.neuro_cols,
+        'SudoMnsi' : D.sudo_cols + D.mnsi_col
+    }
 
-    # ### No NCS and Comorbidities
-    benchmark_cols = [c for c in Xnoncs.columns if c not in D.comorbidity_cols]
-    benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
-    model_metrics['NoNcsCom'] = benchmark_metrics
-    metrics_stats['NoNcsCom'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+    for code, cols in feature_sets.items():
+        benchmark_featureset(feature_set_code=code, benchmark_cols=cols)
+
+    # # ### No NCS
+    # benchmark_cols = Xnoncs.columns.to_list() 
+    # benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
+    # model_metrics['All'] = benchmark_metrics
+    # metrics_stats['All'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+
+    # #### No NCS-derived studies: start using Xnoncs 
+
+    # # ### No NCS and Collinear Features
+
+    # benchmark_cols = [c for c in Xnoncs.columns if c not in high_vif_features]
+    # benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
+    # model_metrics['NoCol'] = benchmark_metrics
+    # metrics_stats['NoCol'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+
+    # # ### No NCS and Profile
+    # benchmark_cols = [c for c in Xnoncs.columns if c not in D.profile_cols]
+    # benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
+    # model_metrics['NoProf'] = benchmark_metrics
+    # metrics_stats['NoProf'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+
+    # # ### No NCS and Comorbidities
+    # benchmark_cols = [c for c in Xnoncs.columns if c not in D.comorbidity_cols]
+    # benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
+    # model_metrics['NoCom'] = benchmark_metrics
+    # metrics_stats['NoCom'] = sel.calculate_metric_statistics(benchmark_metrics, config)
     
-    # ### No NCS and Neurology Exam
-    benchmark_cols = [c for c in Xnoncs.columns if c not in D.neuro_cols]
-    benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
-    model_metrics['NoNcsNeuro'] = benchmark_metrics
-    metrics_stats['NoNcsNeuro'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+    # # ### No NCS and Neurology Exam
+    # benchmark_cols = [c for c in Xnoncs.columns if c not in D.neuro_cols]
+    # benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
+    # model_metrics['NoNeuro'] = benchmark_metrics
+    # metrics_stats['NoNeuro'] = sel.calculate_metric_statistics(benchmark_metrics, config)
 
-    # ### No NCS and MSI
-    benchmark_cols = [c for c in Xnoncs.columns if c not in D.mnsi_col]
-    benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
-    model_metrics['NoNcsMsi'] = benchmark_metrics
-    metrics_stats['NoNcsMsi'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+    # # ### No NCS and MSI
+    # benchmark_cols = [c for c in Xnoncs.columns if c not in D.mnsi_col]
+    # benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
+    # model_metrics['NoMsi'] = benchmark_metrics
+    # metrics_stats['NoMsi'] = sel.calculate_metric_statistics(benchmark_metrics, config)
 
-    # ### No NCS and Sudoscan
-    benchmark_cols = [c for c in Xnoncs.columns if c not in D.sudo_cols]
-    benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
-    model_metrics['NoNcsSudo'] = benchmark_metrics
-    metrics_stats['NoNcsSudo'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+    # # ### No NCS and Sudoscan
+    # benchmark_cols = [c for c in Xnoncs.columns if c not in D.sudo_cols]
+    # benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=0)
+    # model_metrics['NoSudo'] = benchmark_metrics
+    # metrics_stats['NoSudo'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+    
+    # # ### Ablations for Sudoscan
 
-    report_metrics = ['accuracy', 'precision', 'specificity', 'f1', 'f2', 'youden', 'roc-auc', 'auprc']
+    # # ### Sudo only
+    # benchmark_cols = D.sudo_cols
+    # benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
+    # model_metrics['Sudo'] = benchmark_metrics
+    # metrics_stats['Sudo'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+
+    # # ### Sudo +  Profile
+    # benchmark_cols = D.sudo_cols +  D.profile_cols
+    # benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
+    # model_metrics['SudoProf'] = benchmark_metrics
+    # metrics_stats['SudoProf'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+
+    # # ### Sudo +  Comorbidity
+    # benchmark_cols = D.sudo_cols +  D.comorbidity_cols
+    # benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
+    # model_metrics['SudoCom'] = benchmark_metrics
+    # metrics_stats['SudoCom'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+
+    # # ### Sudo Profile + Neurology
+    # benchmark_cols = D.sudo_cols +  D.neuro_cols
+    # benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
+    # model_metrics['SudoNeuro'] = benchmark_metrics
+    # metrics_stats['SudoNeuro'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+
+    # # ### Sudo Profile + MNSI 
+    # benchmark_cols = D.sudo_cols +  D.mnsi_col
+    # benchmark_metrics = sel.benchmark_models(X, y, benchmark_cols, config, verbosity=0)
+    # model_metrics['SudoMnsi'] = benchmark_metrics
+    # metrics_stats['SudoMnsi'] = sel.calculate_metric_statistics(benchmark_metrics, config)
+
+
+    report_metrics = list(sel.metric_fullname.keys()) 
     
     for metric in report_metrics:
         # Summary: including all columns and stats

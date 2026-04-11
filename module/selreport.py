@@ -27,6 +27,11 @@ def main():
         print("Usage: python selreports.py <config file>")
         sys.exit(1)
 
+    if len(sys.argv) == 2:
+        overwrite_benchmarks = False
+    else:
+        overwrite_benchmarks = sys.argv[2]=='overwrite'
+    
     config_path = Path(r'experiments')
 
     # choose between final and development config file
@@ -70,9 +75,11 @@ def main():
     def benchmark_featureset(*, feature_set_code, benchmark_cols, verbosity=0):
         start_time = datetime.now()    
         print(f'{feature_set_code} benchmarking models for feature set started at: ', start_time.strftime("%H:%M:%S"))
-        benchmark_metrics = sel.benchmark_models(Xnoncs, y, benchmark_cols, config, verbosity=verbosity)
+        benchmark_metrics = sel.benchmark_models(feature_set_code, Xnoncs, y, benchmark_cols, config, 
+                                                 savedir=outputdir, overwrite=overwrite_benchmarks, verbosity=verbosity)
         model_metrics[feature_set_code] = benchmark_metrics
-        metrics_stats[feature_set_code] = sel.calculate_metric_statistics(benchmark_metrics, config)
+        metrics_stats[feature_set_code] = sel.calculate_metric_statistics(feature_set_code, benchmark_metrics, config, 
+                                                                          savedir=outputdir, overwrite=overwrite_benchmarks)
         end_time = datetime.now()
         elapsed = end_time - start_time
         print(f'{feature_set_code} benchmarking models for feature set took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%H:%M:%S"))

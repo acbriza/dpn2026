@@ -18,6 +18,7 @@ optuna.logging.set_verbosity(optuna.logging.WARNING)
 from skopt import BayesSearchCV
 
 from scipy import stats
+from tqdm import tqdm
 
 import sys 
 from pathlib import Path
@@ -84,7 +85,9 @@ def nested_cv_youden_optuna(
 
     opt_results = []
 
-    for fold_idx, (outer_train_idx, outer_test_idx) in enumerate(outer_cv.split(X, y)):
+
+    folds = outer_cv.split(X, y)
+    for fold_idx, (outer_train_idx, outer_test_idx) in tqdm(enumerate(folds), total=outer_cv.get_n_splits()):
         X_outer_train, X_outer_test = X[outer_train_idx], X[outer_test_idx]
         y_outer_train, y_outer_test = y[outer_train_idx], y[outer_test_idx]
 

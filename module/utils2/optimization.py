@@ -244,17 +244,18 @@ def mean_confidence_interval(
     metrics_ci_filename =  savedir / f'optimization_metrics_ci.csv'
     if not overwrite and metrics_ci_filename.is_file():
         print(f'{metrics_ci_filename.name} exists. Returning values from contents.')
-        metrics_ci_df = pd.read_csv(metrics_ci_filename)        
+        metrics_ci_df = pd.read_csv(metrics_ci_filename)      
+        return  metrics_ci_df
 
     confidence = config.evaluation.confidence
     verbosity = config.experiment.verbosity
 
     opt_results_ci = {}
-    metrics = [item for item in list(opt_results['folds'][0].keys()) 
+    metrics = [item for item in list(opt_results[0].keys()) 
                if item not in ['fold', 'best_params']] 
     print(metrics)
     for metric in metrics:
-        scores = [fold[metric] for fold in opt_results['folds']]
+        scores = [fold[metric] for fold in opt_results]
         
         scores = np.array(scores)
         n = len(scores)
@@ -278,6 +279,7 @@ def mean_confidence_interval(
             print(f"{metric} {confidence*100}% CI: {opt_results_ci[metric]}")
 
     metrics_ci_df = pd.DataFrame(opt_results_ci).T
+    metrics_ci_df.index.name = 'metric'
     metrics_ci_df.to_csv(metrics_ci_filename)
 
     return metrics_ci_df

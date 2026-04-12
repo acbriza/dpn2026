@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
 from sklearn.metrics import (
-    confusion_matrix, roc_auc_score, accuracy_score,
+    confusion_matrix, roc_auc_score, accuracy_score, roc_curve,
     precision_score, f1_score, fbeta_score, average_precision_score
 )
 from sklearn.feature_selection import mutual_info_classif
@@ -67,7 +67,7 @@ def nested_cv_youden_optuna(
         random_state:    Base random seed
 
     Returns:
-        dict with mean/std summary metrics and per-fold results
+        list of per-fold results
     """
     opt_results_filename = savedir / f'optimization_results.json'
     if not overwrite and opt_results_filename.is_file():
@@ -82,7 +82,7 @@ def nested_cv_youden_optuna(
         random_state=random_state,
     )
 
-    fold_results = []
+    opt_results = []
 
     for fold_idx, (outer_train_idx, outer_test_idx) in enumerate(outer_cv.split(X, y)):
         X_outer_train, X_outer_test = X[outer_train_idx], X[outer_test_idx]
@@ -173,7 +173,7 @@ def nested_cv_youden_optuna(
             else np.nan
         )
 
-        fold_results.append(
+        opt_results.append(
             {
                 "fold": fold_idx,
                 "threshold": best_threshold,
@@ -191,29 +191,29 @@ def nested_cv_youden_optuna(
         )
 
     # ── Aggregate ─────────────────────────────────────────────────────────────
-    def _nanstats(key):
-        vals = [f[key] for f in fold_results]
-        return float(np.nanmean(vals)), float(np.nanstd(vals))
+    # def _nanstats(key):
+    #     vals = [f[key] for f in fold_results]
+    #     return float(np.nanmean(vals)), float(np.nanstd(vals))
 
-    roc_mean, roc_std = _nanstats("roc_auc")
-    you_mean, you_std = _nanstats("youden")
-    sen_mean, _ = _nanstats("sensitivity")
-    spe_mean, _ = _nanstats("specificity")
-    thr_mean, thr_std = _nanstats("threshold")
+    # roc_mean, roc_std = _nanstats("roc_auc")
+    # you_mean, you_std = _nanstats("youden")
+    # sen_mean, _ = _nanstats("sensitivity")
+    # spe_mean, _ = _nanstats("specificity")
+    # thr_mean, thr_std = _nanstats("threshold")
 
-    opt_results = {
-        # ── Summary stats ──
-        "roc_auc_mean": roc_mean,
-        "roc_auc_std": roc_std,
-        "youden_mean": you_mean,
-        "youden_std": you_std,
-        "sensitivity_mean": sen_mean,
-        "specificity_mean": spe_mean,
-        "threshold_mean": thr_mean,
-        "threshold_std": thr_std,
-        # ── Per-fold detail ──
-        "folds": fold_results,
-    }
+    # opt_results = {
+    #     # ── Summary stats ──
+    #     # "roc_auc_mean": roc_mean,
+    #     # "roc_auc_std": roc_std,
+    #     # "youden_mean": you_mean,
+    #     # "youden_std": you_std,
+    #     # "sensitivity_mean": sen_mean,
+    #     # "specificity_mean": spe_mean,
+    #     # "threshold_mean": thr_mean,
+    #     # "threshold_std": thr_std,
+    #     # ── Per-fold detail ──
+    #     "folds": fold_results,
+    # }
 
     # save results 
     with open(opt_results_filename, "w") as f:
@@ -264,8 +264,8 @@ def mean_confidence_interval(
         margin = z * stderr
 
         opt_results_ci[metric] =  {
-            "mean": mean,
-            "std": std,
+            "mean": np.nanmean(scores), # mean without nans
+            "std": np.nanstd(scores), # std without nans
             "ci_lower": mean - margin,
             "ci_upper": mean + margin,
             # "n_folds": n

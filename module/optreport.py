@@ -66,9 +66,10 @@ def main():
     D.load(classification=config.experiment.classification_type)
     dfdpn = D.df
     data_cols = dfdpn.drop(D.non_data_cols, axis=1, errors="ignore").columns
-    no_ncs_datacols = [c for c in data_cols if c not in D.neuro_cols]
+    no_ncs_datacols = [c for c in data_cols if c not in D.ncs_cols]
     X = dfdpn[no_ncs_datacols]
     y = dfdpn['Confirmed_Binary_DPN']
+    print(f'X: {X.shape}, y:{y.shape}')
     dfXy = pd.concat([X, y], axis=1)    
 
 

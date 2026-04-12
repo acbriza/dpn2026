@@ -1,10 +1,13 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
-from sklearn.metrics import roc_curve, confusion_matrix, roc_auc_score
-from sklearn.datasets import load_breast_cancer
+from sklearn.metrics import (
+    confusion_matrix, roc_auc_score, accuracy_score,
+    precision_score, f1_score, fbeta_score, average_precision_score
+)
 from sklearn.feature_selection import mutual_info_classif
 from sklearn.ensemble import RandomForestClassifier
 from catboost import CatBoostClassifier
@@ -17,19 +20,24 @@ from skopt import BayesSearchCV
 from scipy import stats
 
 import sys 
+from pathlib import Path
 sys.path.append('..')  
+import json
 
 def nested_cv_youden_optuna(
     X,
     y,
+    *,
     model_class,
     param_space_fn,
-    n_splits_outer=3,
-    n_repeats_outer=3,
-    n_splits_inner=3,
-    n_iter=30,
-    random_state=42,
-):
+    n_splits_outer,
+    n_repeats_outer,
+    n_splits_inner,
+    n_iter,
+    random_state,
+    savedir: Path,
+    overwrite: bool = False, 
+    ):
     """
     Nested cross-validation with:
     - Outer: RepeatedStratifiedKFold
@@ -61,7 +69,13 @@ def nested_cv_youden_optuna(
     Returns:
         dict with mean/std summary metrics and per-fold results
     """
-
+    opt_results_filename = savedir / f'optimization_results.json'
+    if not overwrite and opt_results_filename.is_file():
+        print(f'{opt_results_filename.name} exists. Returning values from contents.')
+        with open(opt_results_filename, "r") as f:
+            opt_results = json.load(f)
+        return opt_results
+    
     outer_cv = RepeatedStratifiedKFold(
         n_splits=n_splits_outer,
         n_repeats=n_repeats_outer,
@@ -153,16 +167,26 @@ def nested_cv_youden_optuna(
             if len(np.unique(y_outer_test)) > 1
             else np.nan
         )
+        auprc = (
+            average_precision_score(y_outer_test, y_test_proba) 
+            if len(np.unique(y_outer_test)) > 1 
+            else np.nan
+        )
 
         fold_results.append(
             {
                 "fold": fold_idx,
-                "roc_auc": roc_auc,
-                "youden": youden_test,
-                "sensitivity": sensitivity,
-                "specificity": specificity,
                 "threshold": best_threshold,
                 "best_params": best_params,
+                "accuracy": accuracy_score(y_outer_test, y_test_pred),
+                "precision": precision_score(y_outer_test, y_test_pred, zero_division=np.nan),
+                "sensitivity": sensitivity,
+                "specificity": specificity,
+                "f1": f1_score(y_outer_test, y_test_pred, zero_division=np.nan),
+                "f2": fbeta_score(y_outer_test, y_test_pred, beta=2, zero_division=np.nan),
+                "youden": youden_test,
+                "roc-auc": roc_auc,
+                "auprc": auprc,
             }
         )
 
@@ -177,7 +201,7 @@ def nested_cv_youden_optuna(
     spe_mean, _ = _nanstats("specificity")
     thr_mean, thr_std = _nanstats("threshold")
 
-    return {
+    opt_results = {
         # ── Summary stats ──
         "roc_auc_mean": roc_mean,
         "roc_auc_std": roc_std,
@@ -191,20 +215,43 @@ def nested_cv_youden_optuna(
         "folds": fold_results,
     }
 
+    # save results 
+    with open(opt_results_filename, "w") as f:
+        json.dump(opt_results, f, indent=4)
+    
+    return opt_results
+
+
 model_class = {
     'catboost': CatBoostClassifier,
     'random_forest' : RandomForestClassifier,
 }
 
-#### OPTUNA OPTIMIZATION #######
 
-def mean_confidence_interval(results, config):
+#### OPTUNA OPTIMIZATION #######
+def mean_confidence_interval(
+        opt_results,
+        config,
+        savedir: Path,
+        overwrite: bool = False,
+        ):
+    
+    # calculate statistics for the metrics
+
+    metrics_ci_filename =  savedir / f'optimization_metrics_ci.csv'
+    if not overwrite and metrics_ci_filename.is_file():
+        print(f'{metrics_ci_filename.name} exists. Returning values from contents.')
+        metrics_ci_df = pd.read_csv(metrics_ci_filename)        
+
     confidence = config.evaluation.confidence
     verbosity = config.experiment.verbosity
 
     opt_results_ci = {}
-    for metric in ["youden", "roc_auc"]:
-        scores = [fold[metric] for fold in results['folds']]
+    metrics = [item for item in list(opt_results['folds'][0].keys()) 
+               if item not in ['fold', 'best_params']] 
+    print(metrics)
+    for metric in metrics:
+        scores = [fold[metric] for fold in opt_results['folds']]
         
         scores = np.array(scores)
         n = len(scores)
@@ -221,13 +268,16 @@ def mean_confidence_interval(results, config):
             "std": std,
             "ci_lower": mean - margin,
             "ci_upper": mean + margin,
-            "n_folds": n
+            # "n_folds": n
         } 
 
         if verbosity > 0:
             print(f"{metric} {confidence*100}% CI: {opt_results_ci[metric]}")
 
-    return opt_results_ci
+    metrics_ci_df = pd.DataFrame(opt_results_ci).T
+    metrics_ci_df.to_csv(metrics_ci_filename)
+
+    return metrics_ci_df
 
 def train_final_model_with_threshold_recalculation(X, y, model, param_space, n_splits_inner=3, n_iter=30, random_state=42, n_jobs=-1):
     """

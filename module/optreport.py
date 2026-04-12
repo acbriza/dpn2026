@@ -114,24 +114,12 @@ def main():
     print(f'Running repeated crossvalidation, took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%H:%M:%S"))
 
     # ### Calculate Confidence Interval 
-    opt_ci  = hpo.mean_confidence_interval(opt_results, config)
-
-    opt_results_summary = {
-        'youden': f'{opt_results["youden_mean"]:.3f} +/ {opt_results["youden_std"]:.3f}',
-        'youden ci': f'{opt_ci["youden"]["ci_lower"]:.3f} - {opt_ci["youden"]["ci_upper"]:.3f}', 
-        'roc_auc': f'{opt_results["roc_auc_mean"]:.3f} +/ {opt_results["roc_auc_std"]:.3f}',
-        'roc_auc ci': f'{opt_ci["roc_auc"]["ci_lower"]:.3f} - {opt_ci["roc_auc"]["ci_upper"]:.3f}', 
-        'threshold': f'{opt_results["threshold_mean"]:.3f} +/ {opt_results["threshold_std"]:.3f}',
-        'specificity mean': f'{opt_results["specificity_mean"]:.3f}',
-        'sensitivity mean': f'{opt_results["sensitivity_mean"]:.3f}',
-    }
-
-    opt_results_df = pd.DataFrame(opt_results_summary, index=['value']).T
-
-    with open(outputdir / "optimization_results.json", "w") as f:
-        json.dump(opt_results, f, indent=4)
-
-    opt_results_df.to_csv(outputdir / "optimization_results_summary.csv")
+    opt_ci  = hpo.mean_confidence_interval(
+        opt_results,
+        config, 
+        savedir=outputdir, 
+        overwrite=overwrite_optimization_reports,
+        )
 
 if __name__ == "__main__":
     main()

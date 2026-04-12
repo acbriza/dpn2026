@@ -24,7 +24,7 @@ from utils2 import selection as sel
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python selreports.py <config file>")
+        print("Usage: python selreports.py <config file> <overwrite>")
         sys.exit(1)
 
     if len(sys.argv) == 2:
@@ -34,8 +34,7 @@ def main():
     
     config_path = Path(r'experiments')
 
-    # choose between final and development config file
-    # config_filename = "bin_sel_final.yml" # final
+    # sample config_filename = bin_sel_final.yml
     config_filename = sys.argv[1]
 
     # ## Read Config File    
@@ -83,8 +82,6 @@ def main():
         end_time = datetime.now()
         elapsed = end_time - start_time
         print(f'{feature_set_code} benchmarking models for feature set took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%H:%M:%S"))
-
-        print(f"Elapsed: {elapsed}") 
 
     high_vif = sel.get_high_vif(Xnoncs, config)
     high_vif_features = high_vif.feature.values.tolist()[1:]

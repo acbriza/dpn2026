@@ -53,7 +53,7 @@ def main():
     print(config)
 
     # #### Set output directory
-    outputdir = config_path /  config.experiment.classification_type /  config.experiment.stage / config.experiment.tag 
+    outputdir = config_path /  config.experiment.classification_type /  config.experiment.stage / config.model.code / config.experiment.tag 
     outputdir.mkdir(parents=True, exist_ok=True)
 
     # #### Copy config file to output directory
@@ -111,15 +111,18 @@ def main():
 
     end_time = datetime.now()
     elapsed = end_time - start_time
+    print(opt_results)
     print(f'Running repeated crossvalidation, took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%H:%M:%S"))
 
     # ### Calculate Confidence Interval 
-    opt_ci  = hpo.mean_confidence_interval(
+    opt_ci_df  = hpo.mean_confidence_interval(
         opt_results,
         config, 
         savedir=outputdir, 
         overwrite=overwrite_optimization_reports,
         )
+    print()
+    print(opt_ci_df)
 
 if __name__ == "__main__":
     main()

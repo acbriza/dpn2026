@@ -11,6 +11,7 @@ from skopt.space import Integer, Real
 from pathlib import Path
 import joblib
 from datetime import datetime
+from tqdm import tqdm
 
 import shap
 
@@ -100,11 +101,11 @@ def get_ksplit_trained_models(
 
     split_results = []
 
-    for train_idx, test_idx in skf.split(X, y):
+    for train_idx, test_idx in tqdm(skf.split(X, y), total=skf.get_n_splits(), desc="K-Fold"):
         X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
         y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
 
-        model, best_params = hpo.train_final_model(
+        best_model, best_params, best_threshold = hpo.train_final_model(
             X_train.values, 
             y_train.values, 
             config,
@@ -114,38 +115,38 @@ def get_ksplit_trained_models(
         )
 
         # no need to retrain model since refit=true in train_final_model
-        cm, metrics= hpo.test_model(model, config.hpo_results.threshold, X_test, y_test)
+        cm, metrics= hpo.test_model(best_model, best_threshold, X_test, y_test)
 
         result = {
-            "model" : model,
+            "model" : best_model,
+            "threshold" : best_threshold,
+            "best_params" : best_params,
             "X_train": X_train,
             "X_test": X_test,
             "y_train": y_train,
             "y_test": y_test,
-            "threshold" : config.hpo_results.threshold,
-            "best_params" : best_params,
             "cm": cm,
             "metrics" : metrics,
         }
         split_results.append(result)
 
-        # get mean and std of summaries of results
-        df_ksm = pd.DataFrame([{k: result[k] for k in ["youden", "roc_auc"]} for result in split_results]).T
-        df_ksm['mean'] = df_ksm.mean(axis=1)
-        df_ksm['std'] = df_ksm.std(axis=1)  
+    # don't get mean to highlight these are separate models
+    ksplit_trained_models_metrics_filename = savedir / f"{config.model.code}_ksplit_trained_models_metrics.csv"
+    df_ksm = pd.DataFrame([result['metrics'] for result in split_results])
+    df_ksm.to_csv(ksplit_trained_models_metrics_filename)
 
-        # create a dictionary for saving results
-        rundate = datetime.now().strftime("%Y-%m-%d")
-        ksplit_trained_models = {
-            "results": split_results,
-            "summary": df_ksm,
-            "rundate": rundate,
-            "tag" : config.experiment.tag
-        }          
+    # create a dictionary for saving results
+    rundate = datetime.now().strftime("%Y-%m-%d")
+    ksplit_trained_models = {
+        "results": split_results,
+        "summary": df_ksm,
+        "rundate": rundate,
+        "tag" : config.experiment.tag
+    }          
 
-        joblib.dump(ksplit_trained_models, ksplit_trained_models_filename)    
+    joblib.dump(ksplit_trained_models, ksplit_trained_models_filename)    
 
-    return split_results
+    return ksplit_trained_models
 
 
 def plot_importances(DPN_data, model, split_index, feature_names, config, 

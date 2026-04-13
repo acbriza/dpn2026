@@ -160,11 +160,11 @@ def nested_cv_optimization(
                 X_outer_train[inner_val_idx]
             )[:, 1]
 
-        if optimization_metric == 'roc-auc':
+        if threshold_selection_metric == 'roc-auc':
             fpr, tpr, threshold_candidates = roc_curve(y_outer_train, oof_proba)
             youden_index = tpr - fpr
             best_threshold = float(threshold_candidates[np.argmax(youden_index)])
-        elif optimization_metric == 'auprc':
+        elif threshold_selection_metric == 'f2':
             precision_vals, recall_vals, threshold_candidates = precision_recall_curve(y_outer_train, oof_proba)
             # precision_recall_curve appends a sentinel at the end with no matching threshold, so align arrays before scoring.
             f2_scores = (

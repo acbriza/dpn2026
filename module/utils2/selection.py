@@ -370,7 +370,7 @@ def plot_metric_scores(metric_scores, config, exp_code, sorted=True, target_metr
             dpi=300
         )
     plt.show()
-    plt.close
+    plt.close()
     
 
 def get_high_vif(df, config):
@@ -431,4 +431,4 @@ def create_model_summary_table(metrics_stats, config, *,
         plt.savefig(savename , bbox_inches='tight', dpi=300)
     if show_plot:
         plt.show()
-    plt.close
+    plt.close()

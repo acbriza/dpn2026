@@ -67,13 +67,13 @@ def nested_cv_optimization(
         list of per-fold results
     """
 
-    n_splits_outer = config.optimization.k_splits_outer,
-    n_repeats_outer = config.optimization.n_repeats_outer,
-    n_splits_inner = config.optimization.k_splits_inner,
-    n_iter = config.optimization.n_iter,   
+    n_splits_outer = config.optimization.k_splits_outer
+    n_repeats_outer = config.optimization.n_repeats_outer
+    n_splits_inner = config.optimization.k_splits_inner
+    n_iter = config.optimization.n_iter
     optimization_metric = config.optimization.optimization_metric
     threshold_selection_metric = config.optimization.threshold_selection_metric
-    random_state = config.experiment.random_seed,
+    random_state = config.experiment.random_seed
         
     opt_results_filename = savedir / f'optimization_results.json'
     if not overwrite and opt_results_filename.is_file():

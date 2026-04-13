@@ -97,8 +97,8 @@ def main():
     start_time = datetime.now()    
     print(f'Running repeated crossvalidation, started at: ', start_time.strftime("%H:%M:%S"))
     opt_results = hpo.nested_cv_optimization(
-        X=X.values,
-        y=y.values,
+        X.values,
+        y.values,
         config,
         model_class=hpo.model_class[config.model.name],   # class, not an instance
         param_space_fn=param_space_fn,

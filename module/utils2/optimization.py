@@ -3,9 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
+from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold, cross_val_predict
 from sklearn.metrics import (
-    confusion_matrix, roc_auc_score, accuracy_score, roc_curve,
+    confusion_matrix, roc_auc_score, accuracy_score, roc_curve, make_scorer,
     precision_score, f1_score, fbeta_score, average_precision_score, precision_recall_curve
 )
 from sklearn.feature_selection import mutual_info_classif
@@ -174,7 +174,7 @@ def nested_cv_optimization(
             )
             best_threshold = float(threshold_candidates[np.argmax(f2_scores)])
         else:
-            raise ValueError(f"Threshold selection criteria not implemented: {optimization_metric}.")
+            raise ValueError(f"Threshold selection criteria not implemented: {threshold_selection_metric}.")
        
 
         # ── Evaluation on outer test fold ─────────────────────────────────────
@@ -323,7 +323,14 @@ def train_final_model_with_threshold_recalculation(X, y, model, param_space, n_s
 
     return final_model, best_threshold, opt.best_params_
 
-def train_final_model(X, y, model, param_space, n_splits_inner=5, n_iter=50, random_state=42, n_jobs=-1):
+def train_final_model(
+        X, 
+        y,
+        config,
+        *, 
+        model, 
+        param_space,  
+        n_jobs=-1):
     """
     Train the final deployable model on ALL data:
     1. BayesSearchCV to find best hyperparameters (inner CV on full dataset)
@@ -331,12 +338,26 @@ def train_final_model(X, y, model, param_space, n_splits_inner=5, n_iter=50, ran
     3. No best threshold recalculation; we will use the one from the cross validated folds
     """
 
+    n_splits_inner = config.optimization.k_splits_inner
+    n_iter = config.optimization.n_iter
+    random_state = config.experiment.random_seed 
+    optimization_metric = config.optimization.optimization_metric
+    threshold_selection_metric = config.optimization.threshold_selection_metric
+
+    # --- Bayesian Optimization ---
     inner_cv = StratifiedKFold(n_splits=n_splits_inner, shuffle=True, random_state=random_state)
+
+    if optimization_metric=="roc-auc":
+        optimization_scoring="roc_auc"
+    elif optimization_metric=="auprc":
+       optimization_scoring = make_scorer(average_precision_score, needs_proba=True)
+    else:
+        raise ValueError(f"Optimization criteria not implemented: {optimization_metric}.")
 
     opt = BayesSearchCV(
         estimator=model,
         search_spaces=param_space,
-        scoring="roc_auc",
+        scoring=optimization_scoring,
         cv=inner_cv,
         n_iter=n_iter,
         n_jobs=n_jobs,
@@ -345,7 +366,43 @@ def train_final_model(X, y, model, param_space, n_splits_inner=5, n_iter=50, ran
         verbose=0,
     )
     opt.fit(X, y, callback=None)
-    return opt.best_estimator_, opt.best_params_
+
+    best_estimator = opt.best_estimator_
+    best_params = opt.best_params_
+
+    # --- Threshold Search via OOF predictions ---
+    oof_probs = cross_val_predict(
+            best_estimator,
+            X, y,
+            cv=inner_cv,
+            method="predict_proba",
+            n_jobs=n_jobs,
+        )[:, 1]    
+    
+    if threshold_selection_metric == 'roc-auc':
+        fpr, tpr, threshold_candidates = roc_curve(y, oof_probs)
+        youden_index = tpr - fpr
+        best_threshold = float(threshold_candidates[np.argmax(youden_index)])
+    if threshold_selection_metric in ["f1", "f2"]:
+        precisions, recalls, thresholds = precision_recall_curve(y, oof_probs)
+        # precision_recall_curve returns len(thresholds) = len(precisions) - 1
+        if threshold_selection_metric == 'f1':
+            f_scores = (
+                2 * precisions[:-1] * recalls[:-1]
+                / (precisions[:-1] + recalls[:-1] + 1e-9)
+            )
+        elif threshold_selection_metric == 'f2':
+            f_scores = (
+                (1+2**2) * precisions[:-1] * recalls[:-1]
+                / (2**2 * precisions[:-1] + recalls[:-1] + 1e-8)
+            )
+        best_idx = np.argmax(f_scores)
+        best_threshold = thresholds[best_idx]    
+    else:
+        raise ValueError(f"Threshold selection criteria not implemented: {threshold_selection_metric}.")
+    
+
+    return best_estimator, best_params, best_threshold
 
 def model_predict(X_new, model, threshold):
     proba = model.predict_proba(X_new)[:, 1]

@@ -193,30 +193,6 @@ def nested_cv_youden_optuna(
             }
         )
 
-    # ── Aggregate ─────────────────────────────────────────────────────────────
-    # def _nanstats(key):
-    #     vals = [f[key] for f in fold_results]
-    #     return float(np.nanmean(vals)), float(np.nanstd(vals))
-
-    # roc_mean, roc_std = _nanstats("roc_auc")
-    # you_mean, you_std = _nanstats("youden")
-    # sen_mean, _ = _nanstats("sensitivity")
-    # spe_mean, _ = _nanstats("specificity")
-    # thr_mean, thr_std = _nanstats("threshold")
-
-    # opt_results = {
-    #     # ── Summary stats ──
-    #     # "roc_auc_mean": roc_mean,
-    #     # "roc_auc_std": roc_std,
-    #     # "youden_mean": you_mean,
-    #     # "youden_std": you_std,
-    #     # "sensitivity_mean": sen_mean,
-    #     # "specificity_mean": spe_mean,
-    #     # "threshold_mean": thr_mean,
-    #     # "threshold_std": thr_std,
-    #     # ── Per-fold detail ──
-    #     "folds": fold_results,
-    # }
 
     # save results 
     with open(opt_results_filename, "w") as f:
@@ -372,12 +348,26 @@ def test_model(model, threshold, Xnew, ynew, uses_proba=False):
         if len(np.unique(ynew)) > 1
         else np.nan
     )
-
+    auprc = (
+        average_precision_score(ynew, ypredproba) 
+        if len(np.unique(ynew)) > 1 
+        else np.nan
+    )
+    metrics = {
+        "accuracy": accuracy_score(ynew, ypredproba),
+        "precision": precision_score(ynew, ypredproba, zero_division=np.nan),
+        "sensitivity": sensitivity,
+        "specificity": specificity,
+        "f1": f1_score(ynew, ypredproba, zero_division=np.nan),
+        "f2": fbeta_score(ynew, ypredproba, beta=2, zero_division=np.nan),
+        "youden": youden_test,
+        "roc-auc": roc_auc,
+        "auprc": auprc,
+    }
     print()
     print(cm)
-    print('youden: ', youden_test)
-    print('roc_auc: ', roc_auc)
-    return cm, youden_test, roc_auc
+    print(metrics)
+    return cm, metrics
 
 
 def plot_mutual_info(X, y):

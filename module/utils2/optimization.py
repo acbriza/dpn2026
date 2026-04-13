@@ -25,17 +25,13 @@ from pathlib import Path
 sys.path.append('..')  
 import json
 
-def nested_cv_youden_optuna(
+def nested_cv_optimization(
     X,
     y,
+    config,
     *,
     model_class,
     param_space_fn,
-    n_splits_outer,
-    n_repeats_outer,
-    n_splits_inner,
-    n_iter,
-    random_state,
     savedir: Path,
     overwrite: bool = False, 
     ):
@@ -70,6 +66,15 @@ def nested_cv_youden_optuna(
     Returns:
         list of per-fold results
     """
+
+    n_splits_outer = config.optimization.k_splits_outer,
+    n_repeats_outer = config.optimization.n_repeats_outer,
+    n_splits_inner = config.optimization.k_splits_inner,
+    n_iter = config.optimization.n_iter,   
+    optimization_metric = config.optimization.optimization_metric
+    threshold_selection_metric = config.optimization.threshold_selection_metric
+    random_state = config.experiment.random_seed,
+        
     opt_results_filename = savedir / f'optimization_results.json'
     if not overwrite and opt_results_filename.is_file():
         print(f'{opt_results_filename.name} exists. Returning values from contents.')

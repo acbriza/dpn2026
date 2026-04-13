@@ -96,16 +96,12 @@ def main():
     
     start_time = datetime.now()    
     print(f'Running repeated crossvalidation, started at: ', start_time.strftime("%H:%M:%S"))
-    opt_results = hpo.nested_cv_youden_optuna(
+    opt_results = hpo.nested_cv_optimization(
         X=X.values,
         y=y.values,
+        config,
         model_class=hpo.model_class[config.model.name],   # class, not an instance
         param_space_fn=param_space_fn,
-        n_splits_outer=config.optimization.k_splits_outer,
-        n_repeats_outer=config.optimization.n_repeats_outer,
-        n_splits_inner=config.optimization.k_splits_inner,
-        n_iter=config.optimization.n_iter,   # Optuna trials per outer fold
-        random_state=config.experiment.random_seed,
         savedir=outputdir, 
         overwrite=overwrite_optimization_reports,
     )

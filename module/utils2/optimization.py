@@ -6,7 +6,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
 from sklearn.metrics import (
     confusion_matrix, roc_auc_score, accuracy_score, roc_curve,
-    precision_score, f1_score, fbeta_score, average_precision_score
+    precision_score, f1_score, fbeta_score, average_precision_score, precision_recall_curve
 )
 from sklearn.feature_selection import mutual_info_classif
 from sklearn.ensemble import RandomForestClassifier
@@ -112,7 +112,7 @@ def nested_cv_optimization(
         def objective(trial):
             params = param_space_fn(trial)
 
-            fold_aucs = []
+            fold_scores = []
             for inner_train_idx, inner_val_idx in inner_splits:
                 m = model_class(**params, random_state=random_state)
                 m.fit(
@@ -123,11 +123,19 @@ def nested_cv_optimization(
                 val_proba = m.predict_proba(X_outer_train[inner_val_idx])[:, 1]
 
                 if len(np.unique(y_outer_train[inner_val_idx])) > 1:
-                    fold_aucs.append(
-                        roc_auc_score(y_outer_train[inner_val_idx], val_proba)
-                    )
+                    if optimization_metric == 'roc-auc':
+                        fold_scores.append(
+                            roc_auc_score(y_outer_train[inner_val_idx], val_proba)
+                        )
+                    elif optimization_metric == 'auprc':
+                        fold_scores.append(
+                            average_precision_score(y_outer_train[inner_val_idx], val_proba)
+                        )
+                    else:
+                        raise ValueError(f"Optimization criteria not implemented: {optimization_metric}.")
+                    
 
-            return float(np.mean(fold_aucs)) if fold_aucs else 0.0
+            return float(np.mean(fold_scores)) if fold_scores else 0.0
 
         sampler = optuna.samplers.TPESampler(seed=current_seed)
         study = optuna.create_study(direction="maximize", sampler=sampler)
@@ -152,9 +160,22 @@ def nested_cv_optimization(
                 X_outer_train[inner_val_idx]
             )[:, 1]
 
-        fpr, tpr, threshold_candidates = roc_curve(y_outer_train, oof_proba)
-        youden_index = tpr - fpr
-        best_threshold = float(threshold_candidates[np.argmax(youden_index)])
+        if optimization_metric == 'roc-auc':
+            fpr, tpr, threshold_candidates = roc_curve(y_outer_train, oof_proba)
+            youden_index = tpr - fpr
+            best_threshold = float(threshold_candidates[np.argmax(youden_index)])
+        elif optimization_metric == 'auprc':
+            precision_vals, recall_vals, threshold_candidates = precision_recall_curve(y_outer_train, oof_proba)
+            # precision_recall_curve appends a sentinel at the end with no matching threshold, so align arrays before scoring.
+            f2_scores = (
+                (1 + 2**2)
+                * (precision_vals[:-1] * recall_vals[:-1])
+                / (2**2 * precision_vals[:-1] + recall_vals[:-1] + 1e-8)
+            )
+            best_threshold = float(threshold_candidates[np.argmax(f2_scores)])
+        else:
+            raise ValueError(f"Threshold selection criteria not implemented: {optimization_metric}.")
+       
 
         # ── Evaluation on outer test fold ─────────────────────────────────────
         y_test_proba = best_model.predict_proba(X_outer_test)[:, 1]

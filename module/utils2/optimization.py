@@ -350,7 +350,7 @@ def train_final_model(
     if optimization_metric=="roc-auc":
         optimization_scoring="roc_auc"
     elif optimization_metric=="auprc":
-       optimization_scoring = make_scorer(average_precision_score, needs_proba=True)
+       optimization_scoring = make_scorer(average_precision_score, response_method="predict_proba")
     else:
         raise ValueError(f"Optimization criteria not implemented: {optimization_metric}.")
 
@@ -409,9 +409,9 @@ def model_predict(X_new, model, threshold):
     return (proba >= threshold).astype(int), proba
 
 
-def test_model(model, threshold, Xnew, ynew, uses_proba=False):
+def test_model(model, threshold, Xnew, ynew, uses_proba=True):
     if uses_proba:
-        ypredproba = model.predict(Xnew)
+        ypredproba = model.predict_proba(Xnew)[:, 1]
         ypred = (ypredproba > threshold).astype(int)
     else:
         ypred, ypredproba = model_predict(Xnew, model, threshold)
@@ -437,12 +437,12 @@ def test_model(model, threshold, Xnew, ynew, uses_proba=False):
         else np.nan
     )
     metrics = {
-        "accuracy": accuracy_score(ynew, ypredproba),
-        "precision": precision_score(ynew, ypredproba, zero_division=np.nan),
+        "accuracy": accuracy_score(ynew, ypred),
+        "precision": precision_score(ynew, ypred, zero_division=np.nan),
         "sensitivity": sensitivity,
         "specificity": specificity,
-        "f1": f1_score(ynew, ypredproba, zero_division=np.nan),
-        "f2": fbeta_score(ynew, ypredproba, beta=2, zero_division=np.nan),
+        "f1": f1_score(ynew, ypred, zero_division=np.nan),
+        "f2": fbeta_score(ynew, ypred, beta=2, zero_division=np.nan),
         "youden": youden_test,
         "roc-auc": roc_auc,
         "auprc": auprc,

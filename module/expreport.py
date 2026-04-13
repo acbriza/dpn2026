@@ -75,15 +75,15 @@ def main():
 
     start_time = datetime.now()    
     print(f'Training models on data splits, started at: ', start_time.strftime("%H:%M:%S"))
-    split_results =  exp.get_ksplit_trained_models(
+    ksplit_trained_models =  exp.get_ksplit_trained_models(
         X, y, config,
         savedir=outputdir, 
         overwrite=overwrite_reports,        
         )
     end_time = datetime.now()
     elapsed = end_time - start_time
-    print(f"\nrundate and tag: ", split_results['rundate'], split_results['tag'])
-    print(f"summary:\n {split_results['summary']}")
+    print(f"\nrundate and tag: ", ksplit_trained_models['rundate'], ksplit_trained_models['tag'])
+    print(f"summary:\n {ksplit_trained_models['summary']}")
     print(f'Training models on data splits, took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%H:%M:%S"))
 
 if __name__ == "__main__":

@@ -73,6 +73,7 @@ def nested_cv_optimization(
     n_iter = config.optimization.n_iter
     optimization_metric = config.optimization.optimization_metric
     threshold_selection_metric = config.optimization.threshold_selection_metric
+    fbeta = config.optimization.fscore_beta
     random_state = config.experiment.random_seed
         
     opt_results_filename = savedir / f'optimization_results.json'
@@ -164,15 +165,16 @@ def nested_cv_optimization(
             fpr, tpr, threshold_candidates = roc_curve(y_outer_train, oof_proba)
             youden_index = tpr - fpr
             best_threshold = float(threshold_candidates[np.argmax(youden_index)])
-        elif threshold_selection_metric == 'f2':
+        elif threshold_selection_metric == 'fscore':
+
             precision_vals, recall_vals, threshold_candidates = precision_recall_curve(y_outer_train, oof_proba)
             # precision_recall_curve appends a sentinel at the end with no matching threshold, so align arrays before scoring.
-            f2_scores = (
-                (1 + 2**2)
+            f_scores = (
+                (1 + fbeta**2)
                 * (precision_vals[:-1] * recall_vals[:-1])
-                / (2**2 * precision_vals[:-1] + recall_vals[:-1] + 1e-8)
+                / (fbeta**2 * precision_vals[:-1] + recall_vals[:-1] + 1e-8)
             )
-            best_threshold = float(threshold_candidates[np.argmax(f2_scores)])
+            best_threshold = float(threshold_candidates[np.argmax(f_scores)])
         else:
             raise ValueError(f"Threshold selection criteria not implemented: {threshold_selection_metric}.")
        
@@ -343,6 +345,7 @@ def train_final_model(
     random_state = config.experiment.random_seed 
     optimization_metric = config.optimization.optimization_metric
     threshold_selection_metric = config.optimization.threshold_selection_metric
+    fbeta = config.optimization.fscore_beta
 
     # --- Bayesian Optimization ---
     inner_cv = StratifiedKFold(n_splits=n_splits_inner, shuffle=True, random_state=random_state)
@@ -383,19 +386,13 @@ def train_final_model(
         fpr, tpr, threshold_candidates = roc_curve(y, oof_probs)
         youden_index = tpr - fpr
         best_threshold = float(threshold_candidates[np.argmax(youden_index)])
-    if threshold_selection_metric in ["f1", "f2"]:
+    elif threshold_selection_metric == 'fscore':
         precisions, recalls, thresholds = precision_recall_curve(y, oof_probs)
         # precision_recall_curve returns len(thresholds) = len(precisions) - 1
-        if threshold_selection_metric == 'f1':
-            f_scores = (
-                2 * precisions[:-1] * recalls[:-1]
-                / (precisions[:-1] + recalls[:-1] + 1e-9)
-            )
-        elif threshold_selection_metric == 'f2':
-            f_scores = (
-                (1+2**2) * precisions[:-1] * recalls[:-1]
-                / (2**2 * precisions[:-1] + recalls[:-1] + 1e-8)
-            )
+        f_scores = (
+            (1+fbeta**2) * precisions[:-1] * recalls[:-1]
+            / (fbeta**2 * precisions[:-1] + recalls[:-1] + 1e-8)
+        )
         best_idx = np.argmax(f_scores)
         best_threshold = thresholds[best_idx]    
     else:

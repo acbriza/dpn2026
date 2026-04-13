@@ -105,13 +105,11 @@ def get_ksplit_trained_models(
         y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
 
         model, best_params = hpo.train_final_model(
-            X=X_train.values, 
-            y=y_train.values, 
+            X_train.values, 
+            y_train.values, 
+            config,
             model=catboost_model,
             param_space=param_space,
-            n_splits_inner=config.optimization.k_splits_inner,
-            n_iter=config.optimization.n_iter, 
-            random_state=config.experiment.random_seed, 
             n_jobs=1
         )
 

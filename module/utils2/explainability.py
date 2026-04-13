@@ -7,6 +7,7 @@ from sklearn.metrics import roc_curve, auc, confusion_matrix
 from sklearn.model_selection import StratifiedKFold
 from catboost import CatBoostClassifier
 from skopt.space import Integer, Real
+from sklearn.metrics import precision_recall_curve, average_precision_score
 
 from pathlib import Path
 import joblib
@@ -33,11 +34,11 @@ palette = {
 }
 
 COLOR_GROUP_MAP = {
-    'Nerve Conduction Studies': palette['Blue'],
+    # 'Nerve Conduction Studies': palette['Blue'],
     'Sudoscan': palette['Orange'],
     'Profile': palette['Teal'],
-    'Comorbidities': palette['Red'],
-    'Neurology Examination': palette['Pink'],
+    'Comorbidities': palette['Pink'],
+    'Neurology Examination': palette['Blue'],
     'MNSI': palette['Green'],
     # 'Others': palette['Gray']
 }
@@ -197,6 +198,7 @@ def plot_importances(DPN_data, model, split_index, feature_names, config,
             filename = f'{filename}_min-{minimum:.3f}'
         plt.savefig(savedir / f'{filename}.png')
     plt.show()
+    plt.close()
 
 
 def plot_roc_auc(y_test, y_proba, split_index, config, savedir=None):
@@ -220,6 +222,7 @@ def plot_roc_auc(y_test, y_proba, split_index, config, savedir=None):
         filename = f'{config.model.code}_split{split_index}_roc_auc'
         plt.savefig(savedir / f'{filename}.png')
     plt.show()
+    plt.close()
 
 
 def plot_decision_curve_analysis(model, split_index, X, y, config, thresholds=None, savedir=None):
@@ -280,6 +283,8 @@ def plot_decision_curve_analysis(model, split_index, X, y, config, thresholds=No
         filename = f'{config.model.code}_split{split_index}_dca'
         plt.savefig(savedir / f'{filename}.png')    
     plt.show()
+    plt.close()
+
     return thresholds, net_benefits
 
 
@@ -364,3 +369,56 @@ def plot_shap(DPN_data, model, split_index, config, X_test, savedir=None):
         plt.savefig(savedir / f'{filename}.png')    
 
     plt.show()
+    plt.close()
+
+
+def plot_cv_auprc(y_reals, y_probas, config, savedir=None):
+    """
+    y_reals: list of arrays containing true labels for each fold
+    y_probas: list of arrays containing predicted probabilities for each fold
+    """
+    plt.figure(figsize=(8, 7))
+    
+    # Store metrics for averaging
+    mean_recall = np.linspace(0, 1, 100)
+    precisions = []
+    aucs = []
+
+    for i, (y_real, y_proba) in enumerate(zip(y_reals, y_probas)):
+        precision, recall, _ = precision_recall_curve(y_real, y_proba)
+        pr_auc = average_precision_score(y_real, y_proba)
+        aucs.append(pr_auc)
+        
+        # Plot individual fold
+        plt.plot(recall, precision, lw=1, alpha=0.7, label=f'Fold {i} (AP = {pr_auc:.2f})')
+        
+        # Interpolate precision to allow averaging
+        interp_precision = np.interp(mean_recall, recall[::-1], precision[::-1])
+        precisions.append(interp_precision)
+
+    # Calculate and plot Mean
+    mean_precision = np.mean(precisions, axis=0)
+    mean_auc = np.mean(aucs)
+    std_auc = np.std(aucs)
+    
+    plt.plot(mean_recall, mean_precision, color='b',
+            label=f'Mean PR (AP = {mean_auc:.2f} $\pm$ {std_auc:.2f})',
+            lw=2, alpha=.8)
+
+    # Plot No-Skill Baseline (average across folds)
+    total_pos = sum([sum(y) for y in y_reals])
+    total_n = sum([len(y) for y in y_reals])
+    plt.axhline(y=total_pos/total_n, color='r', linestyle='--', label='No-Skill Baseline')
+
+    plt.xlabel('Recall (Sensitivity)')
+    plt.ylabel('Precision')
+    plt.title(f'Precision-Recall Curve')
+    plt.legend(loc="best")
+    plt.grid(alpha=0.3)
+
+    plt.tight_layout()
+    if savedir:
+        filename = f'{config.model.code}_auprc'
+        plt.savefig(savedir / f'{filename}.png')    
+    plt.show()    
+    plt.close()

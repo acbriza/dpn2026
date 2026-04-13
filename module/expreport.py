@@ -4,18 +4,12 @@
 import numpy as np
 import pandas as pd
 import matplotlib
+import matplotlib.pyplot as plt
 matplotlib.use('Agg')
 
-import joblib
-import json
 from pathlib import Path
 import shutil
 from datetime import datetime
-from tqdm import tqdm
-
-from sklearn.metrics import roc_curve, confusion_matrix, roc_auc_score
-from catboost import CatBoostClassifier
-from skopt.space import Integer, Real
 
 
 import sys 
@@ -85,6 +79,46 @@ def main():
     print(f"\nrundate and tag: ", ksplit_trained_models['rundate'], ksplit_trained_models['tag'])
     print(f"summary:\n {ksplit_trained_models['summary']}")
     print(f'Training models on data splits, took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%H:%M:%S"))
+
+    split_results = ksplit_trained_models['results']
+
+    # Feature Importances
+    for s in range(len(split_results)): 
+        model = split_results[s]['model']
+        feature_names = X.columns
+        exp.plot_importances(D, model, s, feature_names, config, 
+                            minimum=None, limit=None, 
+                            savedir=outputdir)
+    # ROC-AUC
+    for s in range(len(split_results)): 
+        model = split_results[s]['model']
+        X_test = split_results[s]['X_test']
+        y_test = split_results[s]['y_test']
+        y_proba = model.predict_proba(X_test)[:,1]
+        exp.plot_roc_auc(y_test, y_proba, s, config, outputdir);        
+
+    # DCA
+    for s in range(len(split_results)): 
+        model = split_results[s]['model']
+        thresholds, nb = exp.plot_decision_curve_analysis(model, s, X_test, y_test, config, savedir=outputdir)
+
+    # SHAP
+    for s in range(len(split_results)): 
+        model = split_results[s]['model']
+        exp.plot_shap(D, model, s, config, X_test, savedir=outputdir)
+
+    # AUPRC CURVE
+    y_test_list = []
+    y_proba_list = []
+    for s in range(len(split_results)): 
+        model = split_results[s]['model']
+        X_test = split_results[s]['X_test']
+        y_test = split_results[s]['y_test']
+        y_proba = model.predict_proba(X_test)[:,1]# y_test: true labels
+        y_test_list.append(y_test)
+        y_proba_list.append(y_proba)
+
+    exp.plot_cv_auprc(y_test_list, y_proba_list, config, savedir=outputdir)        
 
 if __name__ == "__main__":
     main()

@@ -9,6 +9,9 @@ from catboost import CatBoostClassifier
 from skopt.space import Integer, Real
 
 from pathlib import Path
+import joblib
+from datetime import datetime
+
 import shap
 
 from utils2 import optimization as hpo
@@ -53,7 +56,17 @@ def get_colors(DPN_data, labels):
     ]
 
 
-def get_ksplit_trained_models(X, y, config):
+def get_ksplit_trained_models(
+        X, y, config, *,
+        savedir: Path,
+        overwrite: bool = False, 
+    ):
+
+    ksplit_trained_models_filename = savedir / f"{config.model.code}_ksplit_trained_models.joblib"
+    if not overwrite and ksplit_trained_models_filename.is_file():
+        print(f'{ksplit_trained_models_filename.name} exists. Returning values from contents.')
+        ksplit_trained_models = joblib.load(ksplit_trained_models_filename)
+        return ksplit_trained_models
 
     catboost_model = CatBoostClassifier(
         verbose=0,
@@ -103,7 +116,7 @@ def get_ksplit_trained_models(X, y, config):
         )
 
         # no need to retrain model since refit=true in train_final_model
-        cm, youden, roc_auc = hpo.test_model(model, config.hpo_results.threshold, X_test, y_test)
+        cm, metrics= hpo.test_model(model, config.hpo_results.threshold, X_test, y_test)
 
         result = {
             "model" : model,
@@ -114,10 +127,25 @@ def get_ksplit_trained_models(X, y, config):
             "threshold" : config.hpo_results.threshold,
             "best_params" : best_params,
             "cm": cm,
-            "youden" : youden,
-            "roc_auc": roc_auc, 
+            "metrics" : metrics,
         }
         split_results.append(result)
+
+        # get mean and std of summaries of results
+        df_ksm = pd.DataFrame([{k: result[k] for k in ["youden", "roc_auc"]} for result in split_results]).T
+        df_ksm['mean'] = df_ksm.mean(axis=1)
+        df_ksm['std'] = df_ksm.std(axis=1)  
+
+        # create a dictionary for saving results
+        rundate = datetime.now().strftime("%Y-%m-%d")
+        ksplit_trained_models = {
+            "results": split_results,
+            "summary": df_ksm,
+            "rundate": rundate,
+            "tag" : config.experiment.tag
+        }          
+
+        joblib.dump(ksplit_trained_models, ksplit_trained_models_filename)    
 
     return split_results
 

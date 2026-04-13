@@ -437,6 +437,7 @@ def test_model(model, threshold, Xnew, ynew, uses_proba=True):
         else np.nan
     )
     metrics = {
+        "threshold": threshold,
         "accuracy": accuracy_score(ynew, ypred),
         "precision": precision_score(ynew, ypred, zero_division=np.nan),
         "sensitivity": sensitivity,

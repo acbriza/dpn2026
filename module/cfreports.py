@@ -64,6 +64,7 @@ def main():
     config_path = Path(script_dir /'experiments')
     config_dict = ymlconfig.load_config(config_path / config_filename)
     config = ymlconfig.dict_to_namespace(config_dict)
+    print(config_dict)
 
     # #### Set output directory
     outputdir = config_path /  config.experiment.classification_type /  config.experiment.stage / config.model.code / config.experiment.tag 
@@ -79,20 +80,39 @@ def main():
     D.load(classification=config.experiment.classification_type)
     dfdpn = D.df
     data_cols = dfdpn.drop(D.non_data_cols, axis=1, errors="ignore").columns
-    X = dfdpn[data_cols]
+    no_ncs_datacols = [c for c in data_cols if c not in D.ncs_cols]
+    X = dfdpn[no_ncs_datacols]
     y = dfdpn['Confirmed_Binary_DPN']
+    print(f'X: {X.shape}, y:{y.shape}')
     dfXy = pd.concat([X, y], axis=1)
 
-    # ## Define custom column lists
-    actionable_features = config.dice.cf_features.unactionable.split(',')
-    unactionable_features = config.dice.cf_features.unactionable.split(',')
-    features_to_vary = dfXy.columns.difference(unactionable_features+['Confirmed_Binary_DPN']).to_list()
-    continuous_cols = dfXy.columns.difference(D.categorical_cols+['Confirmed_Binary_DPN']).to_list()
 
-    if config.experiment.verbosity > 0:
-        print('features to vary columns:\n', len(features_to_vary), features_to_vary)
-        print('categorical columns:\n', len(D.categorical_cols), D.categorical_cols)
-        print('continuous_columns:\n', len(continuous_cols), continuous_cols)
+    # ## Define custom column lists
+    actionable_features = config.dice.cf_features.actionable.split(',')
+    unactionable_features = config.dice.cf_features.unactionable.split(',')
+    columns_not_to_vary = D.ncs_cols + unactionable_features + ['Confirmed_Binary_DPN']
+    features_to_vary = [
+        c for c in dfXy.columns 
+        if c not in columns_not_to_vary
+        ]
+    assert set(features_to_vary).isdisjoint(D.ncs_cols)
+    assert set(features_to_vary).isdisjoint(unactionable_features)
+    assert set(features_to_vary).isdisjoint(columns_not_to_vary)
+
+    continuous_cols = dfXy.columns.difference(D.categorical_cols+['Confirmed_Binary_DPN']).to_list()
+    # continuous_cols = [
+    #     c for c in dfXy.columns 
+    #     if c not in columns_not_to_vary + D.categorical_cols 
+    #     ]
+
+    # assert set(continuous_cols).isdisjoint(D.categorical_cols)
+    # assert set(continuous_cols).isdisjoint(D.ncs_cols)
+    # assert set(continuous_cols).isdisjoint(unactionable_features)
+    # assert set(continuous_cols).isdisjoint(columns_not_to_vary)
+
+    print('features to vary columns:\n', len(features_to_vary), features_to_vary)
+    print('categorical columns:\n', len(D.categorical_cols), D.categorical_cols)
+    print('continuous_columns:\n', len(continuous_cols), continuous_cols)
 
     # ### Load trained model splits from Explainability Stage
     ksplit_trained_models = joblib.load(config_path / config.explainability.ksplit_trained_model_results_file)

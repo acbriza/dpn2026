@@ -1,4 +1,14 @@
 # -----------------------------------
+# This project
+# -----------------------------------
+catboost_info/
+module/experiments/
+module/outputs/
+module/catboost_info/
+dataset/adult
+scratch.py
+
+# -----------------------------------
 # Python
 # -----------------------------------
 __pycache__/
@@ -16,12 +26,6 @@ build/
 *.manifest
 *.spec
 
-catboost_info/
-module/experiments/
-module/outputs/
-module/catboost_info/
-dataset/adult
-
 # Pipenv / venv / Poetry
 .venv/
 venv/
@@ -30,8 +34,6 @@ env/
 pip-log.txt
 pip-delete-this-directory.txt
 
-# scratch file
-scratch.py
 
 # pyenv
 .python-version

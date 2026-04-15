@@ -201,17 +201,21 @@ def main():
                     continue
 
             print(f"Generating counterfactual analysis for record {qidx}")
-            cf.generate_local_cf_reports(dfXy, dexp, ioi_df, qidx, 
-                                    features_to_vary=features_to_vary, 
-                                    config=config,
-                                    split_index=midx,
-                                    threshold=threshold,
-                                    categorical_cols=D.categorical_cols,
-                                    continuous_cols=continuous_cols,
-                                    remove_invalid_progressive_cfs=True,
-                                    savedir=split_output_dir
-                                    )
-
+            try:
+                cf.generate_local_cf_reports(dfXy, dexp, ioi_df, qidx, 
+                                        features_to_vary=features_to_vary, 
+                                        config=config,
+                                        split_index=midx,
+                                        threshold=threshold,
+                                        categorical_cols=D.categorical_cols,
+                                        continuous_cols=continuous_cols,
+                                        remove_invalid_progressive_cfs=True,
+                                        savedir=split_output_dir
+                                        )
+            except Exception as e:
+                print(f'Error: Generating counterfactual analysis for record {qidx}')
+                print(f'{e}')
+                continue                
         
         # ### Get Global Importances
         print(f"Getting global importance from model {midx}...")

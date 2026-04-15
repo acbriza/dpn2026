@@ -3,18 +3,8 @@ channels:
   - defaults
 dependencies:
   - python=3.12.1
-  - pip=25.1.1
+  - pip
   - pip:
-      - numpy==1.26.4
-      - scipy==1.13.0
-      - pandas==2.2.2
-      - scikit-learn==1.4.2
-      - dice-ml==0.9
-      - xgboost
-      - matplotlib #.
-      - seaborn #.
-      - openpyxl #.
-      - lightgbm
-      - catboost
-      - scikit-optimize
-      - shap
+# run the command below manually
+# pip install numpy==1.26.4 scipy==1.13.0 pandas==2.2.2 scikit-learn==1.4.2 dice-ml==0.9 xgboost \
+# matplotlib seaborn openpyxl lightgbm catboost scikit-optimize shap

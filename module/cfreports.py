@@ -180,16 +180,6 @@ def main():
         m = dice_ml.Model(model=wrapped_model, backend="sklearn", model_type="classifier")
         dexp = dice_ml.Dice(d, m, method=config.dice.method)
 
-        # ### Get Global Importances
-        print(f"Getting global importance from model {midx}...")
-        print('Start:', time.strftime("%H:%M:%S", time.localtime()))
-        cf.get_global_importance(dexp, D, X_test, config, midx,
-                                features_to_vary, threshold, global_permitted_range,   
-                                highlight_features=actionable_features, 
-                                filename_suffix="", savedir=split_output_dir, 
-                                n_cpus=-1)
-        print('End:', time.strftime("%H:%M:%S", time.localtime()))
-
         # #### Instances of Interest
         ioi_df, display_cols = cf.get_instances_of_interest(
             wrapped_model, X_test, y_test, config, midx,
@@ -221,6 +211,17 @@ def main():
                                     remove_invalid_progressive_cfs=True,
                                     savedir=split_output_dir
                                     )
+
+        
+        # ### Get Global Importances
+        print(f"Getting global importance from model {midx}...")
+        print('Start:', time.strftime("%H:%M:%S", time.localtime()))
+        cf.get_global_importance(dexp, D, X_test, config, midx,
+                                features_to_vary, threshold, global_permitted_range,   
+                                highlight_features=actionable_features, 
+                                filename_suffix="", savedir=split_output_dir, 
+                                n_cpus=-1)
+        print('End:', time.strftime("%H:%M:%S", time.localtime()))
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,57 @@
+experiment:
+  summary: binary classification - Counterfactual Analysis (Final- No NCS, Sudo)
+  classification_type: binary
+  stage: counterfactuals
+  tag: final_no_sudo_auprc_f125
+  verbosity: 0
+  random_seed: 42
+
+data:
+  dataset_path: ../dataset/Sudoscan Working File with Stats.xlsx
+
+model: 
+  code: catboost
+  name: CatBoost
+
+# ksplit trained models from explainability stage 
+explainability:
+  ksplit_trained_model_results_file: binary\explainability\catboost\final_auprc_f125\catboost_ksplit_trained_models.joblib
+  rundate: '2026-04-13'
+  tag: final_auprc_f125
+
+dice:
+  method: genetic
+  cf_features:
+    actionable: INSULIN,HBA1C,HPN,PAOD,DSLPDMIA,CKD,DEC_VS,DEC_PPS,DEC_LTS,DEC_AR,MNSI
+    unactionable: SEX,AGE,SUBJ,DM_DUR,GBS,FEET_MEAN_ESC,FEET_PCT_ASYM,HAND_MEAN_ESC,HAND_PCT_ASYM,NS,CAS
+    progressive: none
+    # for sanity check, ensure these features don't show in analysis
+    # unactionable: NCS and SUDOSCAN features 
+
+  global_cf:
+    total_CFs: 20
+    posthoc_sparsity_algorithm: binary
+  local_cf:
+    nrepeats: 3
+    total_CFs: 20 
+    posthoc_sparsity_algorithm: binary    # maximally sparse for clean reporting
+    posthoc_sparsity_param: 0.05          # finer pruning for research quality
+    proximity_weight: 0.5                 # balanced default
+    diversity_weight: 1.0                 # encourage varied CFs
+    categorical_penalty: 0.1
+    algorithm: DiverseCF                  # highest quality CFs
+
+  sufficiency:
+    maxiterations: 200 # 500 for final; 20 for dev
+  necessity:
+    maxiterations: 500
+    total_CFs: 2
+    nrepeats: 5
+    
+reporting:
+  nzfill: 3
+  cf_heatmap:
+    save_every: 15
+    figsize:
+      x: 15
+      y: 6.5  

@@ -1,0 +1,41 @@
+experiment:
+  summary: binary classification - Explainability Analysis (development)
+  classification_type: binary
+  stage: explainability
+  tag: final_auprc_f15
+  verbosity: 1
+  random_seed: 42
+
+data:
+  dataset_path: ../dataset/Sudoscan Working File with Stats.xlsx
+
+model: 
+  code: catboost
+  name: CatBoost
+
+param_space:
+  iterations:
+    min: 100
+    max: 500 
+  depth:
+    min: 4
+    max: 10
+  learning_rate:
+    min: 0.01
+    max: 0.1
+  l2_leaf_reg:
+    min: 1
+    max: 9
+
+# hyperparameter optimization of algorithms 
+hpo_results: 
+  file: binary\hyperparameter_optimization\CatBoost\final\optimization_results.json
+  threshold: 0.6352084424142594
+
+optimization:
+  k_splits_outer: 3 
+  k_splits_inner: 3
+  n_iter: 5 
+  optimization_metric: auprc #options implemented: roc-auc or auprc
+  threshold_selection_metric: fscore # options implemented: f2, roc-auc
+  fscore_beta: 1.5

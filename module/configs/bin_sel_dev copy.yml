@@ -1,0 +1,21 @@
+experiment:
+  summary: binary classification - feature  and model selection (development)
+  classification_type: binary
+  stage: selection # feature and model selection
+  tag: development
+  verbosity: 0
+  random_seed: 42
+
+data:
+  dataset_path: ../dataset/Sudoscan Working File with Stats.xlsx
+
+feature_selection:
+  cross_validation:
+    k_splits: 3
+    n_repeats: 3
+    sort_by: youden
+  vif_threshold: 5
+
+figures:
+  summary_metric: youden
+  summary_table_topk: 5

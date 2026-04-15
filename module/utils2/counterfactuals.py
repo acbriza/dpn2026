@@ -399,7 +399,12 @@ def generate_diverse_cfs(dice_exp, instance, config, split_index,
                          threshold, features_to_vary, permitted_range={}, 
                          savedir=None):
     """Generate diverse counterfactuals across multiple seeds."""
-    
+
+    cf_filename = savedir / f'{config.model.code}_split{split_index}_local_cf.csv'
+    if cf_filename.is_file():
+        print(f'{cf_filename.name} exists. Returning values from contents.')
+        combined_dfs = pd.read_csv(cf_filename)
+        return combined_dfs    
     all_cfs = []
     seeds = list(range(config.dice.local_cf.nrepeats))
     for s in seeds:
@@ -431,8 +436,7 @@ def generate_diverse_cfs(dice_exp, instance, config, split_index,
     else:        
         combined_dfs = instance.iloc[0:0].copy() # empty dataframe with only the headers
     if savedir:
-        filename = f'{config.model.code}_split{split_index}_local_cf.csv'
-        combined_dfs.to_csv(savedir / filename)
+        combined_dfs.to_csv(cf_filename)
     return combined_dfs
 
     

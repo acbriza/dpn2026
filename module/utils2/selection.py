@@ -38,6 +38,7 @@ from pathlib import Path
 import sys 
 sys.path.append('..')  
 import joblib
+from joblib import Parallel, delayed
 
 from sklearn.model_selection import StratifiedKFold, cross_validate
 from sklearn.metrics import (
@@ -277,6 +278,108 @@ def benchmark_models(
             break
     if failed_models:
         print(f'Error cross validating for these models {failed_models}.')
+    joblib.dump(results, filename)
+    print(f'Saved benchmarking results to {filename.name}.')
+    return results
+
+# --- Extract the per-model work into a standalone function ---
+def _evaluate_single_model(name, model, X, y, rcv, scoring, verbosity):
+    """Evaluate one model; designed to be called in parallel."""
+    pipe = build_smart_pipeline(name, model, X, verbosity)
+    try:
+        scores = cross_validate(
+            pipe, X, y,
+            cv=rcv,
+            scoring=scoring,
+            n_jobs=1,          # <-- 1 here; parallelism is at the outer loop
+            error_score="raise",
+            verbose=0
+        )
+        algo_results = {
+            "accuracy":    scores["test_accuracy"],
+            "precision":   scores["test_precision"],
+            "sensitivity": scores["test_sensitivity"],
+            "specificity": scores["test_specificity"],
+            "youden":      scores["test_youden"],
+            "f1":          scores["test_f1"],
+            "f2":          scores["test_f2"],
+            "roc-auc":     scores["test_roc_auc"],
+            "auprc":       scores["test_auprc"],
+        }
+        return {"model": name, "rcv_scores": pd.DataFrame(algo_results), "failed": False}
+
+    except Exception as e:
+        print(f'\nError cross validating {name}: {e}')
+        algo_results = {k: np.NaN for k in
+                        ["accuracy","precision","sensitivity","specificity",
+                         "youden","f1","f2","roc-auc","auprc"]}
+        return {
+            "model": name,
+            "rcv_scores": pd.DataFrame(algo_results, index=[0]),
+            "failed": True
+        }
+
+
+def benchmark_models_in_parallel(
+    code, X, y, include_cols, config,
+    *, savedir, overwrite=False, verbosity=None,
+    n_cpus=-1                              # <-- new parameter for HPC
+):
+    """
+    Parallelized version of benchmark_models()
+    Parameters:
+        n_cpus: number of cpus to use, set to -1 to use all cores
+    """    
+    
+    savedir = savedir / 'benchmarking'
+    savedir.mkdir(parents=True, exist_ok=True)
+    filename = savedir / f'{code}_benchmarking_scores.joblib'
+
+    if not overwrite and filename.is_file():
+        print(f'{filename.name} exists. Returning values from contents.')
+        return joblib.load(filename)
+
+    if include_cols:
+        X = X.copy()[include_cols]
+    if verbosity is None:
+        verbosity = config.experiment.verbosity
+
+    n_repeats    = config.feature_selection.cross_validation.n_repeats
+    random_state = config.experiment.random_seed
+    cv_splits    = config.feature_selection.cross_validation.k_splits
+    experiment_tag = config.experiment.tag
+
+    rcv = RepeatedStratifiedKFold(
+        n_splits=cv_splits, n_repeats=n_repeats, random_state=random_state
+    )
+    scoring = {
+        "accuracy":    "accuracy",
+        "precision":   "precision",
+        "sensitivity": "recall",
+        "specificity": get_specificity_scorer(),
+        "youden":      get_youden_scorer(),
+        "f1":          "f1",
+        "f2":          make_scorer(fbeta_score, beta=2),
+        "roc_auc":     "roc_auc",
+        "auprc":       "average_precision",
+    }
+
+    model_list = list(models.items())
+    if experiment_tag in ['development', 'debug']:
+        model_list = model_list[:3]         # honour the debug cap
+
+    # --- Parallel model evaluation ---
+    raw_results = Parallel(n_jobs=n_cpus, backend="loky", verbose=verbosity)(
+        delayed(_evaluate_single_model)(name, model, X, y, rcv, scoring, verbosity)
+        for name, model in model_list
+    )
+
+    failed_models = [r["model"] for r in raw_results if r["failed"]]
+    results       = [{"model": r["model"], "rcv_scores": r["rcv_scores"]} for r in raw_results]
+
+    if failed_models:
+        print(f'Error cross validating for these models: {failed_models}.')
+
     joblib.dump(results, filename)
     print(f'Saved benchmarking results to {filename.name}.')
     return results

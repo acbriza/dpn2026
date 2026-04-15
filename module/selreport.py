@@ -24,13 +24,15 @@ from utils2 import selection as sel
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python selreports.py <config file> <overwrite>")
+        print("Usage: python selreports.py <config file> <n_cores> <overwrite>")
         sys.exit(1)
-
     if len(sys.argv) == 2:
+        n_cpus = -1
         overwrite_benchmarks = False
-    else:
-        overwrite_benchmarks = sys.argv[2]=='overwrite'
+    if len(sys.argv) >= 3:
+        n_cpus = int(sys.argv[2])
+    if len(sys.argv) >= 4:
+        overwrite_benchmarks = sys.argv[3]=='overwrite'
     
     config_path = Path(r'experiments')
 
@@ -74,8 +76,9 @@ def main():
     def benchmark_featureset(*, feature_set_code, benchmark_cols, verbosity=0):
         start_time = datetime.now()    
         print(f'{feature_set_code} benchmarking models for feature set started at: ', start_time.strftime("%H:%M:%S"))
-        benchmark_metrics = sel.benchmark_models(feature_set_code, Xnoncs, y, benchmark_cols, config, 
-                                                 savedir=outputdir, overwrite=overwrite_benchmarks, verbosity=verbosity)
+        benchmark_metrics = sel.benchmark_models_in_parallel(feature_set_code, Xnoncs, y, benchmark_cols, config, 
+                                                 savedir=outputdir, overwrite=overwrite_benchmarks, verbosity=verbosity, 
+                                                 n_cpus=n_cpus)
         model_metrics[feature_set_code] = benchmark_metrics
         metrics_stats[feature_set_code] = sel.calculate_metric_statistics(feature_set_code, benchmark_metrics, config, 
                                                                           savedir=outputdir, overwrite=overwrite_benchmarks)

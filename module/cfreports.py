@@ -29,17 +29,22 @@ def main():
         print("Usage: python cfreports.py <config file>")
         print("Usage: python cfreports.py <config file> <skip_instances> <model-split-idx> <instance-indices:>")
         print("Usage: python cfreports.py <config file> <redo_instances> <model-split-idx> <instance-indices:>")
+        print("Usage: python cfreports.py <config file> <global_only> <model-split-idx>")
         print("e.g.   python cfreports.py bin_cf_final.yml   --> redo all reports")
         print("e.g.   python cfreports.py bin_cf_final.yml skip_instances 2 53,67--> Do not overwrite reports of model 2, redo all instances but SKIP 53 & 67")
         print("e.g.   python cfreports.py bin_cf_final.yml redo_instances 2 53,67--> Do not overwrite reports of model 2, redo ONLY instances 53 & 67")
+        print("e.g.   python cfreports.py bin_cf_final.yml global_only 2 --> Generate Global Importances for Model 2 only")
         sys.exit(1)
 
     if len(sys.argv)==2:
         # we only received a config file: run all experiments
-        rework = False
-        resume = False
+        skip_instances = True # will actually do all models since model and instance indices not provided
+        redo_instances = False
+        global_only = False
+        target_model_idx = None # do all models
 
     if len(sys.argv)>=3:
+        global_only = sys.argv[2]=='global_only'
         skip_instances = sys.argv[2]=='skip_instances'
         redo_instances = sys.argv[2]=='redo_instances'
 
@@ -186,36 +191,37 @@ def main():
             threshold=threshold, delta=0.2, savedir=split_output_dir)
         qindices = ioi_df.index.to_list()
 
-        # #### Produce reports for each Instance of Interest
-        for qidx in qindices:
-            if skip_instances: 
-                # skip target instances (because of error, or reports already exist)
-                if qidx in target_instance_indices:
-                    print(f"Skipping instance {qidx}...")        
-                    continue
+        if not global_only:
+            # #### Produce reports for each Instance of Interest
+            for qidx in qindices:
+                if skip_instances: 
+                    # skip target instances (because of error, or reports already exist)
+                    if qidx in target_instance_indices:
+                        print(f"Skipping instance {qidx}...")        
+                        continue
 
-            elif redo_instances:
-                if qidx not in target_instance_indices:
-                    # redo only target instances; skip the rest
-                    print(f"Skipping and not redoing instance {qidx}...")
-                    continue
+                elif redo_instances:
+                    if qidx not in target_instance_indices:
+                        # redo only target instances; skip the rest
+                        print(f"Skipping and not redoing instance {qidx}...")
+                        continue
 
-            print(f"Generating counterfactual analysis for record {qidx}")
-            try:
-                cf.generate_local_cf_reports(dfXy, dexp, ioi_df, qidx, 
-                                        features_to_vary=features_to_vary, 
-                                        config=config,
-                                        split_index=midx,
-                                        threshold=threshold,
-                                        categorical_cols=D.categorical_cols,
-                                        continuous_cols=continuous_cols,
-                                        remove_invalid_progressive_cfs=True,
-                                        savedir=split_output_dir
-                                        )
-            except Exception as e:
-                print(f'Error: Generating counterfactual analysis for record {qidx}')
-                print(f'{e}')
-                continue                
+                print(f"Generating counterfactual analysis for record {qidx}")
+                try:
+                    cf.generate_local_cf_reports(dfXy, dexp, ioi_df, qidx, 
+                                            features_to_vary=features_to_vary, 
+                                            config=config,
+                                            split_index=midx,
+                                            threshold=threshold,
+                                            categorical_cols=D.categorical_cols,
+                                            continuous_cols=continuous_cols,
+                                            remove_invalid_progressive_cfs=True,
+                                            savedir=split_output_dir
+                                            )
+                except Exception as e:
+                    print(f'Error: Generating counterfactual analysis for record {qidx}')
+                    print(f'{e}')
+                    continue                
         
         # ### Get Global Importances
         print(f"Getting global importance from model {midx}...")

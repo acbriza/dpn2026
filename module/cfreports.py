@@ -187,7 +187,7 @@ def main():
                                 features_to_vary, threshold, global_permitted_range,   
                                 highlight_features=actionable_features, 
                                 filename_suffix="", savedir=split_output_dir, 
-                                ncpus=20)
+                                n_cpus=-1)
         print('End:', time.strftime("%H:%M:%S", time.localtime()))
 
         # #### Instances of Interest

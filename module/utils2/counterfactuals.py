@@ -169,7 +169,7 @@ def parallel_global_feature_importance(
     global_permitted_range: dict,
     threshold: float,
     posthoc_sparsity_algorithm: str,
-    n_jobs: int = 10,
+    n_jobs: int = -1,
 ) -> tuple[pd.DataFrame, list]:
     """
     Parallelised version of dice_exp.global_feature_importance().
@@ -231,25 +231,29 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
         posthoc_sparsity_algorithm = None
     else:
         posthoc_sparsity_algorithm = config.dice.global_cf.posthoc_sparsity_algorithm
-    # cobj = dice_exp.global_feature_importance(
-    #     X_test, 
-    #     total_CFs=config.dice.global_cf.total_CFs, 
-    #     features_to_vary=features_to_vary,
-    #     permitted_range=global_permitted_range,
-    #     stopping_threshold=threshold,
-    #     posthoc_sparsity_algorithm=posthoc_sparsity_algorithm,
-    #     verbose=0)
-    # df_imp = pd.DataFrame([cobj.summary_importance])
-    df_imp, _raw_chunks = parallel_global_feature_importance(
-        dice_exp,
-        X_test,
-        config,
-        features_to_vary=features_to_vary,
-        global_permitted_range=global_permitted_range,
-        threshold=threshold,
-        posthoc_sparsity_algorithm=posthoc_sparsity_algorithm,
-        n_cpus=n_cpus,
-    )
+    if n_cpus < 2 :
+        # no parallelization
+        cobj = dice_exp.global_feature_importance(
+            X_test, 
+            total_CFs=config.dice.global_cf.total_CFs, 
+            features_to_vary=features_to_vary,
+            permitted_range=global_permitted_range,
+            stopping_threshold=threshold,
+            posthoc_sparsity_algorithm=posthoc_sparsity_algorithm,
+            verbose=0)
+        df_imp = pd.DataFrame([cobj.summary_importance])
+    else:
+        # apply parallelization - note: untested, unused 
+        df_imp, _raw_chunks = parallel_global_feature_importance(
+            dice_exp,
+            X_test,
+            config,
+            features_to_vary=features_to_vary,
+            global_permitted_range=global_permitted_range,
+            threshold=threshold,
+            posthoc_sparsity_algorithm=posthoc_sparsity_algorithm,
+            n_jobs=n_cpus,
+        )
     s = df_imp.iloc[0]
     s_trimmed = s[s>0]
 

@@ -113,14 +113,108 @@ def get_global_permitted_range(dfXy, continuous_cols, config, split_index, verbo
     return global_permitted_range
 
 
+from joblib import Parallel, delayed
+
+def _chunk_global_importance(
+    dice_exp,
+    X_chunk: pd.DataFrame,
+    total_CFs: int,
+    features_to_vary: list,
+    permitted_range: dict,
+    stopping_threshold: float,
+    posthoc_sparsity_algorithm: str,
+) -> dict:
+    """Compute global feature importance for one chunk of X_test."""
+    result = dice_exp.global_feature_importance(
+        X_chunk,
+        total_CFs=total_CFs,
+        features_to_vary=features_to_vary,
+        permitted_range=permitted_range,
+        stopping_threshold=stopping_threshold,
+        posthoc_sparsity_algorithm=posthoc_sparsity_algorithm,
+        verbose=0,
+    )
+    # DiCE returns a GlobalCFExplanations object; extract the importance dict
+    return result.summary_importance   # {feature: importance_ratio}
+
+
+def _aggregate_importance(
+    chunk_scores: list[dict],
+    chunk_sizes: list[int],
+) -> pd.DataFrame:
+    """Weighted average of per-chunk importance scores."""
+    total     = sum(chunk_sizes)
+    weights   = [s / total for s in chunk_sizes]
+    features  = list(chunk_scores[0].keys())
+
+    aggregated = {
+        feat: round(
+            sum(scores[feat] * w for scores, w in zip(chunk_scores, weights)),
+            4
+        )
+        for feat in features
+    }
+    df = (
+        pd.DataFrame.from_dict(aggregated, orient="index", columns=["importance"])
+        .sort_values("importance", ascending=False)
+    )
+    return df
+
+
+def parallel_global_feature_importance(
+    dice_exp,
+    X_test: pd.DataFrame,
+    config,
+    features_to_vary: list,
+    global_permitted_range: dict,
+    threshold: float,
+    posthoc_sparsity_algorithm: str,
+    n_jobs: int = 10,
+) -> tuple[pd.DataFrame, list]:
+    """
+    Parallelised version of dice_exp.global_feature_importance().
+
+    Splits X_test into `n_jobs` chunks, evaluates each chunk concurrently,
+    then returns a weighted-average importance DataFrame plus raw chunk results.
+
+    Returns
+    -------
+    importance_df   : pd.DataFrame  — features ranked by aggregated importance
+    chunk_results   : list[dict]    — raw per-chunk summary_importance dicts
+    """
+    # Build non-empty chunks
+    chunks      = [c for c in np.array_split(X_test, n_jobs) if len(c) > 0]
+    chunk_sizes = [len(c) for c in chunks]
+
+    print(f"Running global CF importance across {len(chunks)} chunks "
+          f"({chunk_sizes} instances each) on {n_jobs} cores…")
+
+    chunk_results = Parallel(n_jobs=n_jobs, backend="loky", verbose=1)(
+        delayed(_chunk_global_importance)(
+            dice_exp,
+            chunk,
+            config.dice.global_cf.total_CFs,
+            features_to_vary,
+            global_permitted_range,
+            threshold,
+            posthoc_sparsity_algorithm,
+        )
+        for chunk in chunks
+    )
+
+    importance_df = _aggregate_importance(chunk_results, chunk_sizes)
+    return importance_df, chunk_results
+
+
 def get_global_importance(dice_exp, DPN_data, X_test, config, split_index, 
                           features_to_vary, threshold, global_permitted_range, 
-                          highlight_features=[], filename_suffix="", savedir=None):
+                          highlight_features=[], filename_suffix="", savedir=None, n_cpus=-1):
     """
     Parameters:
     dice_exp: DiCE explainer object
     X_test: test set 
     total_CFs: Number of counterfactuals to generate
+    n_cpus: Number of cpu cores to use. set to -1 to use all
     """
     if savedir:
         filename = f'{config.model.code}_split{split_index}_global_importance'
@@ -137,16 +231,25 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
         posthoc_sparsity_algorithm = None
     else:
         posthoc_sparsity_algorithm = config.dice.global_cf.posthoc_sparsity_algorithm
-    cobj = dice_exp.global_feature_importance(
-        X_test, 
-        total_CFs=config.dice.global_cf.total_CFs, 
+    # cobj = dice_exp.global_feature_importance(
+    #     X_test, 
+    #     total_CFs=config.dice.global_cf.total_CFs, 
+    #     features_to_vary=features_to_vary,
+    #     permitted_range=global_permitted_range,
+    #     stopping_threshold=threshold,
+    #     posthoc_sparsity_algorithm=posthoc_sparsity_algorithm,
+    #     verbose=0)
+    # df_imp = pd.DataFrame([cobj.summary_importance])
+    df_imp, _raw_chunks = parallel_global_feature_importance(
+        dice_exp,
+        X_test,
+        config,
         features_to_vary=features_to_vary,
-        permitted_range=global_permitted_range,
-        stopping_threshold=threshold,
+        global_permitted_range=global_permitted_range,
+        threshold=threshold,
         posthoc_sparsity_algorithm=posthoc_sparsity_algorithm,
-        verbose=0)
-    df_imp = pd.DataFrame([cobj.summary_importance])
-
+        n_cpus=n_cpus,
+    )
     s = df_imp.iloc[0]
     s_trimmed = s[s>0]
 

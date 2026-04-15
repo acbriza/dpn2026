@@ -186,7 +186,8 @@ def main():
         cf.get_global_importance(dexp, D, X_test, config, midx,
                                 features_to_vary, threshold, global_permitted_range,   
                                 highlight_features=actionable_features, 
-                                filename_suffix="", savedir=split_output_dir)
+                                filename_suffix="", savedir=split_output_dir, 
+                                ncpus=20)
         print('End:', time.strftime("%H:%M:%S", time.localtime()))
 
         # #### Instances of Interest

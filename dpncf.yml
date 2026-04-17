@@ -7,4 +7,4 @@ dependencies:
   - pip:
 # run the command below manually
 # pip install numpy==1.26.4 scipy==1.13.0 pandas==2.2.2 scikit-learn==1.4.2 dice-ml==0.9 xgboost \
-# matplotlib seaborn openpyxl lightgbm catboost scikit-optimize shap
+# matplotlib seaborn openpyxl lightgbm catboost scikit-optimize shap statsmodels optuna ipython

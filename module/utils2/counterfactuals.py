@@ -10,6 +10,7 @@ import seaborn as sns
 from pathlib import Path
 
 import os
+from datetime import datetime
 import time
 
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -18,7 +19,7 @@ from sklearn.metrics import roc_curve, confusion_matrix, roc_auc_score
 
 from IPython.display import display
 
-from utils2 import explainability as exp
+from utils2 import explainability as exp, timeout
 
 backend = matplotlib.get_backend()
 
@@ -394,7 +395,7 @@ def get_instances_of_interest(model, X_test, y_test, config, split_index, thresh
         ioi_df.to_csv(savedir / filename)
     return ioi_df, display_cols
 
-
+@timeout.timeout(3*60*60) # timeout after 3 hours
 def generate_diverse_cfs(dice_exp, instance, config, split_index, 
                          threshold, features_to_vary, permitted_range={}, 
                          savedir=None):
@@ -769,19 +770,40 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
         dfXy, query_instance, features_to_vary, categorical_cols, continuous_cols, 
         progressive_cols, config, split_index, savedir=unfiltered_cfs_savedir)
 
-    print(f'Generating Counterfactuals for Instance {qidx}...')
-    print('Start:', time.strftime("%H:%M:%S", time.localtime()))
-    df_dcf = generate_diverse_cfs(
-        dice_exp,
-        query_instance, 
-        config,
-        split_index,
-        threshold,
-        features_to_vary=features_to_vary,
-        permitted_range=instance_permitted_range,
-        savedir=unfiltered_cfs_savedir
-        )
-    print('End:', time.strftime("%H:%M:%S", time.localtime()))    
+    print(f'\nGenerating Counterfactuals for Instance {qidx} of model {split_index}...')
+
+    start_time = datetime.now()    
+    print('Start:', start_time.strftime("%m-%d %H:%M:%S"))
+    generation_error = False
+    try:
+        df_dcf = generate_diverse_cfs(
+            dice_exp,
+            query_instance, 
+            config,
+            split_index,
+            threshold,
+            features_to_vary=features_to_vary,
+            permitted_range=instance_permitted_range,
+            savedir=unfiltered_cfs_savedir
+            )
+    except Exception as e:
+        print(e)
+        generation_error =  True
+    end_time = datetime.now()  
+    elapsed = end_time - start_time
+    print('End:', end_time.strftime("%m-%d %H:%M:%S"))
+    print(f'Elapsed: {elapsed.total_seconds()/60:.2f} mins.')
+    if generation_error:
+        with open(unfiltered_cfs_savedir / 'error.txt', 'w') as f:
+            f.write(f'Error generating Counterfactuals for Instance {qidx} of model {split_index}\n')
+            f.write(f'Start: {start_time.strftime("%m-%d %H:%M:%S")}\n')
+            f.write(f'End: {end_time.strftime("%m-%d %H:%M:%S")}\n')
+            seconds = elapsed.total_seconds()
+            mins = seconds/60
+            hours = mins/60
+            elapsed_str = f'{hours} hours' if hours>1 else f'{mins} mins' if mins>1 else f'{seconds} seconds'
+            f.write(f'Elapsed: {elapsed_str}.\n')
+            return
     
     print('plotting heatmaps...')
     plot_local_cf_heatmap(dfXy, df_dcf, query_instance, 

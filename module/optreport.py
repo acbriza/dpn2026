@@ -75,10 +75,6 @@ def main():
 
     def param_space_fn(trial):
         return  {
-            "iterations": trial.suggest_int(
-                "iterations", 
-                config.param_space.iterations.min, 
-                config.param_space.iterations.max),
             "depth": trial.suggest_int(
                 "depth", 
                 config.param_space.depth.min, 
@@ -91,8 +87,18 @@ def main():
             "l2_leaf_reg": trial.suggest_int(
                 "l2_leaf_reg", 
                 config.param_space.l2_leaf_reg.min, 
-                config.param_space.l2_leaf_reg.max),
-        }    
+                config.param_space.l2_leaf_reg.max,
+                log=True),
+            "scale_pos_weight": trial.suggest_float(
+                "scale_pos_weight", 
+                config.param_space.scale_pos_weight.min, 
+                config.param_space.scale_pos_weight.max,
+                ),
+            # --- Fixed ---
+            "iterations": config.param_space.iterations,
+            "early_stopping_rounds": config.param_space.early_stopping_rounds,
+            "verbose": 0,
+        }
     
     start_time = datetime.now()    
     print(f'Running repeated crossvalidation, started at: ', start_time.strftime("%H:%M:%S"))

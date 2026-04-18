@@ -70,7 +70,7 @@ def nested_cv_optimization(
     n_splits_outer = config.optimization.k_splits_outer
     n_repeats_outer = config.optimization.n_repeats_outer
     n_splits_inner = config.optimization.k_splits_inner
-    n_iter = config.optimization.n_iter
+    optuna_n_trials = config.optimization.optuna_n_trials
     optimization_metric = config.optimization.optimization_metric
     threshold_selection_metric = config.optimization.threshold_selection_metric
     fbeta = config.optimization.fscore_beta
@@ -140,7 +140,7 @@ def nested_cv_optimization(
 
         sampler = optuna.samplers.TPESampler(seed=current_seed)
         study = optuna.create_study(direction="maximize", sampler=sampler)
-        study.optimize(objective, n_trials=n_iter, show_progress_bar=False)
+        study.optimize(objective, n_trials=optuna_n_trials, show_progress_bar=False)
 
         best_params = study.best_params
 

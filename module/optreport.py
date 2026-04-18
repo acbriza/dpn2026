@@ -84,7 +84,7 @@ def main():
                 config.param_space.learning_rate.min, 
                 config.param_space.learning_rate.max, 
                 log=True),
-            "l2_leaf_reg": trial.suggest_int(
+            "l2_leaf_reg": trial.suggest_float(
                 "l2_leaf_reg", 
                 config.param_space.l2_leaf_reg.min, 
                 config.param_space.l2_leaf_reg.max),

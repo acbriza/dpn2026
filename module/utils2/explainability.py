@@ -73,26 +73,31 @@ def get_ksplit_trained_models(
     catboost_model = CatBoostClassifier(
         verbose=0,
         loss_function="Logloss",
-        eval_metric="AUC",
+        eval_metric="F1",
         random_state=config.experiment.random_seed, 
         thread_count=-1
     )    
 
     param_space = {
-        'iterations': Integer(
-            config.param_space.iterations.min, 
-            config.param_space.iterations.max),
         'depth': Integer(
             config.param_space.depth.min, 
             config.param_space.depth.max),
         'learning_rate': Real(
             config.param_space.learning_rate.min, 
             config.param_space.learning_rate.max, 
-            prior='log-uniform'),  # log-uniform better for LR
+            log=True),
         'l2_leaf_reg': Real(
             config.param_space.l2_leaf_reg.min, 
             config.param_space.l2_leaf_reg.max, 
             prior='uniform'),
+        "scale_pos_weight": Real(
+            "scale_pos_weight", 
+            config.param_space.scale_pos_weight.min, 
+            config.param_space.scale_pos_weight.max,
+            ),            
+        'iterations': config.param_space.iterations,
+        "early_stopping_rounds": config.param_space.early_stopping_rounds,
+        "verbose": 0,        
     }    
 
     skf = StratifiedKFold(

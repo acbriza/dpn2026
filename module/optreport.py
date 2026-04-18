@@ -1,5 +1,5 @@
 """
-    Produce feature and model selection reports based on study from selection.ipynb
+    Produce optimization report for selected selected top model (CatBoost)
 """
 import numpy as np
 import pandas as pd

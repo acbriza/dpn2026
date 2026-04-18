@@ -87,8 +87,7 @@ def main():
             "l2_leaf_reg": trial.suggest_int(
                 "l2_leaf_reg", 
                 config.param_space.l2_leaf_reg.min, 
-                config.param_space.l2_leaf_reg.max,
-                log=True),
+                config.param_space.l2_leaf_reg.max),
             "scale_pos_weight": trial.suggest_float(
                 "scale_pos_weight", 
                 config.param_space.scale_pos_weight.min, 

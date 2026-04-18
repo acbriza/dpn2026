@@ -6,7 +6,7 @@ import matplotlib.patches as mpatches
 from sklearn.metrics import roc_curve, auc, confusion_matrix
 from sklearn.model_selection import StratifiedKFold
 from catboost import CatBoostClassifier
-from skopt.space import Integer, Real
+from skopt.space import Integer, Real, Categorical
 from sklearn.metrics import precision_recall_curve, average_precision_score
 
 from pathlib import Path
@@ -85,19 +85,18 @@ def get_ksplit_trained_models(
         'learning_rate': Real(
             config.param_space.learning_rate.min, 
             config.param_space.learning_rate.max, 
-            log=True),
+            prior='log-uniform'),
         'l2_leaf_reg': Real(
             config.param_space.l2_leaf_reg.min, 
             config.param_space.l2_leaf_reg.max, 
             prior='uniform'),
         "scale_pos_weight": Real(
-            "scale_pos_weight", 
             config.param_space.scale_pos_weight.min, 
             config.param_space.scale_pos_weight.max,
-            ),            
-        'iterations': config.param_space.iterations,
-        "early_stopping_rounds": config.param_space.early_stopping_rounds,
-        "verbose": 0,        
+            prior='uniform'),
+        'iterations': Categorical([config.param_space.iterations]),
+        "early_stopping_rounds": Categorical([config.param_space.early_stopping_rounds]),
+        "verbose": Categorical([0]),        
     }    
 
     skf = StratifiedKFold(

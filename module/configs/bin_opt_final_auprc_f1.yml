@@ -1,0 +1,46 @@
+experiment:
+  summary: binary classification - hyperparameter optimization (final experiment)
+  classification_type: binary
+  stage: hyperparameter_optimization
+  tag: final
+  verbosity: 0
+  random_seed: 42
+
+data:
+  dataset_path: ../dataset/Sudoscan Working File with Stats.xlsx
+
+model: 
+  name: catboost
+  code: CatBoost
+
+param_space:
+  depth:
+    min: 4
+    max: 10
+  learning_rate:
+    min: 0.003
+    max: 0.3
+  l2_leaf_reg:
+    min: 0.02
+    max: 10.0
+  scale_pos_weight:
+    min: 1.0
+    max: 5.0 
+  iterations: 500
+  early_stopping_rounds: 50
+
+optimization:
+  k_splits_outer: 4
+  n_repeats_outer: 10
+  k_splits_inner: 3
+  optuna_n_trials: 100
+  optimization_metric: auprc #options implemented: roc-auc or auprc
+  threshold_selection_metric: fscore # options implemented: f2, roc-auc
+  fscore_beta: 1
+
+evaluation:
+  confidence: 0.95
+
+final_training:
+  k_splits_inner: 3
+  n_iter: 30

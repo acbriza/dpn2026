@@ -70,34 +70,36 @@ def get_ksplit_trained_models(
         ksplit_trained_models = joblib.load(ksplit_trained_models_filename)
         return ksplit_trained_models
 
-    catboost_model = CatBoostClassifier(
-        verbose=0,
-        loss_function="Logloss",
-        eval_metric="F1",
-        random_state=config.experiment.random_seed, 
-        thread_count=-1
-    )    
+    def get_model_paramspace():
+        catboost_model = CatBoostClassifier(
+            verbose=0,
+            loss_function="Logloss",
+            eval_metric="F1",
+            random_state=config.experiment.random_seed, 
+            thread_count=-1
+        )    
 
-    param_space = {
-        'depth': Integer(
-            config.param_space.depth.min, 
-            config.param_space.depth.max),
-        'learning_rate': Real(
-            config.param_space.learning_rate.min, 
-            config.param_space.learning_rate.max, 
-            prior='log-uniform'),
-        'l2_leaf_reg': Real(
-            config.param_space.l2_leaf_reg.min, 
-            config.param_space.l2_leaf_reg.max, 
-            prior='uniform'),
-        "scale_pos_weight": Real(
-            config.param_space.scale_pos_weight.min, 
-            config.param_space.scale_pos_weight.max,
-            prior='uniform'),
-        'iterations': Categorical([config.param_space.iterations]),
-        "early_stopping_rounds": Categorical([config.param_space.early_stopping_rounds]),
-        "verbose": Categorical([0]),        
-    }    
+        param_space = {
+            'depth': Integer(
+                config.param_space.depth.min, 
+                config.param_space.depth.max),
+            'learning_rate': Real(
+                config.param_space.learning_rate.min, 
+                config.param_space.learning_rate.max, 
+                prior='log-uniform'),
+            'l2_leaf_reg': Real(
+                config.param_space.l2_leaf_reg.min, 
+                config.param_space.l2_leaf_reg.max, 
+                prior='uniform'),
+            "scale_pos_weight": Real(
+                config.param_space.scale_pos_weight.min, 
+                config.param_space.scale_pos_weight.max,
+                prior='uniform'),
+            'iterations': Categorical([config.param_space.iterations]),
+            "early_stopping_rounds": Categorical([config.param_space.early_stopping_rounds]),
+            "verbose": Categorical([0]),        
+        }   
+        return catboost_model, param_space 
 
     skf = StratifiedKFold(
         n_splits=config.optimization.k_splits_outer, 
@@ -110,6 +112,8 @@ def get_ksplit_trained_models(
         X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
         y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
 
+        catboost_model, param_space = get_model_paramspace()
+
         best_model, best_params, best_threshold = hpo.train_final_model(
             X_train.values, 
             y_train.values, 
@@ -120,7 +124,7 @@ def get_ksplit_trained_models(
         )
 
         # no need to retrain model since refit=true in train_final_model
-        cm, metrics= hpo.test_model(best_model, best_threshold, X_test, y_test)
+        cm, metrics = hpo.test_model(best_model, best_threshold, X_test, y_test)
 
         result = {
             "model" : best_model,
@@ -135,10 +139,18 @@ def get_ksplit_trained_models(
         }
         split_results.append(result)
 
+        # save best parameters to file
+        split_index = len(result)-1
+        best_params_filename = savedir / f"{config.model.code}_best_params_split{split_index}.csv"
+        df_best_params = pd.DataFrame(list(best_params.items()), columns=['Parameter', 'Value'])
+        df_best_params.to_csv(best_params_filename, index=False)
+        
+
+
     # don't get mean to highlight these are separate models
     ksplit_trained_models_metrics_filename = savedir / f"{config.model.code}_ksplit_trained_models_metrics.csv"
     df_ksm = pd.DataFrame([result['metrics'] for result in split_results])
-    df_ksm.to_csv(ksplit_trained_models_metrics_filename)
+    df_ksm.to_csv(ksplit_trained_models_metrics_filename, index_label='split')
 
     # create a dictionary for saving results
     rundate = datetime.now().strftime("%Y-%m-%d")

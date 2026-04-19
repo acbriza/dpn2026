@@ -108,7 +108,7 @@ def get_ksplit_trained_models(
 
     split_results = []
 
-    for train_idx, test_idx in tqdm(skf.split(X, y), total=skf.get_n_splits(), desc="K-Fold"):
+    for split_idx, (train_idx, test_idx) in enumerate(tqdm(skf.split(X, y), total=skf.get_n_splits(), desc="K-Fold")):
         X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
         y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
 
@@ -120,6 +120,7 @@ def get_ksplit_trained_models(
             config,
             model=catboost_model,
             param_space=param_space,
+            split_index=split_idx,
             n_jobs=1
         )
 
@@ -140,8 +141,7 @@ def get_ksplit_trained_models(
         split_results.append(result)
 
         # save best parameters to file
-        split_index = len(result)-1
-        best_params_filename = savedir / f"{config.model.code}_best_params_split{split_index}.csv"
+        best_params_filename = savedir / f"{config.model.code}_split{split_idx}_best_params.csv"
         df_best_params = pd.DataFrame(list(best_params.items()), columns=['Parameter', 'Value'])
         df_best_params.to_csv(best_params_filename, index=False)
         

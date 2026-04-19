@@ -334,7 +334,8 @@ def train_final_model(
         config,
         *, 
         model, 
-        param_space,  
+        param_space,
+        split_index,
         n_jobs=-1):
     """
     Train the final deployable model on ALL data:
@@ -367,7 +368,7 @@ def train_final_model(
         cv=inner_cv,
         n_iter=n_iter,
         n_jobs=n_jobs,
-        random_state=random_state,
+        random_state=random_state+split_index,
         refit=True,
         verbose=0,
     )

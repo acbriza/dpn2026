@@ -107,7 +107,7 @@ def main():
         X.values,
         y.values,
         config,
-        model_class=hpo.model_class[config.model.name],   # class, not an instance
+        model_class=hpo.model_class[config.model.code],   # class, not an instance
         param_space_fn=param_space_fn,
         savedir=outputdir, 
         overwrite=overwrite_optimization_reports,

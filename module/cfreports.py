@@ -144,8 +144,10 @@ def main():
         split_output_dir.mkdir(parents=True, exist_ok=True)
 
         # ## Extract saved variables from split
-        threshold = split_results[midx]['threshold']
         best_params = split_results[midx]['best_params']
+        threshold = split_results[midx]['threshold']
+        print('best_params:', best_params)        
+        print('threshold:', threshold)
         
         # ## Extract Train and Test Sets
         X_test = split_results[midx]['X_test']
@@ -165,7 +167,6 @@ def main():
         # refit model so we can set cat_features (needed in DiCE)
         model=  CatBoostClassifier(**best_params, 
                                 cat_features=D.categorical_cols, 
-                                verbose=0
                                 ).fit(X_train, y_train)
 
         # ### Wrap model so we can use a custom threshold
@@ -188,7 +189,9 @@ def main():
         # #### Instances of Interest
         ioi_df, display_cols = cf.get_instances_of_interest(
             wrapped_model, X_test, y_test, config, midx,
-            threshold=threshold, delta=0.2, savedir=split_output_dir)
+            threshold=threshold, 
+            delta=config.dice.threshold_delta,
+            savedir=split_output_dir)
         qindices = ioi_df.index.to_list()
 
         if global_only:

@@ -191,7 +191,17 @@ def main():
             threshold=threshold, delta=0.2, savedir=split_output_dir)
         qindices = ioi_df.index.to_list()
 
-        if not global_only:
+        if global_only:
+            # ### Get Global Importances
+            print(f"Getting global importance from model {midx}...")
+            print('Start:', time.strftime("%m-%d %H:%M:%S", time.localtime()))
+            cf.get_global_importance(dexp, D, X_test, config, midx,
+                                    features_to_vary, threshold, global_permitted_range,   
+                                    highlight_features=actionable_features, 
+                                    filename_suffix="", savedir=split_output_dir, 
+                                    n_cpus=-1)
+            print('End:', time.strftime("%m-%d %H:%M:%S", time.localtime()))
+        else:
             # #### Produce reports for each Instance of Interest
             for qidx in qindices:
                 if skip_instances: 
@@ -223,15 +233,5 @@ def main():
                     print(f'{e}')
                     continue                
         
-        # ### Get Global Importances
-        print(f"Getting global importance from model {midx}...")
-        print('Start:', time.strftime("%H:%M:%S", time.localtime()))
-        cf.get_global_importance(dexp, D, X_test, config, midx,
-                                features_to_vary, threshold, global_permitted_range,   
-                                highlight_features=actionable_features, 
-                                filename_suffix="", savedir=split_output_dir, 
-                                n_cpus=-1)
-        print('End:', time.strftime("%H:%M:%S", time.localtime()))
-
 if __name__ == "__main__":
     main()

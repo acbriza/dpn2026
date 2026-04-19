@@ -23,45 +23,94 @@ import ymlconfig
 from utils2 import counterfactuals as cf
 from utils2 import explainability as exp
 
+import argparse
+
+def parse_comma_separated_ints(value):
+    """Parse a comma-separated list of integers, e.g. '53,67'"""
+    try:
+        return [int(i) for i in value.split(',')]
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"Invalid integer list: '{value}'. Expected format: '53,67'")
+
+parser = argparse.ArgumentParser(
+    prog='cfreports.py',
+    description='Generate counterfactual reports from a config file.',
+    epilog="""
+    examples:
+    python cfreports.py bin_cf_final.yml
+        --> redo all reports
+
+    python cfreports.py bin_cf_final.yml skip_instances --model-idx 2 --instances 53,67
+        --> do not overwrite reports of model 2, redo all instances but SKIP 53 & 67
+
+    python cfreports.py bin_cf_final.yml redo_instances --model-idx 2 --instances 53,67
+        --> do not overwrite reports of model 2, redo ONLY instances 53 & 67
+
+    python cfreports.py bin_cf_final.yml global_only --model-idx 2
+        --> generate Global Importances for Model 2 only
+    """,
+    formatter_class=argparse.RawDescriptionHelpFormatter
+)
+
+parser.add_argument(
+    'config',
+    help='Path to the YAML config file (e.g. bin_cf_final.yml)'
+)
+parser.add_argument(
+    'mode',
+    nargs='?',
+    choices=['skip_instances', 'redo_instances', 'global_only'],
+    default=None,
+    help='Run mode: skip_instances, redo_instances, or global_only'
+)
+parser.add_argument(
+    '--model-idx',
+    type=int,
+    default=None,
+    dest='target_model_idx',
+    help='Index of the model to target (required when mode is set)'
+)
+parser.add_argument(
+    '--instances',
+    type=parse_comma_separated_ints,
+    default=[],
+    dest='target_instance_indices',
+    help='Comma-separated instance indices to skip or redo, e.g. 53,67'
+)
+parser.add_argument(
+    '--speed',
+    type=parse_comma_separated_ints,
+    default=[],
+    dest='target_instance_indices',
+    help='Comma-separated instance indices to skip or redo, e.g. 53,67'
+)
+
+parser.add_argument(
+    '--gen-timeout',
+    choices=['quick', 'fast', 'normal'],
+    default='fast',
+    dest='gen_timeout',
+    help='Generation timeout preset: quick, fast (default), normal'
+)
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python cfreports.py <config file>")
-        print("Usage: python cfreports.py <config file> <skip_instances> <model-split-idx> <instance-indices:>")
-        print("Usage: python cfreports.py <config file> <redo_instances> <model-split-idx> <instance-indices:>")
-        print("Usage: python cfreports.py <config file> <global_only> <model-split-idx>")
-        print("e.g.   python cfreports.py bin_cf_final.yml   --> redo all reports")
-        print("e.g.   python cfreports.py bin_cf_final.yml skip_instances 2 53,67--> Do not overwrite reports of model 2, redo all instances but SKIP 53 & 67")
-        print("e.g.   python cfreports.py bin_cf_final.yml redo_instances 2 53,67--> Do not overwrite reports of model 2, redo ONLY instances 53 & 67")
-        print("e.g.   python cfreports.py bin_cf_final.yml global_only 2 --> Generate Global Importances for Model 2 only")
-        sys.exit(1)
+    args = parser.parse_args()
 
-    if len(sys.argv)==2:
-        # we only received a config file: run all experiments
-        skip_instances = True # will actually do all models since model and instance indices not provided
-        redo_instances = False
-        global_only = False
-        target_model_idx = None # do all models
+    # Validate: --model-idx is required when mode is set
+    if args.mode and args.target_model_idx is None:
+        parser.error(f"--model-idx is required when mode is '{args.mode}'")
 
-    if len(sys.argv)>=3:
-        global_only = sys.argv[2]=='global_only'
-        skip_instances = sys.argv[2]=='skip_instances'
-        redo_instances = sys.argv[2]=='redo_instances'
+    # Validate: --instances only makes sense for skip/redo modes
+    if args.target_instance_indices and args.mode not in ('skip_instances', 'redo_instances'):
+        parser.error("--instances can only be used with 'skip_instances' or 'redo_instances' mode")
 
-    target_model_idx = None
-    target_instance_indices = [] 
-    if len(sys.argv)>=4:
-        # we'll rework this model but not overwrite existing outputs
-        target_model_idx = int(sys.argv[3])
-    if len(sys.argv)>=5:
-        # we'll skip these specific instances
-        target_instance_indices = sys.argv[4]
-        target_instance_indices = target_instance_indices.split(',')
-        target_instance_indices = [int(i) for i in target_instance_indices]
-
-    # config_filename =  "bin_cf_final.yml"
-    config_filename = sys.argv[1]
-
+    config_filename         = args.config
+    target_model_idx        = args.target_model_idx
+    target_instance_indices = args.target_instance_indices
+    skip_instances          = args.mode == 'skip_instances' or args.mode is None
+    redo_instances          = args.mode == 'redo_instances'
+    global_only             = args.mode == 'global_only'
+    gen_timeout             = args.gen_timeout    
     # ## Read Config File    
     current_file = Path(__file__).resolve() # Get the absolute path of the current file
     script_dir = current_file.parent # Get the directory containing the file
@@ -147,6 +196,7 @@ def main():
         best_params = split_results[midx]['best_params']
         threshold = split_results[midx]['threshold']
         print('best_params:', best_params)        
+        print('scale_pos_weight:', best_params["scale_pos_weight"])        
         print('threshold:', threshold)
         
         # ## Extract Train and Test Sets
@@ -187,6 +237,7 @@ def main():
         dexp = dice_ml.Dice(d, m, method=config.dice.method)
 
         # #### Instances of Interest
+        print(f"Getting Instances of Interest for model {midx} with delta={config.dice.threshold_delta}...")
         ioi_df, display_cols = cf.get_instances_of_interest(
             wrapped_model, X_test, y_test, config, midx,
             threshold=threshold, 
@@ -229,6 +280,7 @@ def main():
                                             categorical_cols=D.categorical_cols,
                                             continuous_cols=continuous_cols,
                                             remove_invalid_progressive_cfs=True,
+                                            generation_timeout=gen_timeout,
                                             savedir=split_output_dir
                                             )
                 except Exception as e:

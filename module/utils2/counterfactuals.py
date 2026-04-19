@@ -757,6 +757,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
                               categorical_cols,
                               continuous_cols,
                               remove_invalid_progressive_cfs=True,
+                              generation_timeout=None,
                               savedir=None):
     
     unfiltered_cfs_savedir = savedir / 'nofiltering' / str(qidx).zfill(3) 
@@ -785,11 +786,11 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
     print('Start:', start_time.strftime("%m-%d %H:%M:%S"))
     generation_error = False
     try:
-        if config.dice.local_cf.timeout == 'quick':
+        if generation_timeout == 'quick':
             gen_diverse_cfs_fn = generate_diverse_cfs_quick
-        elif config.dice.local_cf.timeout == 'fast':
+        elif generation_timeout == 'fast':
             gen_diverse_cfs_fn = generate_diverse_cfs_fast
-        elif config.dice.local_cf.timeout == 'normal':
+        elif generation_timeout == 'normal':
             gen_diverse_cfs_fn = generate_diverse_cfs_normal
         else:
             gen_diverse_cfs_fn = generate_diverse_cfs

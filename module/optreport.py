@@ -100,7 +100,7 @@ def main():
         }
     
     start_time = datetime.now()    
-    print(f'Running repeated crossvalidation, started at: ', start_time.strftime("%H:%M:%S"))
+    print(f'Running repeated crossvalidation, started at: ', start_time.strftime("%m-%d %H:%M:%S"))
     opt_results = hpo.nested_cv_optimization(
         X.values,
         y.values,
@@ -114,7 +114,7 @@ def main():
     end_time = datetime.now()
     elapsed = end_time - start_time
     print(opt_results)
-    print(f'Running repeated crossvalidation, took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%H:%M:%S"))
+    print(f'Running repeated crossvalidation, took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%m-%d %H:%M:%S"))
 
     # ### Calculate Confidence Interval 
     opt_ci_df  = hpo.mean_confidence_interval(

@@ -68,7 +68,7 @@ def main():
 
 
     start_time = datetime.now()    
-    print(f'Training models on data splits, started at: ', start_time.strftime("%H:%M:%S"))
+    print(f'Training models on data splits, started at: ', start_time.strftime("%m-%d %H:%M:%S"))
     ksplit_trained_models =  exp.get_ksplit_trained_models(
         X, y, config,
         savedir=outputdir, 
@@ -78,7 +78,7 @@ def main():
     elapsed = end_time - start_time
     print(f"\nrundate and tag: ", ksplit_trained_models['rundate'], ksplit_trained_models['tag'])
     print(f"summary:\n {ksplit_trained_models['summary']}")
-    print(f'Training models on data splits, took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%H:%M:%S"))
+    print(f'Training models on data splits, took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%m-%d %H:%M:%S"))
 
     split_results = ksplit_trained_models['results']
 

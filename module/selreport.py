@@ -75,7 +75,7 @@ def main():
 
     def benchmark_featureset(*, feature_set_code, benchmark_cols, verbosity=0):
         start_time = datetime.now()    
-        print(f'{feature_set_code} benchmarking models for feature set started at: ', start_time.strftime("%H:%M:%S"))
+        print(f'{feature_set_code} benchmarking models for feature set started at: ', start_time.strftime("%m-%d %H:%M:%S"))
         benchmark_metrics = sel.benchmark_models_in_parallel(feature_set_code, Xnoncs, y, benchmark_cols, config, 
                                                  savedir=outputdir, overwrite=overwrite_benchmarks, verbosity=verbosity, 
                                                  n_cpus=n_cpus)
@@ -84,7 +84,7 @@ def main():
                                                                           savedir=outputdir, overwrite=overwrite_benchmarks)
         end_time = datetime.now()
         elapsed = end_time - start_time
-        print(f'{feature_set_code} benchmarking models for feature set took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%H:%M:%S"))
+        print(f'{feature_set_code} benchmarking models for feature set took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%m-%d %H:%M:%S"))
 
     high_vif = sel.get_high_vif(Xnoncs, config)
     high_vif_features = high_vif.feature.values.tolist()[1:]

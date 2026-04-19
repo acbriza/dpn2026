@@ -95,6 +95,8 @@ def get_ksplit_trained_models(
                 config.param_space.scale_pos_weight.min, 
                 config.param_space.scale_pos_weight.max,
                 prior='uniform'),
+            'loss_function': Categorical([config.param_space.loss_function]),
+            'eval_metric': Categorical([config.param_space.eval_metric]),
             'iterations': Categorical([config.param_space.iterations]),
             "early_stopping_rounds": Categorical([config.param_space.early_stopping_rounds]),
             "verbose": Categorical([0]),        

@@ -94,6 +94,8 @@ def main():
                 config.param_space.scale_pos_weight.max,
                 ),
             # --- Fixed ---
+            "loss_function": config.param_space.loss_function,
+            "eval_metric": config.param_space.eval_metric,
             "iterations": config.param_space.iterations,
             "early_stopping_rounds": config.param_space.early_stopping_rounds,
             "verbose": 0,

@@ -24,6 +24,8 @@ import sys
 from pathlib import Path
 sys.path.append('..')  
 import json
+import joblib
+from datetime import datetime
 
 def nested_cv_optimization(
     X,
@@ -91,7 +93,7 @@ def nested_cv_optimization(
 
     opt_results = []
 
-
+    first_repeat_results = {}
     folds = outer_cv.split(X, y)
     for fold_idx, (outer_train_idx, outer_test_idx) in tqdm(enumerate(folds), total=outer_cv.get_n_splits()):
         X_outer_train, X_outer_test = X[outer_train_idx], X[outer_test_idx]
@@ -204,28 +206,61 @@ def nested_cv_optimization(
             else np.nan
         )
 
-        opt_results.append(
-            {
-                "fold": fold_idx,
-                "threshold": best_threshold,
-                "best_params": best_params,
-                "accuracy": accuracy_score(y_outer_test, y_test_pred),
-                "precision": precision_score(y_outer_test, y_test_pred, zero_division=np.nan),
-                "sensitivity": sensitivity,
-                "specificity": specificity,
-                "f1": f1_score(y_outer_test, y_test_pred, zero_division=np.nan),
-                "f1.25": fbeta_score(y_outer_test, y_test_pred, beta=1.25, zero_division=np.nan),
-                "f1.5": fbeta_score(y_outer_test, y_test_pred, beta=1.5, zero_division=np.nan),
-                "f1.75": fbeta_score(y_outer_test, y_test_pred, beta=1.75, zero_division=np.nan),
-                "f2": fbeta_score(y_outer_test, y_test_pred, beta=2, zero_division=np.nan),
-                "youden": youden_test,
-                "roc-auc": roc_auc,
-                "auprc": auprc,
+        results = {
+            "fold": fold_idx,
+            "threshold": best_threshold,
+            "best_params": best_params,
+            "accuracy": accuracy_score(y_outer_test, y_test_pred),
+            "precision": precision_score(y_outer_test, y_test_pred, zero_division=np.nan),
+            "sensitivity": sensitivity,
+            "specificity": specificity,
+            "f1": f1_score(y_outer_test, y_test_pred, zero_division=np.nan),
+            "f1.25": fbeta_score(y_outer_test, y_test_pred, beta=1.25, zero_division=np.nan),
+            "f1.5": fbeta_score(y_outer_test, y_test_pred, beta=1.5, zero_division=np.nan),
+            "f1.75": fbeta_score(y_outer_test, y_test_pred, beta=1.75, zero_division=np.nan),
+            "f2": fbeta_score(y_outer_test, y_test_pred, beta=2, zero_division=np.nan),
+            "youden": youden_test,
+            "roc-auc": roc_auc,
+            "auprc": auprc,
+        }
+        opt_results.append(results)
+
+        # ── Save model if it belongs to the first repeat ──────────────────────
+        if fold_idx < n_splits_outer:
+            print(f"Results for fold {fold_idx}:")
+            print(results)
+            print(cm)
+            first_repeat_results[fold_idx] = {
+                "model": best_model,
+                "test_idx": outer_test_idx,   # lets you reconstruct full-data coverage
+                "X_train": X_outer_train,
+                "X_test": X_outer_test,
+                "y_train": y_outer_train,
+                "y_test": y_outer_test,
+                "cm": cm,
+                "metrics" : results,
             }
-        )
+        if fold_idx == (n_splits_outer-1):
+            # save opt first_repeat_models
+            rundate = datetime.now().strftime("%Y-%m-%d")
+            first_repeat_trained_models = {
+                "results": first_repeat_results,
+                "rundate": rundate,
+                "tag" : config.experiment.tag
+            }
+            first_repeat_trained_models_filename = savedir / f"{config.model.code}_first_repeat_trained_models.joblib"
+            joblib.dump(first_repeat_trained_models, first_repeat_trained_models_filename)        
 
+            # save opt first_repeat_models summary
+            first_repeat_optimization_metrics_filename = savedir / f"{config.model.code}_first_repeat_optimization_metrics.csv"
+            df_frr = pd.DataFrame([first_repeat_results[i]["metrics"] for i in  range(n_splits_outer)])
+            df_frr.to_csv(first_repeat_optimization_metrics_filename, index_label='split')
 
-    # save results 
+            # confirm the test indices tile the whole dataset
+            all_test_idx = np.concatenate([v["test_idx"] for v in first_repeat_results.values()])
+            assert len(np.unique(all_test_idx)) == len(X), "Test folds don't cover the full dataset!"
+
+    # save opt results 
     with open(opt_results_filename, "w") as f:
         json.dump(opt_results, f, indent=4)
     
@@ -341,7 +376,7 @@ def train_final_model(
     Train the final deployable model on ALL data:
     1. BayesSearchCV to find best hyperparameters (inner CV on full dataset)
     2. Refit on full dataset with best params
-    3. No best threshold recalculation; we will use the one from the cross validated folds
+    Updated for optimal threshold calculation that prevents leakage
     """
 
     n_splits_inner = config.optimization.k_splits_inner
@@ -368,24 +403,42 @@ def train_final_model(
         cv=inner_cv,
         n_iter=n_iter,
         n_jobs=n_jobs,
-        random_state=random_state+split_index,
+        random_state=random_state + split_index,
         refit=True,
         verbose=0,
     )
-    opt.fit(X, y, callback=None)
+    opt.fit(X, y)
 
     best_estimator = opt.best_estimator_
     best_params = opt.best_params_
 
     # --- Threshold Search via OOF predictions ---
+    # Use a separate CV object with a different seed to avoid leakage.
+    # Reusing inner_cv would produce the same folds as hyperparameter tuning,
+    # meaning the model has indirectly "seen" those validation sets already,
+    # leading to an optimistically biased threshold.
+    threshold_cv = StratifiedKFold(
+        n_splits=n_splits_inner,
+        shuffle=True,
+        random_state=random_state + 1000,  # offset far from split_index range
+    )
+    
+    # --- Threshold Search via OOF predictions ---
     oof_probs = cross_val_predict(
             best_estimator,
             X, y,
-            cv=inner_cv,
+            cv=threshold_cv, # use threshold_cv here instead of inner cv
             method="predict_proba",
             n_jobs=n_jobs,
         )[:, 1]    
     
+    # inherent limitation: cross_val_predict clones
+    # best_estimator_ and retrains it on (k-1)/k of X per fold. The threshold
+    # is therefore calibrated on models trained on less data than the final
+    # estimator returned by this function. This causes a slight downward bias
+    # in estimated probabilities and may shift the optimal threshold. A proper
+    # held-out calibration set would eliminate this, but requires reserving data
+    # before calling this function.    
     if threshold_selection_metric == 'roc-auc':
         fpr, tpr, threshold_candidates = roc_curve(y, oof_probs)
         youden_index = tpr - fpr

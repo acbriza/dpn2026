@@ -169,17 +169,17 @@ def main():
     print('continuous_columns:\n', len(continuous_cols), continuous_cols)
 
     # ### Load trained model splits from Explainability Stage
-    ksplit_trained_models = joblib.load(config_path / config.explainability.ksplit_trained_model_results_file)
-    assert ksplit_trained_models['rundate'] == config.explainability.rundate, f"{ksplit_trained_models['rundate']} != {config.explainability.rundate}"
-    assert ksplit_trained_models['tag'] == config.explainability.tag
-    print('rundate:', ksplit_trained_models['rundate'])
-    print('tag:', ksplit_trained_models['tag'])
+    first_repeat_trained_models = joblib.load(config_path / config.optimization.first_repeat_trained_models_filename)
+    assert first_repeat_trained_models['rundate'] == config.optimization.rundate, f"{first_repeat_trained_models['rundate']} != {config.optimization.rundate}"
+    assert first_repeat_trained_models['tag'] == config.optimization.tag
+    print('rundate:', first_repeat_trained_models['rundate'])
+    print('tag:', first_repeat_trained_models['tag'])
     print('split results summary:')
-    print(ksplit_trained_models['summary'])
-    split_results = ksplit_trained_models['results']
+    # print(first_repeat_trained_models['summary'])
+    split_results = first_repeat_trained_models['results']
 
     # ## Loop through model splits
-    for midx in range(len(split_results)):
+    for midx in split_results.keys():
 
         if target_model_idx is not None and midx!=target_model_idx:
             # if this model index is not being resumed or reworked
@@ -193,26 +193,24 @@ def main():
         split_output_dir.mkdir(parents=True, exist_ok=True)
 
         # ## Extract saved variables from split
-        best_params = split_results[midx]['best_params']
-        threshold = split_results[midx]['threshold']
+        best_params = split_results[midx]['metrics']['best_params']
+        threshold = split_results[midx]['metrics']['threshold']
         print('best_params:', best_params)        
         print('scale_pos_weight:', best_params["scale_pos_weight"])        
         print('threshold:', threshold)
         
-        # ## Extract Train and Test Sets
+        # ## Extract Test Sets
         X_test = split_results[midx]['X_test']
         y_test = split_results[midx]['y_test']
         dfXy_test = pd.concat([X_test, y_test], axis=1)
 
         X_train = split_results[midx]['X_train']
-        X_test = split_results[midx]['X_test']
+        y_train = split_results[midx]['y_train']
 
         # convert categorical columns in X_train - needed in CatBoost for use in DiCE
         X_train[D.categorical_cols] = X_train[D.categorical_cols].astype(str)
         X_test[D.categorical_cols] = X_test[D.categorical_cols].astype(str)
 
-        y_train = split_results[midx]['y_train']
-        y_test = split_results[midx]['y_test']
 
         # refit model so we can set cat_features (needed in DiCE)
         model=  CatBoostClassifier(**best_params, 

@@ -405,7 +405,7 @@ def generate_diverse_cfs(dice_exp, instance, config, split_index,
         print(f'{cf_filename.name} exists. Returning values from contents.')
         combined_dfs = pd.read_csv(cf_filename)
         return combined_dfs    
-    all_cfs = []
+    all_cfs = [instance] #include instance values in the report
     seeds = list(range(config.dice.local_cf.nrepeats))
     for s in seeds:
         # manually set random seed
@@ -431,10 +431,7 @@ def generate_diverse_cfs(dice_exp, instance, config, split_index,
                 all_cfs.append(df_cf)
         except Exception as e:
             print(f"[DiCE] No CFs found — {e}")
-    if all_cfs:
-        combined_dfs = pd.concat(all_cfs).drop_duplicates().reset_index(drop=True)         
-    else:        
-        combined_dfs = instance.iloc[0:0].copy() # empty dataframe with only the headers
+    combined_dfs = pd.concat(all_cfs).drop_duplicates().reset_index(drop=True)         
     if savedir:
         combined_dfs.to_csv(cf_filename)
     return combined_dfs
@@ -466,7 +463,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
     progressive_cols = [] if config.dice.cf_features.progressive=='none' else config.dice.cf_features.progressive.split(',')
 
     # Compute differences (each row in df_large vs. the single row)
-    diffs = df_dcf - query_instance.iloc[0]
+    diffs = df_dcf.astype(float) - query_instance.iloc[0].astype(float)
     if verbosity: print("diffs.shape: ", diffs.shape)
     
     batch_ranges = [(b*save_every, b*save_every+save_every) for b in range(int(np.ceil(df_dcf.shape[0]/save_every))) ]

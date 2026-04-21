@@ -28,8 +28,8 @@ import joblib
 from datetime import datetime
 
 def nested_cv_optimization(
-    X,
-    y,
+    dfX,
+    dfy,
     config,
     *,
     model_class,
@@ -68,6 +68,8 @@ def nested_cv_optimization(
     Returns:
         list of per-fold results
     """
+    X = dfX.values
+    y = dfy.values
 
     n_splits_outer = config.optimization.k_splits_outer
     n_repeats_outer = config.optimization.n_repeats_outer
@@ -232,11 +234,11 @@ def nested_cv_optimization(
             print(cm)
             first_repeat_results[fold_idx] = {
                 "model": best_model,
-                "test_idx": outer_test_idx,   # lets you reconstruct full-data coverage
-                "X_train": X_outer_train,
-                "X_test": X_outer_test,
-                "y_train": y_outer_train,
-                "y_test": y_outer_test,
+                "test_indices": outer_test_idx,   # lets you reconstruct full-data coverage
+                "X_train": dfX.iloc[outer_train_idx],
+                "X_test": dfX.iloc[outer_test_idx],
+                "y_train": dfy.iloc[outer_train_idx],
+                "y_test": dfy.iloc[outer_test_idx],
                 "cm": cm,
                 "metrics" : results,
             }
@@ -257,7 +259,7 @@ def nested_cv_optimization(
             df_frr.to_csv(first_repeat_optimization_metrics_filename, index_label='split')
 
             # confirm the test indices tile the whole dataset
-            all_test_idx = np.concatenate([v["test_idx"] for v in first_repeat_results.values()])
+            all_test_idx = np.concatenate([v["test_indices"] for v in first_repeat_results.values()])
             assert len(np.unique(all_test_idx)) == len(X), "Test folds don't cover the full dataset!"
 
     # save opt results 

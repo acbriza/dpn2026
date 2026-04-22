@@ -134,6 +134,7 @@ def main():
     D.load(classification=config.experiment.classification_type)
     dfdpn = D.df
     data_cols = dfdpn.drop(D.non_data_cols, axis=1, errors="ignore").columns
+    Xfull = dfdpn[data_cols]
     no_ncs_datacols = [c for c in data_cols if c not in D.ncs_cols]
     X = dfdpn[no_ncs_datacols]
     y = dfdpn['Confirmed_Binary_DPN']
@@ -215,6 +216,7 @@ def main():
         # refit model so we can set cat_features (needed in DiCE)
         model=  CatBoostClassifier(**best_params, 
                                 cat_features=D.categorical_cols, 
+                                verbose=0,
                                 ).fit(X_train, y_train)
 
         # ### Wrap model so we can use a custom threshold
@@ -270,7 +272,7 @@ def main():
 
                 print(f"Generating counterfactual analysis for record {qidx}")
                 try:
-                    cf.generate_local_cf_reports(dfXy, dexp, ioi_df, qidx, 
+                    cf.generate_local_cf_reports(dfXy, dexp, ioi_df, qidx, Xfull, 
                                             features_to_vary=features_to_vary, 
                                             config=config,
                                             split_index=midx,

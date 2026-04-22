@@ -447,7 +447,7 @@ generate_diverse_cfs_fast  = timeout.timeout(30*60)(generate_diverse_cfs)
 # timeout after 3 hours
 generate_diverse_cfs_normal = timeout.timeout(3*60*60)(generate_diverse_cfs)
     
-def plot_local_cf_heatmap(dfXy, df_dcf, query_instance, 
+def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
                           query_idx, pred, actual,
                           config,
                           split_index,
@@ -591,6 +591,174 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
         plt.close(fig) if backend in ["Agg"] else plt.show()
     return
 
+from matplotlib.colors import LinearSegmentedColormap
+
+def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
+                          query_idx, pred, actual, pred_proba, margin,
+                          config,
+                          split_index,
+                          savedir=None,
+                          ):   
+    z = config.reporting.nzfill
+    actionable_features = config.dice.cf_features.actionable
+    actionable_features = actionable_features.split(',')
+    # figsize_x = config.reporting.cf_heatmap.figsize.x 
+    # figsize_y = config.reporting.cf_heatmap.figsize.y
+
+    # 1. Load data and calculate changes
+    instance = df_dcf.iloc[0:1][actionable_features]
+    print(instance.columns)
+    cfs = df_dcf.iloc[1:][actionable_features]
+    changes = cfs.values.astype(float) - instance.values.astype(float)
+    changes_formatted = np.char.mod('%.4g', changes)
+    # changes_formatted = changes.map(lambda x: f"{x:.4g}" if isinstance(x, (int, float)) else x)
+
+    # 2. Define Custom Color Scheme (Red -> White -> Blue)
+    colors = ["#B31B2E", "#FFFFFF", "#2367AC"] 
+    custom_cmap = LinearSegmentedColormap.from_list("custom_diverging", colors)
+    annot_mask = np.where(np.isclose(changes, 0), "", changes_formatted)
+
+    # 3. Create Figure
+    fig, (ax_meta_table, ax_table, ax_heatmap) = plt.subplots(3, 1, figsize=(12, 16), 
+                                            gridspec_kw={'height_ratios': [4, 1, 14], 'hspace': 0.01})
+
+    # INSTANCE VALUES ===========
+    # Set background for the heatmap axis
+    ax_meta_table.set_facecolor('#F7F7F7')
+    xi = lambda x: f"{df_dcf.iloc[0][x]:.4g}"
+    xf = lambda x: f"{Xfull.iloc[query_idx][x]:.4g}" 
+    label = lambda x: 'Confirmed' if int(x)==1 else 'Unconfirmed'
+    table_vals = [
+        ['Actual', '',"SEX","AGE","SUBJ","DM_DUR","GBS", "", ""],
+        [label(actual), "",  xi("SEX"), xi("AGE"), xi("SUBJ"), xi("DM_DUR"),xi("GBS"),"", ""],
+        [ 'Predicted' ,"",'FEET_MEAN_ESC','FEET_PCT_ASYM','HAND_MEAN_ESC','HAND_PCT_ASYM','NS','CAS', ""],
+        [ label(pred),"",xi('FEET_MEAN_ESC'), xi('FEET_PCT_ASYM'),xi('HAND_MEAN_ESC'),xi('HAND_PCT_ASYM'),xi('NS'),xi('CAS'), ""],        
+        ['Probability', "",'SSA_L', 'SSC_L', 'MCV_L', 'DL_L','CMAPANK_L','CMAPKNE_L','FWAVE_L'],
+        [f"{pred_proba:.4g}", "",xf('SSA_L'), xf('SSC_L'), xf('MCV_L'), xf('DL_L'),xf('CMAPANK_L'),xf('CMAPKNE_L'),xf('FWAVE_L')],
+        ['Margin', '', 'SSA_R', 'SSC_R', 'MCV_R', 'DL_R','CMAPANK_R','CMAPKNE_R','FWAVE_R'],
+        [f"{margin:.4g}", '', xf('SSA_R'), xf('SSC_R'), xf('MCV_R'), xf('DL_R'),xf('CMAPANK_R'),xf('CMAPKNE_R'),xf('FWAVE_R')],
+    ]
+
+    # --- Reference Table ---
+    meta_tbl = ax_meta_table.table(cellText=table_vals, loc='center', cellLoc='center')
+
+    header_color = "#8DAEF5" 
+    for (row, col), cell in meta_tbl.get_celld().items():
+        header=False
+        if row == 0: # Header
+            if col in [0,2,3,4,5,6]:
+                header=True
+        if row == 2: # Header
+            if col in [0,2,3,4,5,6,7]:
+                header=True
+        if row == 4: # Header
+            if col in [0,2,3,4,5,6,7,8]:
+                header=True
+        if row == 6: # Header
+            if col in [0,2,3,4,5,6,7,8]:
+                header=True
+        if header:
+            cell.set_facecolor(header_color)
+        else:
+            cell.set_facecolor('#F7F7F7')
+
+
+    meta_tbl.auto_set_font_size(False)
+    meta_tbl.set_fontsize(8)
+    ax_meta_table.axis('off')
+
+    # INSTANCE VALUES ===========
+    # Set background for the heatmap axis
+    ax_heatmap.set_facecolor('#F7F7F7')
+
+    # --- Reference Table ---
+    table_vals = instance.values
+    table_vals_formatted = np.char.mod('%.4g', table_vals)
+
+    tbl = ax_table.table(
+        cellText=table_vals_formatted, 
+        colLabels=actionable_features, 
+        # rowLabels=['Actual'], 
+        loc='center', cellLoc='center')
+
+    # header_color = '#D9E1F2' 
+
+    for (row, col), cell in tbl.get_celld().items():
+        if row == 0: # Header
+            cell.set_facecolor(header_color)
+        elif col == -1: # Row labels
+            cell.set_facecolor('#D9E1F2')
+        else:
+            cell.set_facecolor('#F7F7F7')
+        cell.set_height(0.45)
+
+    tbl.auto_set_font_size(False)
+    tbl.set_fontsize(9)
+    ax_table.axis('off')
+
+    # --- Heatmap ---
+    sns.heatmap(changes, 
+                annot=annot_mask, 
+                fmt="", 
+                cmap=custom_cmap, 
+                center=0,
+                xticklabels=actionable_features, 
+                yticklabels=[f'CF {i+1}' for i in range(len(cfs))],
+                ax=ax_heatmap, 
+                cbar_kws={'label': 'Direction of Change', 'orientation': 'horizontal', 'pad': 0.05, 'shrink': 0.4},
+                # cbar=False, # Disable default cbar to manually place it
+                linewidths=0.5, 
+                linecolor='white')
+
+    # Custom gray gridlines
+    num_rows = changes.shape[0]
+    ax_heatmap.axhline(0, color='gray', linewidth=1.5)
+    for i in range(5, num_rows, 5):
+        ax_heatmap.axhline(i, color='gray', linewidth=1.0)
+    ax_heatmap.axhline(num_rows, color='gray', linewidth=1.5)
+
+    # Vertical gray lines on both ends
+    ax_heatmap.axvline(0, color='gray', linewidth=1.5)
+    ax_heatmap.axvline(len(actionable_features), color='gray', linewidth=1.5)
+
+    # Identify non-feature metadata columns
+    # instance_full = df.iloc[0]
+    # all_cols = df.columns.tolist()
+    # excluded_cols = actionable_features + ['Unnamed: 0']
+    # other_cols = [c for c in all_cols if c not in excluded_cols]
+    # other_values = instance_full[other_cols].to_dict()
+
+    # Format metadata string
+    # meta_items = [f"{k}: {v}" for k, v in other_values.items()]
+    # other_info_str = "Instance Meta-Data:\n" + ", ".join(meta_items[:7]) + "\n" + ", ".join(meta_items[7:])
+
+
+    # 4. Custom Horizontal Colorbar flushed to the rightmost
+    # pos = ax_heatmap.get_position()
+    # # Position: [left, bottom, width, height] relative to figure
+    # cbar_ax = fig.add_axes([pos.x1 - 0.35, pos.y0 - 0.05, 0.35, 0.015]) 
+    # norm = plt.Normalize(vmin=changes.min(), vmax=changes.max())
+    # sm = plt.cm.ScalarMappable(cmap=custom_cmap, norm=norm)
+    # sm.set_array([])
+    # cbar = fig.colorbar(sm, cax=cbar_ax, orientation='horizontal')
+    # cbar.set_label('Direction of Change', fontsize=10)
+
+    # --- Colorbar and Text ---
+    # pos = ax_heatmap.get_position()
+    # cbar_ax = fig.add_axes([pos.x1 - 0.35, pos.y0 - 0.04, 0.35, 0.015])
+    # sm = plt.cm.ScalarMappable(cmap=custom_cmap, norm=plt.Normalize(vmin=changes.min(), vmax=changes.max()))
+    # fig.colorbar(sm, cax=cbar_ax, orientation='horizontal').set_label('Direction of Change')
+
+    fig.suptitle(f'Counterfactuals for Patient {query_idx}', fontsize=14, y=0.9)
+    ax_heatmap.tick_params(left=False) 
+
+    plt.tight_layout()
+    if savedir:
+        filename = f'{config.model.code}_split{split_index}_local_cf.png'
+        plt.savefig(savedir / filename)
+        print(f'Counterfactual heatmaps saved to {filename} in {Path(*savedir.parts[-7:])}')
+    plt.close(fig) if backend in ["Agg"] else plt.show()
+    return
 
 def get_most_changed_feature(df_cf, instance, config, split_index, savedir):
     # Boolean mask: True if feature changed compared to the original instance
@@ -746,7 +914,7 @@ def check_necessity(dice_exp, instance, all_features, permitted_range, desired_c
     return results_df 
 
 
-def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, 
+def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
                               features_to_vary,                              
                               config,
                               split_index,
@@ -822,14 +990,14 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx,
             return
     
     print('plotting heatmaps...')
-    plot_local_cf_heatmap(dfXy, df_dcf, query_instance, 
+    plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull, 
                         query_idx=qidx, 
                         pred=ioi_df.loc[qidx].pred, 
                         actual=ioi_df.loc[qidx].actual, 
+                        pred_proba=ioi_df.loc[qidx].pred_proba,
+                        margin=ioi_df.loc[qidx].margin,
                         config=config,
                         split_index=split_index,
-                        categorical_cols=categorical_cols,
-                        highlight_invalid=True, 
                         savedir=unfiltered_cfs_savedir)    
     
     print('Getting changed features...')

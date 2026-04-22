@@ -438,15 +438,18 @@ def generate_diverse_cfs(dice_exp, instance, config, split_index,
 
 # define Time-constrained versions of generate_diverse_cfs
 
-# timeout after 15 minutes
-generate_diverse_cfs_quick  = timeout.timeout(15*60)(generate_diverse_cfs)
-
 # timeout after 30 minutes
 generate_diverse_cfs_fast  = timeout.timeout(30*60)(generate_diverse_cfs)
 
+# timeout after 1 hour
+generate_diverse_cfs_normal  = timeout.timeout(60*60)(generate_diverse_cfs)
+
 # timeout after 3 hours
-generate_diverse_cfs_normal = timeout.timeout(3*60*60)(generate_diverse_cfs)
+generate_diverse_cfs_long = timeout.timeout(3*60*60)(generate_diverse_cfs)
     
+# timeout after 6 hours
+generate_diverse_cfs_extended = timeout.timeout(6*60*60)(generate_diverse_cfs)
+
 def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
                           query_idx, pred, actual,
                           config,
@@ -951,12 +954,14 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
     print('Start:', start_time.strftime("%m-%d %H:%M:%S"))
     generation_error = False
     try:
-        if generation_timeout == 'quick':
-            gen_diverse_cfs_fn = generate_diverse_cfs_quick
-        elif generation_timeout == 'fast':
+        if generation_timeout == 'fast':
             gen_diverse_cfs_fn = generate_diverse_cfs_fast
         elif generation_timeout == 'normal':
             gen_diverse_cfs_fn = generate_diverse_cfs_normal
+        elif generation_timeout == 'long':
+            gen_diverse_cfs_fn = generate_diverse_cfs_long
+        elif generation_timeout == 'extended':
+            gen_diverse_cfs_fn = generate_diverse_cfs_extended
         else:
             gen_diverse_cfs_fn = generate_diverse_cfs
 

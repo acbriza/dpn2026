@@ -78,19 +78,11 @@ parser.add_argument(
     help='Comma-separated instance indices to skip or redo, e.g. 53,67'
 )
 parser.add_argument(
-    '--speed',
-    type=parse_comma_separated_ints,
-    default=[],
-    dest='target_instance_indices',
-    help='Comma-separated instance indices to skip or redo, e.g. 53,67'
-)
-
-parser.add_argument(
     '--gen-timeout',
-    choices=['quick', 'fast', 'normal'],
-    default='fast',
+    choices=['fast', 'normal', 'long', 'extended'],
+    default='normal',
     dest='gen_timeout',
-    help='Generation timeout preset: quick, fast (default), normal'
+    help='Generation timeout preset: fast (30mins), normal (1 hour; default), long (3houra), extended (6hours)'
 )
 
 def main():

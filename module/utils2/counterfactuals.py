@@ -404,7 +404,11 @@ def generate_diverse_cfs(dice_exp, instance, config, split_index,
     if cf_filename.is_file():
         print(f'{cf_filename.name} exists. Returning values from contents.')
         combined_dfs = pd.read_csv(cf_filename)
-        return combined_dfs    
+        return combined_dfs
+    error_filename = savedir / 'error.txt'
+    if error_filename.is_file():
+        # raise exception which will propagate to caller and won't process cf results
+        raise Exception(f'{error_filename.name} exists: Previous run did not find counterfactuals. Exiting.') 
     all_cfs = [instance] #include instance values in the report
     seeds = list(range(config.dice.local_cf.nrepeats))
     for s in seeds:
@@ -628,43 +632,53 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
     # INSTANCE VALUES ===========
     # Set background for the heatmap axis
     ax_meta_table.set_facecolor('#F7F7F7')
-    xi = lambda x: f"{df_dcf.iloc[0][x]:.4g}"
-    xf = lambda x: f"{Xfull.iloc[query_idx][x]:.4g}" 
-    label = lambda x: 'Confirmed' if int(x)==1 else 'Unconfirmed'
+    xi = lambda x: f"{df_dcf.iloc[0][x]:.4g}"         # cf table values
+    xf = lambda x: f"{Xfull.iloc[query_idx][x]:.4g}"  # full data values 
+    label = lambda x: 'Confirmed' if int(x)==1 else 'Unconfirmed' 
+    fg = lambda x : f"{x:.4g}" # general formatting
+
+    r1 = [['Actual',      label(actual)]]  + [[f, xf(f)] for f in ["SUBJ",   "FEET_MEAN_ESC", "SSA_L", "SSA_R"]]
+    r2 = [['Predicted',   label(pred)]]    + [[f, xf(f)] for f in ["DM_DUR", "FEET_PCT_ASYM", "SSC_L", "SSC_R"]]
+    r3 = [['Probability', fg(pred_proba)]] + [[f, xf(f)] for f in ["GBS",    "HAND_MEAN_ESC", "SPSA_L", "SPSA_R"]]
+    r4 = [['Margin',      fg(margin)]]     + [[f, xf(f)] for f in ["MNSI",    "HAND_PCT_ASYM", "SPSC_L", "SPSC_L"]]
+    r5 = [[f, xf(f)] for f in ["SEX",  "DEC_VS",  "NS",  "MCV_L", "MCV_R"]]
+    r6 = [[f, xf(f)] for f in ["AGE",  "DEC_PPS", "CAS", "DL_L",  "DL_R"]]
+    r7 = [[""]]*2 + [["DEC_LTS", xf("DEC_LTS")]] +  [[""]*2] + [[f, xf(f)] for f in ["CMAPANK_L", "CMAPANK_R"]]
+    r8 = [[""]]*2 + [["DEC_AR", xf("DEC_AR")]]   +  [[""]*2] + [[f, xf(f)] for f in ["CMAPKNE_L", "CMAPKNE_R"]]
+    r9 = [[""]]*6 + [[f, xf(f)] for f in ["FWAVE_L", "FWAVE_R"]]
+
     table_vals = [
-        ['Actual', '',"SEX","AGE","SUBJ","DM_DUR","GBS", "", ""],
-        [label(actual), "",  xi("SEX"), xi("AGE"), xi("SUBJ"), xi("DM_DUR"),xi("GBS"),"", ""],
-        [ 'Predicted' ,"",'FEET_MEAN_ESC','FEET_PCT_ASYM','HAND_MEAN_ESC','HAND_PCT_ASYM','NS','CAS', ""],
-        [ label(pred),"",xi('FEET_MEAN_ESC'), xi('FEET_PCT_ASYM'),xi('HAND_MEAN_ESC'),xi('HAND_PCT_ASYM'),xi('NS'),xi('CAS'), ""],        
-        ['Probability', "",'SSA_L', 'SSC_L', 'MCV_L', 'DL_L','CMAPANK_L','CMAPKNE_L','FWAVE_L'],
-        [f"{pred_proba:.4g}", "",xf('SSA_L'), xf('SSC_L'), xf('MCV_L'), xf('DL_L'),xf('CMAPANK_L'),xf('CMAPKNE_L'),xf('FWAVE_L')],
-        ['Margin', '', 'SSA_R', 'SSC_R', 'MCV_R', 'DL_R','CMAPANK_R','CMAPKNE_R','FWAVE_R'],
-        [f"{margin:.4g}", '', xf('SSA_R'), xf('SSC_R'), xf('MCV_R'), xf('DL_R'),xf('CMAPANK_R'),xf('CMAPKNE_R'),xf('FWAVE_R')],
+        [item for sublist in r1 for item in sublist],         
+        [item for sublist in r2 for item in sublist],         
+        [item for sublist in r3 for item in sublist],         
+        [item for sublist in r4 for item in sublist],         
+        [item for sublist in r5 for item in sublist],         
+        [item for sublist in r6 for item in sublist],         
+        [item for sublist in r7 for item in sublist],         
+        [item for sublist in r8 for item in sublist],         
+        [item for sublist in r9 for item in sublist],         
     ]
 
     # --- Reference Table ---
-    meta_tbl = ax_meta_table.table(cellText=table_vals, loc='center', cellLoc='center')
+    meta_tbl = ax_meta_table.table(
+        cellText=table_vals, 
+        colWidths=[0.1, 0.1, 0.1, 0.085, 0.13, 0.085, 0.1, 0.1, 0.1, 0.1],
+        loc='center', 
+        cellLoc='center')
 
     header_color = "#8DAEF5" 
     for (row, col), cell in meta_tbl.get_celld().items():
-        header=False
-        if row == 0: # Header
-            if col in [0,2,3,4,5,6]:
-                header=True
-        if row == 2: # Header
-            if col in [0,2,3,4,5,6,7]:
-                header=True
-        if row == 4: # Header
-            if col in [0,2,3,4,5,6,7,8]:
-                header=True
-        if row == 6: # Header
-            if col in [0,2,3,4,5,6,7,8]:
-                header=True
+        header=False        
+        if col in  [0,4] and row < 6:
+            header=True
+        if col == 2 and row < 8:
+            header=True
+        if col in [6,8]:
+            header=True
         if header:
             cell.set_facecolor(header_color)
         else:
             cell.set_facecolor('#F7F7F7')
-
 
     meta_tbl.auto_set_font_size(False)
     meta_tbl.set_fontsize(8)

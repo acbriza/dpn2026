@@ -10,6 +10,8 @@ matplotlib.use('Agg')
 from pathlib import Path
 import shutil
 from datetime import datetime
+import joblib
+from catboost import CatBoostClassifier
 
 
 import sys 
@@ -67,51 +69,139 @@ def main():
     dfXy = pd.concat([X, y], axis=1)    
 
 
-    start_time = datetime.now()    
-    print(f'Training models on data splits, started at: ', start_time.strftime("%m-%d %H:%M:%S"))
-    ksplit_trained_models =  exp.get_ksplit_trained_models(
-        X, y, config,
-        savedir=outputdir, 
-        overwrite=overwrite_reports,        
-        )
-    end_time = datetime.now()
-    elapsed = end_time - start_time
-    print(f"\nrundate and tag: ", ksplit_trained_models['rundate'], ksplit_trained_models['tag'])
-    print(f"summary:\n {ksplit_trained_models['summary']}")
-    print(f'Training models on data splits, took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%m-%d %H:%M:%S"))
+    # ======================================
+    # Old code for retraining the model
+    # start_time = datetime.now()    
+    # print(f'Training models on data splits, started at: ', start_time.strftime("%m-%d %H:%M:%S"))
+    # ksplit_trained_models =  exp.get_ksplit_trained_models(
+    #     X, y, config,
+    #     savedir=outputdir, 
+    #     overwrite=overwrite_reports,        
+    #     )
+    # end_time = datetime.now()
+    # elapsed = end_time - start_time
+    # print(f"\nrundate and tag: ", ksplit_trained_models['rundate'], ksplit_trained_models['tag'])
+    # print(f"summary:\n {ksplit_trained_models['summary']}")
+    # print(f'Training models on data splits, took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%m-%d %H:%M:%S"))
 
-    split_results = ksplit_trained_models['results']
+    # split_results = ksplit_trained_models['results']
+    # ======================================
 
-    # Feature Importances
-    for s in range(len(split_results)): 
-        model = split_results[s]['model']
+    # ### Load trained model splits from Explainability Stage
+    first_repeat_trained_models = joblib.load(config_path / config.optimization.first_repeat_trained_models_filename)
+    assert first_repeat_trained_models['rundate'] == config.optimization.rundate, f"{first_repeat_trained_models['rundate']} != {config.optimization.rundate}"
+    assert first_repeat_trained_models['tag'] == config.optimization.tag
+    print('rundate:', first_repeat_trained_models['rundate'])
+    print('tag:', first_repeat_trained_models['tag'])
+    print('split results summary:')
+    # print(first_repeat_trained_models['summary'])
+    split_results = first_repeat_trained_models['results']    
+
+    retrained_models_fullpath = outputdir / 'retrained_models.joblib'
+    if retrained_models_fullpath.is_file():
+        trained_models = joblib.load(retrained_models_fullpath)
+    else:
+        # ## Loop through model splits
+        trained_models = []
+        for midx in split_results.keys():
+
+            # ## Extract saved variables from split
+            best_params = split_results[midx]['metrics']['best_params']
+            threshold = split_results[midx]['metrics']['threshold']
+            print('best_params:', best_params)        
+            print('scale_pos_weight:', best_params["scale_pos_weight"])        
+            print('threshold:', threshold)    
+
+            # ## Extract Test Sets
+            X_test = split_results[midx]['X_test']
+            y_test = split_results[midx]['y_test']
+            dfXy_test = pd.concat([X_test, y_test], axis=1)
+
+            X_train = split_results[midx]['X_train']
+            y_train = split_results[midx]['y_train']
+
+            # convert categorical columns in X_train - needed in CatBoost for use in DiCE
+            X_train[D.categorical_cols] = X_train[D.categorical_cols].astype(str)
+            X_test[D.categorical_cols] = X_test[D.categorical_cols].astype(str)
+
+
+            # refit model so we can set cat_features (needed in DiCE)
+            print(f'Retrainining model {midx}...')
+            model =  CatBoostClassifier(**best_params, 
+                                    # cat_features=D.categorical_cols, 
+                                    verbose=0,
+                                    ).fit(X_train, y_train)
+            trained_models.append(model)
+        joblib.dump(trained_models, retrained_models_fullpath)
+
+    # Feature Importances (Individual plots)
+    # for s in range(len(split_results)): 
+    #     model = trained_models[s]
+    #     feature_names = X.columns
+    #     exp.plot_importances(D, model, s, feature_names, config, 
+    #                         minimum=None, limit=None, 
+    #                         savedir=outputdir)
+        
+    # Feature Importances (Heat Maps for all splits)
+    all_importances = {}
+    for s in range(len(split_results)):
+        model = trained_models[s]
         feature_names = X.columns
-        exp.plot_importances(D, model, s, feature_names, config, 
-                            minimum=None, limit=None, 
-                            savedir=outputdir)
-    # ROC-AUC
-    for s in range(len(split_results)): 
-        model = split_results[s]['model']
+        importances = model.get_feature_importance()
+        all_importances[f'Model {s}'] = pd.Series(importances, index=feature_names)
+
+    exp.plot_importances_heatmap(D, all_importances, feature_names, config,
+                                minimum=None, limit=None,
+                                savedir=outputdir)
+                
+    # # ROC-AUC (individual plots)
+    # for s in range(len(split_results)): 
+    #     model = trained_models[s]
+    #     X_test = split_results[s]['X_test']
+    #     y_test = split_results[s]['y_test']
+    #     y_proba = model.predict_proba(X_test)[:,1]
+    #     exp.plot_roc_auc(y_test, y_proba, s, config, outputdir);        
+
+    # # ROC-AUC (overlapping plots)
+    # Collect ROC data for all splits
+    roc_data = []
+    for s in range(len(split_results)):
+        model = trained_models[s]
         X_test = split_results[s]['X_test']
         y_test = split_results[s]['y_test']
-        y_proba = model.predict_proba(X_test)[:,1]
-        exp.plot_roc_auc(y_test, y_proba, s, config, outputdir);        
+        y_proba = model.predict_proba(X_test)[:, 1]
+        roc_data.append((y_test, y_proba))
+
+    exp.plot_roc_auc_overlapping(roc_data, config, outputdir)
 
     # DCA
     for s in range(len(split_results)): 
-        model = split_results[s]['model']
+        X_test = split_results[s]['X_test']
+        y_test = split_results[s]['y_test']
+        model = trained_models[s]
         thresholds, nb = exp.plot_decision_curve_analysis(model, s, X_test, y_test, config, savedir=outputdir)
 
-    # SHAP
-    for s in range(len(split_results)): 
-        model = split_results[s]['model']
-        exp.plot_shap(D, model, s, config, X_test, savedir=outputdir)
+    # SHAP Individual Plots
+    # for s in range(len(split_results)): 
+    #     model = trained_models[s]
+    #     X_test = split_results[s]['X_test']
+    #     y_test = split_results[s]['y_test']
+    #     exp.plot_shap(D, model, s, config, X_test, savedir=outputdir)
+
+    # SHAP (Heat Maps for all splits)
+    all_shap_importances = {}
+    for s in range(len(split_results)):
+        model = trained_models[s]
+        X_test = split_results[s]['X_test']
+        exp.collect_shap(D, model, s, config, X_test, all_shap_importances)
+
+    exp.plot_shap_heatmap(D, all_shap_importances, config, savedir=outputdir)        
 
     # AUPRC CURVE
     y_test_list = []
     y_proba_list = []
     for s in range(len(split_results)): 
-        model = split_results[s]['model']
+        model = trained_models[s]
         X_test = split_results[s]['X_test']
         y_test = split_results[s]['y_test']
         y_proba = model.predict_proba(X_test)[:,1]# y_test: true labels

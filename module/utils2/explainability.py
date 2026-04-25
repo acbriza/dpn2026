@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import seaborn as sns
+import matplotlib.colors as mcolors
 
 from sklearn.metrics import roc_curve, auc, confusion_matrix
 from sklearn.model_selection import StratifiedKFold
@@ -33,7 +35,15 @@ palette = {
     'Red': '#E41A1C' 
 }
 
-COLOR_GROUP_MAP = {
+COLOR_GROUP_MAP= {
+    'Sudoscan': '#F28E2B',
+    'Profile':  '#4E79A7',
+    'Comorbidities': '#59A14F',
+    'Neurology Examination': '#E15759',
+    'MNSI': '#B07AA1',
+}
+
+COLOR_GROUP_MAP_ORIG = {
     # 'Nerve Conduction Studies': palette['Blue'],
     'Sudoscan': palette['Orange'],
     'Profile': palette['Teal'],
@@ -43,6 +53,8 @@ COLOR_GROUP_MAP = {
     # 'Others': palette['Gray']
 }
 
+PLOT_COLORS = ['#009E73', '#0072B2', '#D55E00', '#CC79A7',
+              '#000000', '#E69F00',  '#F0E442', '#56B4E9',]
 
 def get_colors(DPN_data, labels):
     D = DPN_data
@@ -218,6 +230,159 @@ def plot_importances(DPN_data, model, split_index, feature_names, config,
     plt.show()
     plt.close()
 
+def plot_importances_heatmap(DPN_data, all_importances, feature_names, config,
+                              minimum=None, limit=None,
+                              savedir=None):
+    D = DPN_data
+
+    # Build DataFrame: rows=features, cols=splits
+    df = pd.DataFrame(all_importances, index=feature_names)
+
+    # Filter by mean importance
+    df['_mean'] = df.mean(axis=1)
+    if minimum:
+        df = df[df['_mean'] > minimum]
+    df = df.sort_values('_mean', ascending=False)
+    if limit:
+        df = df.head(limit)
+    df = df.drop(columns='_mean')
+
+    # Build title
+    title = f"{config.model.name} Feature Importances"
+    if limit:
+        title = f'Top {limit} {title}'
+    if minimum:
+        title = f'{title} (min {minimum:.3f})'
+
+    # --- Plot ---
+    fig, (ax_legend, ax_heatmap) = plt.subplots(
+        1, 2,
+        figsize=(10, max(6, len(df) * 0.4)),
+        gridspec_kw={'width_ratios': [2, 4]}
+    )
+
+    # Heatmap
+    sns.heatmap(
+        df,
+        ax=ax_heatmap,
+        cmap='viridis',
+        annot=True,
+        fmt='.2f',
+        linewidths=0.5,
+        cbar_kws={'label': 'Importance'},
+        yticklabels=True
+    )
+    ax_heatmap.set_title(title)
+    # ax_heatmap.set_xlabel('Split')
+    ax_heatmap.set_ylabel('')
+
+    # Color each y-axis tick label by its feature group
+    row_colors = get_colors(D, df.index.to_list())
+    for tick_label, color in zip(ax_heatmap.get_yticklabels(), row_colors):
+        tick_label.set_color(color)
+        tick_label.set_fontsize(10)
+        tick_label.set_fontweight('bold')
+    ax_heatmap.tick_params(axis='y', labelsize=10)
+
+    # Legend panel
+    legend_handles = [
+        mpatches.Patch(color=color, label=label)
+        for label, color in COLOR_GROUP_MAP.items()
+    ]
+    ax_legend.legend(handles=legend_handles, title='Feature Groups', loc='center',
+                     frameon=False, fontsize=9)
+    ax_legend.axis('off')
+
+    plt.tight_layout()
+    if savedir:
+        filename = f'{config.model.code}_all_splits_feature_importances'
+        if limit:
+            filename = f'{filename}_top-{limit}'
+        if minimum:
+            filename = f'{filename}_min-{minimum:.3f}'
+        plt.savefig(savedir / f'{filename}.png', bbox_inches='tight')
+    plt.show()
+    plt.close()    
+
+def plot_importances_heatmap2(DPN_data, all_importances, feature_names, config,
+                              minimum=None, limit=None,
+                              savedir=None):
+    D = DPN_data
+
+    # Build DataFrame: rows=features, cols=splits
+    df = pd.DataFrame(all_importances, index=feature_names)
+
+    # Filter by mean importance
+    df['_mean'] = df.mean(axis=1)
+    if minimum:
+        df = df[df['_mean'] > minimum]
+    df = df.sort_values('_mean', ascending=False)
+    if limit:
+        df = df.head(limit)
+    df = df.drop(columns='_mean')
+
+    # --- Feature group row colors ---
+    row_colors = pd.Series(
+        get_colors(D, df.index.to_list()),
+        index=df.index
+    )
+
+    # Build title
+    title = f"{config.model.name} Feature Importances"
+    if limit:
+        title = f'Top {limit} {title}'
+    if minimum:
+        title = f'{title} (min {minimum:.3f})'
+
+    # --- Plot ---
+    fig, (ax_legend, ax_colors, ax_heatmap) = plt.subplots(
+        1, 3,
+        figsize=(10, max(6, len(df) * 0.4)),
+        gridspec_kw={'width_ratios': [2, 0.2, 4]}
+    )
+
+    # Heatmap
+    sns.heatmap(
+        df,
+        ax=ax_heatmap,
+        cmap='viridis',
+        annot=True,
+        fmt='.2f',
+        linewidths=0.5,
+        cbar_kws={'label': 'Importance'},
+        yticklabels=True
+    )
+    ax_heatmap.set_title(title)
+    ax_heatmap.set_xlabel('Split')
+    ax_heatmap.set_ylabel('')
+    ax_heatmap.tick_params(axis='y', labelsize=9)
+
+    # Feature group color strip (left of heatmap)
+    color_matrix = [[mcolors.to_rgba(c)] for c in row_colors]
+    ax_colors.imshow(color_matrix, aspect='auto', interpolation='none')
+    ax_colors.set_xticks([])
+    ax_colors.set_yticks([])
+    ax_colors.set_ylabel('')
+
+    # Legend panel
+    legend_handles = [
+        mpatches.Patch(color=color, label=label)
+        for label, color in COLOR_GROUP_MAP.items()
+    ]
+    ax_legend.legend(handles=legend_handles, title='Feature Groups', loc='center',
+                     frameon=False, fontsize=9)
+    ax_legend.axis('off')
+
+    plt.tight_layout()
+    if savedir:
+        filename = f'{config.model.code}_all_splits_feature_importances'
+        if limit:
+            filename = f'{filename}_top-{limit}'
+        if minimum:
+            filename = f'{filename}_min-{minimum:.3f}'
+        plt.savefig(savedir / f'{filename}.png', bbox_inches='tight')
+    plt.show()
+    plt.close()
 
 def plot_roc_auc(y_test, y_proba, split_index, config, savedir=None):
 
@@ -242,6 +407,54 @@ def plot_roc_auc(y_test, y_proba, split_index, config, savedir=None):
     plt.show()
     plt.close()
 
+def plot_roc_auc_overlapping(roc_data, config, savedir=None):
+    """
+    roc_data: list of (y_test, y_proba) tuples, one per split
+    """
+    base_fpr = np.linspace(0, 1, 101)  # common x-axis for interpolation
+    tprs, aucs = [], []
+
+    plt.figure(figsize=(8, 7))
+
+    for s, (y_test, y_proba) in enumerate(roc_data):
+        fpr, tpr, _ = roc_curve(y_test, y_proba)
+        roc_auc = auc(fpr, tpr)
+        aucs.append(roc_auc)
+
+        # Interpolate TPR onto the common FPR grid for averaging
+        interp_tpr = np.interp(base_fpr, fpr, tpr)
+        interp_tpr[0] = 0.0
+        tprs.append(interp_tpr)
+
+        plt.plot(fpr, tpr, 
+                 color=PLOT_COLORS[s % len(PLOT_COLORS)], lw=1.5, alpha=0.6,
+                 label=f'Model {s} (AUC = {roc_auc:.2f})')
+
+    # Compute mean and std across splits
+    mean_tpr = np.mean(tprs, axis=0)
+    mean_tpr[-1] = 1.0
+    std_tpr = np.std(tprs, axis=0)
+    mean_auc = np.mean(aucs)
+    std_auc = np.std(aucs)
+
+    plt.plot(base_fpr, mean_tpr, color='b', lw=2, alpha=0.8,
+             label=f'Mean ROC (AUC = {mean_auc:.2f} ± {std_auc:.2f})')
+    # plt.fill_between(base_fpr, mean_tpr - std_tpr, mean_tpr + std_tpr,
+    #                  color='black', alpha=0.15, label='± 1 std. dev.')
+
+    plt.plot([0, 1], [0, 1], color='r', linestyle='--', label='Chance')
+    plt.xlabel('False Positive Rate (1 - Specificity)')
+    plt.ylabel('True Positive Rate (Sensitivity / Recall)')
+    plt.title('Receiver Operating Characteristic (ROC)')
+    plt.legend(loc="lower right")
+    plt.grid(True)
+    plt.tight_layout()
+
+    if savedir:
+        filename = f'{config.model.code}_all_splits_roc_auc'
+        plt.savefig(savedir / f'{filename}.png')
+    plt.show()
+    plt.close()
 
 def plot_decision_curve_analysis(model, split_index, X, y, config, thresholds=None, savedir=None):
     """
@@ -328,10 +541,11 @@ def plot_shap(DPN_data, model, split_index, config, X_test, savedir=None):
     #. explainer = shap.Explainer(current_model_predict, masker=masker)
 
     #. use x_test directly
-    explainer = shap.Explainer(current_model_predict, X_test) 
+    X_test_numeric = X_test.astype(float)
+    explainer = shap.Explainer(current_model_predict, X_test_numeric) 
 
     # Compute SHAP values
-    shap_values = explainer(X_test)
+    shap_values = explainer(X_test_numeric)
 
     plt.figure(figsize=(8, 8))
 
@@ -389,6 +603,97 @@ def plot_shap(DPN_data, model, split_index, config, X_test, savedir=None):
     plt.show()
     plt.close()
 
+def collect_shap(DPN_data, model, split_index, config, X_test, all_shap_importances):
+    """Computes SHAP values for one split and stores mean absolute values."""
+
+    def current_model_predict(X):
+        return model.predict_proba(X)[:, 1]
+
+    X_test_numeric = X_test.astype(float)
+    explainer = shap.Explainer(current_model_predict, X_test_numeric)
+    shap_values = explainer(X_test_numeric)
+
+    # Mean absolute SHAP value per feature — mirrors feature importance magnitude
+    mean_abs_shap = pd.Series(
+        np.abs(shap_values.values).mean(axis=0),
+        index=X_test.columns
+    )
+    all_shap_importances[f'Model {split_index}'] = mean_abs_shap
+
+
+def plot_shap_heatmap(DPN_data, all_shap_importances, config,
+                      minimum=None, limit=None,
+                      savedir=None):
+    D = DPN_data
+
+    # Build DataFrame: rows=features, cols=splits
+    df = pd.DataFrame(all_shap_importances)
+
+    # Sort by mean absolute SHAP across splits, apply filters
+    df['_mean'] = df.mean(axis=1)
+    if minimum:
+        df = df[df['_mean'] > minimum]
+    df = df.sort_values('_mean', ascending=False)
+    if limit:
+        df = df.head(limit)
+    df = df.drop(columns='_mean')
+
+    # Build title
+    title = f"{config.model.name} Mean Absolute SHAP Values"
+    if limit:
+        title = f'Top {limit} {title}'
+    if minimum:
+        title = f'{title} (min {minimum:.3f})'
+
+    # --- Plot ---
+    fig, (ax_legend, ax_heatmap) = plt.subplots(
+        1, 2,
+        figsize=(10, max(6, len(df) * 0.4)),
+        gridspec_kw={'width_ratios': [2, 4]}
+    )
+
+    sns.heatmap(
+        df,
+        ax=ax_heatmap,
+        cmap='viridis',          # we're using absolute value of SHAP values
+        annot=True,
+        fmt='.3f',
+        linewidths=0.5,
+        cbar_kws={'label': 'Mean |SHAP value|'},
+        yticklabels=True
+    )
+    ax_heatmap.set_title(title)
+    # ax_heatmap.set_xlabel('Split')
+    ax_heatmap.set_ylabel('')
+
+    # Color y-axis tick labels by feature group
+    row_colors = get_colors(D, df.index.to_list())
+    for tick_label, color in zip(ax_heatmap.get_yticklabels(), row_colors):
+        tick_label.set_color(color)
+        tick_label.set_fontsize(10)
+        tick_label.set_fontweight('bold')
+    ax_heatmap.tick_params(axis='y', labelsize=10)
+
+    # Legend panel
+    legend_handles = [
+        mpatches.Patch(color=color, label=label)
+        for label, color in COLOR_GROUP_MAP.items()
+    ]
+    ax_legend.legend(handles=legend_handles, title='Feature Groups', loc='center',
+                     frameon=False, fontsize=9)
+    ax_legend.axis('off')
+
+    plt.tight_layout()
+    if savedir:
+        filename = f'{config.model.code}_all_splits_shap'
+        if limit:
+            filename = f'{filename}_top-{limit}'
+        if minimum:
+            filename = f'{filename}_min-{minimum:.3f}'
+        plt.savefig(savedir / f'{filename}.png', bbox_inches='tight')
+    plt.show()
+    plt.close()
+
 
 def plot_cv_auprc(y_reals, y_probas, config, savedir=None):
     """
@@ -408,7 +713,9 @@ def plot_cv_auprc(y_reals, y_probas, config, savedir=None):
         aucs.append(pr_auc)
         
         # Plot individual fold
-        plt.plot(recall, precision, lw=1, alpha=0.7, label=f'Fold {i} (AP = {pr_auc:.2f})')
+        plt.plot(recall, precision, 
+                 color=PLOT_COLORS[i % len(PLOT_COLORS)], lw=1.5, alpha=0.6, 
+                 label=f'Model {i} (AP = {pr_auc:.2f})')
         
         # Interpolate precision to allow averaging
         interp_precision = np.interp(mean_recall, recall[::-1], precision[::-1])
@@ -436,7 +743,7 @@ def plot_cv_auprc(y_reals, y_probas, config, savedir=None):
 
     plt.tight_layout()
     if savedir:
-        filename = f'{config.model.code}_auprc'
+        filename = f'{config.model.code}_all_splits_auprc'
         plt.savefig(savedir / f'{filename}.png')    
     plt.show()    
     plt.close()

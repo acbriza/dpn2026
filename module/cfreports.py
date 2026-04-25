@@ -84,6 +84,19 @@ parser.add_argument(
     dest='gen_timeout',
     help='Generation timeout preset: fast (30mins), normal (1 hour; default), long (3houra), extended (6hours)'
 )
+parser.add_argument(
+    '--recompute', 
+    action='store_true',
+    help='Recompute all counterfactuals'
+)    
+
+parser.add_argument(
+    '--no-replot', 
+    dest='replot', 
+    action='store_false',
+    help='Do not replot counterfactuals'
+    )
+parser.set_defaults(replot=True)
 
 def main():
     args = parser.parse_args()
@@ -103,6 +116,8 @@ def main():
     redo_instances          = args.mode == 'redo_instances'
     global_only             = args.mode == 'global_only'
     gen_timeout             = args.gen_timeout    
+    recompute               = args.recompute    
+    replot                  = args.replot    
     # ## Read Config File    
     current_file = Path(__file__).resolve() # Get the absolute path of the current file
     script_dir = current_file.parent # Get the directory containing the file
@@ -273,6 +288,8 @@ def main():
                                             continuous_cols=continuous_cols,
                                             remove_invalid_progressive_cfs=True,
                                             generation_timeout=gen_timeout,
+                                            recompute=recompute,
+                                            replot=replot,
                                             savedir=split_output_dir
                                             )
                 except Exception as e:

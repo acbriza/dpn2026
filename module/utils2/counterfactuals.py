@@ -397,16 +397,17 @@ def get_instances_of_interest(model, X_test, y_test, config, split_index, thresh
 
 def generate_diverse_cfs(dice_exp, instance, config, split_index, 
                          threshold, features_to_vary, permitted_range={}, 
+                         recompute=False, 
                          savedir=None):
     """Generate diverse counterfactuals across multiple seeds."""
 
     cf_filename = savedir / f'{config.model.code}_split{split_index}_local_cf.csv'
-    if cf_filename.is_file():
+    if not recompute and cf_filename.is_file():
         print(f'{cf_filename.name} exists. Returning values from contents.')
         combined_dfs = pd.read_csv(cf_filename)
         return combined_dfs
     error_filename = savedir / 'error.txt'
-    if error_filename.is_file():
+    if not recompute and error_filename.is_file():
         # raise exception which will propagate to caller and won't process cf results
         raise Exception(f'{error_filename.name} exists: Previous run did not find counterfactuals. Exiting.') 
     all_cfs = [instance] #include instance values in the report
@@ -604,6 +605,7 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
                           query_idx, pred, actual, pred_proba, margin,
                           config,
                           split_index,
+                          threshold,
                           savedir=None,
                           ):   
     z = config.reporting.nzfill
@@ -632,20 +634,26 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
     # INSTANCE VALUES ===========
     # Set background for the heatmap axis
     ax_meta_table.set_facecolor('#F7F7F7')
-    xi = lambda x: f"{df_dcf.iloc[0][x]:.4g}"         # cf table values
     xf = lambda x: f"{Xfull.iloc[query_idx][x]:.4g}"  # full data values 
-    label = lambda x: 'Confirmed' if int(x)==1 else 'Unconfirmed' 
+    label = lambda x: 'Confirmed' if int(x)==1 else 'Unconfirmed'
+    xfsex = lambda x: 'Female' if xf(x)==0 else 'Male' 
     fg = lambda x : f"{x:.4g}" # general formatting
+    def outcome():
+        if actual and pred: return 'True Positive'
+        elif not actual and pred: return 'False Positive ' # (Type I)
+        elif not actual and not pred: return 'True Negative'
+        elif actual and not pred: return 'False Negative' # (Type II)
 
-    r1 = [['Actual',      label(actual)]]  + [[f, xf(f)] for f in ["SUBJ",   "FEET_MEAN_ESC", "SSA_L", "SSA_R"]]
-    r2 = [['Predicted',   label(pred)]]    + [[f, xf(f)] for f in ["DM_DUR", "FEET_PCT_ASYM", "SSC_L", "SSC_R"]]
-    r3 = [['Probability', fg(pred_proba)]] + [[f, xf(f)] for f in ["GBS",    "HAND_MEAN_ESC", "SPSA_L", "SPSA_R"]]
-    r4 = [['Margin',      fg(margin)]]     + [[f, xf(f)] for f in ["MNSI",    "HAND_PCT_ASYM", "SPSC_L", "SPSC_L"]]
-    r5 = [[f, xf(f)] for f in ["SEX",  "DEC_VS",  "NS",  "MCV_L", "MCV_R"]]
-    r6 = [[f, xf(f)] for f in ["AGE",  "DEC_PPS", "CAS", "DL_L",  "DL_R"]]
-    r7 = [[""]]*2 + [["DEC_LTS", xf("DEC_LTS")]] +  [[""]*2] + [[f, xf(f)] for f in ["CMAPANK_L", "CMAPANK_R"]]
-    r8 = [[""]]*2 + [["DEC_AR", xf("DEC_AR")]]   +  [[""]*2] + [[f, xf(f)] for f in ["CMAPKNE_L", "CMAPKNE_R"]]
-    r9 = [[""]]*6 + [[f, xf(f)] for f in ["FWAVE_L", "FWAVE_R"]]
+
+    r1 = [['Outcome', outcome()]]           + [[f, xf(f)] for f in ["SUBJ",   "FEET_MEAN_ESC", "SSA_L",  "SSA_R"]]
+    r2 = [['Actual',   label(actual)]]      + [[f, xf(f)] for f in ["DM_DUR", "FEET_PCT_ASYM", "SSC_L",  "SSC_R"]]
+    r3 = [['Predicted', label(pred)]]       + [[f, xf(f)] for f in ["GBS",    "HAND_MEAN_ESC", "SPSA_L", "SPSA_R"]]
+    r4 = [['Probability', fg(pred_proba)]]  + [[f, xf(f)] for f in ["MNSI",   "HAND_PCT_ASYM", "SPSC_L", "SPSC_L"]]
+    r5 = [['Margin', fg(margin)]]           + [[f, xf(f)] for f in ["DEC_VS", "NS",             "MCV_L", "MCV_R"]]
+    r6 = [['Threshold', fg(threshold)]]     + [[f, xf(f)] for f in ["DEC_PPS","CAS",            "DL_L",  "DL_R"]]    
+    r7 = [['Model Split', fg(split_index)]] + [["DEC_LTS", xf("DEC_LTS")]] +  [[""]*2] + [[f, xf(f)] for f in ["CMAPANK_L", "CMAPANK_R"]]  
+    r8 = [["SEX", xfsex("SEX")]]            + [["DEC_AR", xf("DEC_AR")]]   +  [[""]*2] + [[f, xf(f)] for f in ["CMAPKNE_L", "CMAPKNE_R"]]
+    r9 = [["AGE", xf("AGE")]]               + [[""]]*4                                 + [[f, xf(f)] for f in ["FWAVE_L", "FWAVE_R"]]
 
     table_vals = [
         [item for sublist in r1 for item in sublist],         
@@ -669,11 +677,11 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
     header_color = "#8DAEF5" 
     for (row, col), cell in meta_tbl.get_celld().items():
         header=False        
-        if col in  [0,4] and row < 6:
+        if col in [0,6,8]:
             header=True
-        if col == 2 and row < 8:
+        elif col == 2 and row < 8:
             header=True
-        if col in [6,8]:
+        elif col == 4 and row < 6:
             header=True
         if header:
             cell.set_facecolor(header_color)
@@ -738,35 +746,8 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
     ax_heatmap.axvline(0, color='gray', linewidth=1.5)
     ax_heatmap.axvline(len(actionable_features), color='gray', linewidth=1.5)
 
-    # Identify non-feature metadata columns
-    # instance_full = df.iloc[0]
-    # all_cols = df.columns.tolist()
-    # excluded_cols = actionable_features + ['Unnamed: 0']
-    # other_cols = [c for c in all_cols if c not in excluded_cols]
-    # other_values = instance_full[other_cols].to_dict()
-
-    # Format metadata string
-    # meta_items = [f"{k}: {v}" for k, v in other_values.items()]
-    # other_info_str = "Instance Meta-Data:\n" + ", ".join(meta_items[:7]) + "\n" + ", ".join(meta_items[7:])
-
-
-    # 4. Custom Horizontal Colorbar flushed to the rightmost
-    # pos = ax_heatmap.get_position()
-    # # Position: [left, bottom, width, height] relative to figure
-    # cbar_ax = fig.add_axes([pos.x1 - 0.35, pos.y0 - 0.05, 0.35, 0.015]) 
-    # norm = plt.Normalize(vmin=changes.min(), vmax=changes.max())
-    # sm = plt.cm.ScalarMappable(cmap=custom_cmap, norm=norm)
-    # sm.set_array([])
-    # cbar = fig.colorbar(sm, cax=cbar_ax, orientation='horizontal')
-    # cbar.set_label('Direction of Change', fontsize=10)
-
-    # --- Colorbar and Text ---
-    # pos = ax_heatmap.get_position()
-    # cbar_ax = fig.add_axes([pos.x1 - 0.35, pos.y0 - 0.04, 0.35, 0.015])
-    # sm = plt.cm.ScalarMappable(cmap=custom_cmap, norm=plt.Normalize(vmin=changes.min(), vmax=changes.max()))
-    # fig.colorbar(sm, cax=cbar_ax, orientation='horizontal').set_label('Direction of Change')
-
-    fig.suptitle(f'Counterfactuals for Patient {query_idx}', fontsize=14, y=0.9)
+    # query_idx is zero-based. add 1 to match raw data ID
+    fig.suptitle(f'Counterfactuals for Patient {query_idx+1}', fontsize=14, y=0.9) 
     ax_heatmap.tick_params(left=False) 
 
     plt.tight_layout()
@@ -940,6 +921,8 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
                               continuous_cols,
                               remove_invalid_progressive_cfs=True,
                               generation_timeout=None,
+                              recompute=False,
+                              replot=True,
                               savedir=None):
     
     unfiltered_cfs_savedir = savedir / 'nofiltering' / str(qidx).zfill(3) 
@@ -987,6 +970,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
             threshold,
             features_to_vary=features_to_vary,
             permitted_range=instance_permitted_range,
+            recompute=recompute,
             savedir=unfiltered_cfs_savedir
             )
     except Exception as e:
@@ -1007,6 +991,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
             elapsed_str = f'{hours} hours' if hours>1 else f'{mins} mins' if mins>1 else f'{seconds} seconds'
             f.write(f'Elapsed: {elapsed_str}.\n')
             return
+        
     
     print('plotting heatmaps...')
     plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull, 
@@ -1017,6 +1002,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
                         margin=ioi_df.loc[qidx].margin,
                         config=config,
                         split_index=split_index,
+                        threshold=threshold,
                         savedir=unfiltered_cfs_savedir)    
     
     print('Getting changed features...')

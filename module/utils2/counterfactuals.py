@@ -628,15 +628,19 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
     annot_mask = np.where(np.isclose(changes, 0), "", changes_formatted)
 
     # 3. Create Figure
-    fig, (ax_meta_table, ax_table, ax_heatmap) = plt.subplots(3, 1, figsize=(12, 16), 
-                                            gridspec_kw={'height_ratios': [4, 1, 14], 'hspace': 0.01})
+    if changes.shape[0] > 10:        
+        fig, (ax_meta_table, ax_table, ax_heatmap) = plt.subplots(3, 1, figsize=(12, 16), 
+                                                gridspec_kw={'height_ratios': [4, 1, 14], 'hspace': 0.01})
+    else:
+        fig, (ax_meta_table, ax_table, ax_heatmap) = plt.subplots(3, 1, figsize=(12, 7), 
+                                                gridspec_kw={'height_ratios': [4, 1, 5], 'hspace': 0.01})
 
     # INSTANCE VALUES ===========
     # Set background for the heatmap axis
     ax_meta_table.set_facecolor('#F7F7F7')
     xf = lambda x: f"{Xfull.iloc[query_idx][x]:.4g}"  # full data values 
     label = lambda x: 'Confirmed' if int(x)==1 else 'Unconfirmed'
-    xfsex = lambda x: 'Female' if xf(x)==0 else 'Male' 
+    xfsex = lambda x: 'Female' if int(xf(x))==0 else 'Male' 
     fg = lambda x : f"{x:.4g}" # general formatting
     def outcome():
         if actual and pred: return 'True Positive'
@@ -721,6 +725,10 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
     tbl.set_fontsize(9)
     ax_table.axis('off')
 
+    if changes.shape[0] < 10:
+        padding = 0.15
+    else:
+        padding = 0.5
     # --- Heatmap ---
     sns.heatmap(changes, 
                 annot=annot_mask, 
@@ -730,7 +738,7 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
                 xticklabels=actionable_features, 
                 yticklabels=[f'CF {i+1}' for i in range(len(cfs))],
                 ax=ax_heatmap, 
-                cbar_kws={'label': 'Direction of Change', 'orientation': 'horizontal', 'pad': 0.05, 'shrink': 0.4},
+                cbar_kws={'label': 'Direction of Change', 'orientation': 'horizontal', 'pad': padding, 'shrink': 0.4},
                 # cbar=False, # Disable default cbar to manually place it
                 linewidths=0.5, 
                 linecolor='white')
@@ -752,7 +760,7 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
 
     plt.tight_layout()
     if savedir:
-        filename = f'{config.model.code}_split{split_index}_local_cf.png'
+        filename = f'{config.model.code}_split{split_index}_local_cf_{query_idx+1}.png'
         plt.savefig(savedir / filename)
         print(f'Counterfactual heatmaps saved to {filename} in {Path(*savedir.parts[-7:])}')
     plt.close(fig) if backend in ["Agg"] else plt.show()

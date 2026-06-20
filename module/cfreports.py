@@ -15,6 +15,7 @@ import time
 sys.path.append('..')  
 import warnings
 warnings.filterwarnings('ignore')
+from pprint import pprint
 
 import dice_ml
 
@@ -100,6 +101,7 @@ parser.set_defaults(replot=True)
 
 def main():
     args = parser.parse_args()
+    pprint(vars(args), indent=4)
 
     # Validate: --model-idx is required when mode is set
     if args.mode and args.target_model_idx is None:

@@ -179,7 +179,8 @@ def main():
         X_test = split_results[s]['X_test']
         y_test = split_results[s]['y_test']
         model = trained_models[s]
-        thresholds, nb = exp.plot_decision_curve_analysis(model, s, X_test, y_test, config, savedir=outputdir)
+        model_threshold = split_results[s]['metrics']['threshold']
+        thresholds, nb = exp.plot_decision_curve_analysis(model, model_threshold, s, X_test, y_test, config, savedir=outputdir)
 
     # SHAP Individual Plots
     # for s in range(len(split_results)): 

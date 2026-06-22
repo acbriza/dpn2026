@@ -456,7 +456,7 @@ def plot_roc_auc_overlapping(roc_data, config, savedir=None):
     plt.show()
     plt.close()
 
-def plot_decision_curve_analysis(model, split_index, X, y, config, thresholds=None, savedir=None):
+def plot_decision_curve_analysis(model, model_threshold, split_index, X, y, config, thresholds=None, savedir=None):
     """
     Perform Decision Curve Analysis (DCA) for a trained classifier.
 
@@ -464,14 +464,18 @@ def plot_decision_curve_analysis(model, split_index, X, y, config, thresholds=No
     -----------
     model : sklearn-like estimator
         Must have a predict_proba method.
+    split_index : int or str
+        Identifier for the current data split (used in output filename).
     X : array-like
         Feature matrix (test set).
     y : array-like
         True binary labels.
+    config : object
+        Config object with `model.name` and `model.code` attributes.
     thresholds : array-like, optional
         List or array of thresholds to evaluate. Defaults to np.linspace(0.01, 0.99, 50).
-    label : str, optional
-        Label for the model curve.
+    savedir : Path, optional
+        Directory to save the plot to.
 
     Returns:
     --------
@@ -483,25 +487,64 @@ def plot_decision_curve_analysis(model, split_index, X, y, config, thresholds=No
 
     # Default thresholds
     if thresholds is None:
-        thresholds = np.linspace(0.01, 0.99, 50)
+        thresholds =  np.arange(0.005, 1.0, 0.005) #np.linspace(0.01, 0.99, 50)
+    else:
+        thresholds = np.asarray(thresholds)
+        if np.any(thresholds >= 1.0):
+            raise ValueError("Thresholds must be < 1.0 to avoid division by zero in net benefit calculation.")
 
     # Get predicted probabilities
     y_pred_prob = model.predict_proba(X)[:, 1]
 
     N = len(y)
-    net_benefits = []
+    prevalence = np.sum(y) / N
 
-    for pt in thresholds:
-        y_pred = (y_pred_prob >= pt).astype(int)
+    net_benefits = []
+    treat_all_net_benefits = []
+    
+    def compute_net_benefit(thresh):
+        """ compute net benefit at a certain threshold """
+        y_pred = (y_pred_prob >= thresh).astype(int)
         tn, fp, fn, tp = confusion_matrix(y, y_pred).ravel()
 
-        net_benefit = (tp / N) - (fp / N) * (pt / (1 - pt))
+        # Net benefit of the model at this threshold
+        net_benefit = (tp / N) - (fp / N) * (thresh / (1 - thresh))
+        return net_benefit
+
+    for pt in thresholds:
+        net_benefit = compute_net_benefit(pt)
         net_benefits.append(net_benefit)
+
+        # Net benefit of treating everyone at this threshold
+        treat_all_nb = prevalence - (1 - prevalence) * (pt / (1 - pt))
+        treat_all_net_benefits.append(treat_all_nb)
+        
 
     # Plotting
     plt.plot(thresholds, net_benefits, label=config.model.name, linewidth=2)
-    plt.plot(thresholds, [0]*len(thresholds), linestyle="--", label="Treat None")
-    plt.plot(thresholds, thresholds, linestyle="--", label="Treat All")  # Simplified version
+    plt.plot(thresholds, [0] * len(thresholds), linestyle="--", label="Treat None")
+    plt.plot(thresholds, treat_all_net_benefits, linestyle="--", label="Treat All")
+    model_nb = compute_net_benefit(model_threshold)
+    print(model_nb)
+    plt.annotate(
+        f'({model_threshold:.3f}, {model_nb:.3f})', 
+        xy=(model_threshold, model_nb),  
+        xytext=(model_threshold, model_nb+0.15),  
+        ha="center",                    # Horizontally center-aligns the text over the point
+        va="bottom",                    # Vertically aligns the bottom of the box above the offset
+        bbox=dict(
+            boxstyle="round,pad=0.4", 
+            fc="#F0F0F0", 
+            ec="gray", 
+            lw=1
+        ),
+        arrowprops=dict(color="gray", 
+                        linewidth=1, 
+                        arrowstyle="-|>,head_length=0.2,head_width=0.1",
+                        shrinkA=0,# Forces arrow tail to touch the text box
+                        shrinkB=0) # Forces arrowhead to perfectly touch the chart point), 
+    )
+    plt.ylim(-1,1)    
 
     plt.xlabel("Threshold Probability")
     plt.ylabel("Net Benefit")
@@ -512,9 +555,17 @@ def plot_decision_curve_analysis(model, split_index, X, y, config, thresholds=No
     plt.tight_layout()
     if savedir:
         filename = f'{config.model.code}_split{split_index}_dca'
-        plt.savefig(savedir / f'{filename}.png')    
+        plt.savefig(savedir / f'{filename}.png')
     plt.show()
     plt.close()
+
+    # save values as CSV
+    dfnb = pd.DataFrame({
+        'threshold' : thresholds,
+        'treat_all' : treat_all_net_benefits,
+        'net_benefits' : net_benefits
+    })
+    dfnb.to_csv(savedir / f'{config.model.code}_split{split_index}_nb.csv')
 
     return thresholds, net_benefits
 

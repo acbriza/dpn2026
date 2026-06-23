@@ -10,6 +10,7 @@ from sklearn.model_selection import StratifiedKFold
 from catboost import CatBoostClassifier
 from skopt.space import Integer, Real, Categorical
 from sklearn.metrics import precision_recall_curve, average_precision_score
+from sklearn.calibration import calibration_curve
 
 from pathlib import Path
 import joblib
@@ -568,6 +569,368 @@ def plot_decision_curve_analysis(model, model_threshold, split_index, X, y, conf
     dfnb.to_csv(savedir / f'{config.model.code}_split{split_index}_nb.csv')
 
     return thresholds, net_benefits
+
+# ---------------------------------------------------------------------
+# CALIBRATION PLOT (Reliability Diagram)
+# ---------------------------------------------------------------------
+def plot_calibration_curve(
+        model, split_index, X, y, config, 
+        savedir=None, n_bins=10, strategy="uniform",
+        color="#1f77b4"):
+    """
+    Plots predicted probability (binned) vs. observed frequency of positives.
+
+    strategy: 'uniform' (equal-width bins) or 'quantile' (equal-count bins).
+              Quantile bins are often preferred with imbalanced clinical data
+              so that no bin is empty/sparse.
+    Inputs
+    -------
+        y_true : array-like of shape (n_samples,), binary labels {0, 1}
+        y_prob : array-like of shape (n_samples,), predicted probabilities for class 1
+                (e.g., from catboost_model.predict_proba(X_test)[:, 1])
+    """
+    y_true = y
+    y_prob = model.predict_proba(X)[:, 1]
+    prob_true, prob_pred = calibration_curve(
+        y_true, y_prob, n_bins=n_bins, strategy=strategy
+    )
+
+    plt.figure(figsize=(7, 7))
+
+    # Perfect calibration reference line
+    plt.plot([0, 1], [0, 1], linestyle="--", color="gray", label="Perfect calibration")
+
+    # Model calibration curve
+    plt.plot(prob_pred, prob_true, marker="o", color=color, label=f"Model {split_index}")
+
+    plt.xlabel("Mean predicted probability")
+    plt.ylabel("Observed frequency of positives")
+    plt.title(f"Calibration Plot with {n_bins} {strategy}-based bins")  
+    plt.xlim([0, 1])
+    plt.ylim([0, 1])
+    plt.legend(loc="upper left")
+
+    plt.tight_layout()
+    if savedir:
+        filename = f'{config.model.code}_split{split_index}_calibration'
+        plt.savefig(savedir / f'{filename}.png')
+    plt.show()
+    plt.close()
+
+
+"""
+Calibration Plot (Reliability Diagram) with Clopper-Pearson Confidence Intervals
+for binary classification, optimized for small samples (e.g., n~200).
+
+Inputs expected:
+    y_true : array-like of shape (n_samples,), binary labels {0, 1}
+    y_prob : array-like of shape (n_samples,), predicted probabilities for class 1
+             (e.g., from catboost_model.predict_proba(X_test)[:, 1])
+"""
+
+import matplotlib.gridspec as gridspec
+from scipy.stats import beta as beta_dist
+from sklearn.calibration import calibration_curve
+
+# ---------------------------------------------------------------------
+# clopper_pearson_ci - CALIBRATION PLOT HELPER
+# ---------------------------------------------------------------------
+
+def clopper_pearson_ci(n_pos, n_total, confidence=0.95):
+    """
+    Exact Clopper-Pearson binomial confidence interval.
+
+    Parameters
+    ----------
+    n_pos   : int or array — number of positive outcomes in the bin
+    n_total : int or array — total observations in the bin
+    confidence : float — e.g. 0.95 for 95% CI
+
+    Returns
+    -------
+    lo, hi : lower and upper bounds of the CI
+    """
+    alpha = 1 - confidence
+    # Lower bound: 0 when n_pos == 0
+    lo = np.where(
+        n_pos == 0,
+        0.0,
+        beta_dist.ppf(alpha / 2, n_pos, n_total - n_pos + 1)
+    )
+    # Upper bound: 1 when n_pos == n_total
+    hi = np.where(
+        n_pos == n_total,
+        1.0,
+        beta_dist.ppf(1 - alpha / 2, n_pos + 1, n_total - n_pos)
+    )
+    return lo, hi
+
+# ---------------------------------------------------------------------
+# compute_calibration_bins - CALIBRATION PLOT HELPER
+# ---------------------------------------------------------------------
+def compute_calibration_bins(y_true, y_prob, n_bins=5, strategy="quantile"):
+    """
+    Computes calibration bin statistics manually so that we can recover
+    the exact n_total and n_pos per bin — required for confidence intervals.
+
+    sklearn's calibration_curve returns prob_true and prob_pred but not
+    the raw bin counts, so we recompute them here using the same binning logic.
+
+    Returns
+    -------
+    prob_pred  : mean predicted probability per bin (x-axis)
+    prob_true  : observed event rate per bin (y-axis)
+    n_total    : number of observations per bin
+    n_pos      : number of positive outcomes per bin
+    ci_lo      : lower 95% CI bound per bin
+    ci_hi      : upper 95% CI bound per bin
+    """
+    y_true = np.asarray(y_true)
+    y_prob = np.asarray(y_prob)
+
+    if strategy == "quantile":
+        # Equal-count bins based on predicted probability quantiles
+        quantiles = np.linspace(0, 1, n_bins + 1)
+        bins = np.percentile(y_prob, quantiles * 100)
+    elif strategy == "uniform":
+        bins = np.linspace(0.0, 1.0 + 1e-8, n_bins + 1)
+    else:
+        raise ValueError("strategy must be 'quantile' or 'uniform'")
+
+    # Ensure bin edges are unique (can collapse with small n or clustered scores)
+    bins = np.unique(bins)
+
+    prob_pred = []
+    prob_true = []
+    n_total_list = []
+    n_pos_list = []
+
+    for i in range(len(bins) - 1):
+        if i == len(bins) - 2:
+            # Include the right edge in the last bin
+            mask = (y_prob >= bins[i]) & (y_prob <= bins[i + 1])
+        else:
+            mask = (y_prob >= bins[i]) & (y_prob < bins[i + 1])
+
+        n = mask.sum()
+        if n == 0:
+            continue  # skip empty bins
+
+        n_pos = y_true[mask].sum()
+        prob_pred.append(y_prob[mask].mean())
+        prob_true.append(n_pos / n)
+        n_total_list.append(n)
+        n_pos_list.append(n_pos)
+
+    prob_pred  = np.array(prob_pred)
+    prob_true  = np.array(prob_true)
+    n_total    = np.array(n_total_list)
+    n_pos      = np.array(n_pos_list)
+
+    ci_lo, ci_hi = clopper_pearson_ci(n_pos, n_total, confidence=0.95)
+
+    return prob_pred, prob_true, n_total, n_pos, ci_lo, ci_hi
+
+
+# ---------------------------------------------------------------------
+# CALIBRATION PLOT WITH CI
+# ---------------------------------------------------------------------
+
+def plot_calibration_with_ci(
+        model, split_index, X, y, config, 
+        savedir=None, n_bins=5, strategy="quantile",
+        color="#1f77b4", show_histogram=True):
+    """
+    Plots a calibration curve with Clopper-Pearson 95% confidence intervals,
+    and an optional histogram of predicted probabilities along the bottom.
+
+    Parameters
+    ----------
+    y_true         : binary outcome array
+    y_prob         : predicted probability array
+    n_bins         : number of calibration bins (5 recommended for n~200)
+    strategy       : 'quantile' (recommended) or 'uniform'
+    label          : model name for the legend
+    color          : line/marker color
+    ax             : matplotlib Axes (optional; creates figure if None)
+    show_histogram : if True, adds a rug/histogram below the plot showing
+                     score distribution for positives and negatives separately
+    """
+    y_true = y
+    y_prob = model.predict_proba(X)[:, 1]
+    label=f"Model {split_index}"
+    prob_pred, prob_true, n_total, n_pos, ci_lo, ci_hi = compute_calibration_bins(
+        y_true, y_prob,
+        n_bins=n_bins, strategy=strategy
+    )
+
+    # Asymmetric error bars: distance from observed rate to CI bounds
+    err_lo = prob_true - ci_lo
+    err_hi = ci_hi - prob_true
+
+    if show_histogram:
+        fig = plt.figure(figsize=(7, 7))
+        gs  = gridspec.GridSpec(2, 1, height_ratios=[4, 1], hspace=0.08)
+        ax  = fig.add_subplot(gs[0])
+        ax_hist = fig.add_subplot(gs[1], sharex=ax)
+    else:
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax_hist = None
+
+    # --- Perfect calibration reference line ---
+    ax.plot([0, 1], [0, 1], linestyle="--", color="gray",
+            linewidth=1.2, label="Perfect calibration", zorder=1)
+
+    # --- Calibration curve with error bars ---
+    ax.errorbar(
+        prob_pred, prob_true,
+        yerr=[err_lo, err_hi],
+        fmt="o-",
+        color=color,
+        ecolor=color,
+        elinewidth=1.5,
+        capsize=4,
+        capthick=1.5,
+        markersize=7,
+        linewidth=1.8,
+        label=f"{label} (95% CI)",
+        zorder=3
+    )
+
+    # --- Annotate each point with bin sample size ---
+    for xp, yp, n in zip(prob_pred, prob_true, n_total):
+        ax.annotate(
+            f"n={n}",
+            xy=(xp, yp),
+            xytext=(5, 6),
+            textcoords="offset points",
+            fontsize=8,
+            color="dimgray"
+        )
+
+    ax.set_ylabel("Observed frequency of positives", fontsize=12)
+    ax.set_ylim(-0.05, 1.05)
+    ax.set_xlim(-0.02, 1.02)
+    ax.legend(loc="upper left", fontsize=10)
+    ax.grid(alpha=0.3)
+    ax.set_title("Calibration Plot (Reliability Diagram)", fontsize=13, pad=10)
+
+    # --- Optional: histogram of predicted probabilities ---
+    if show_histogram and ax_hist is not None:
+        y_true = np.asarray(y_true)
+        y_prob = np.asarray(y_prob)
+
+        ax_hist.hist(y_prob[y_true == 0], bins=25, range=(0, 1),
+                     color="#2196F3", alpha=0.6, label="Negative")
+        ax_hist.hist(y_prob[y_true == 1], bins=25, range=(0, 1),
+                     color="#F44336", alpha=0.6, label="Positive")
+
+        ax_hist.set_xlabel("Predicted probability", fontsize=12)
+        ax_hist.set_ylabel("Count", fontsize=10)
+        ax_hist.legend(fontsize=8, loc="upper right")
+        ax_hist.grid(alpha=0.3)
+        plt.setp(ax.get_xticklabels(), visible=False)
+
+    plt.tight_layout()
+    if savedir:
+        filename = f'{config.model.code}_split{split_index}_calibration'
+        plt.savefig(savedir / f'{filename}.png')
+    plt.show()
+    plt.close()
+
+    # return ax
+
+
+
+
+# ---------------------------------------------------------------------
+# BRIER CURVE
+# ---------------------------------------------------------------------
+def brier_curve(y_true, y_prob, n_points=101):
+    """
+    Computes a Brier Curve following Hernandez-Orallo et al.
+
+    Sweeps an "operating condition" c in [0, 1], representing a hypothetical
+    proportion of the positive class (equivalently, a cost-proportion under
+    cost-sensitive reasoning). At each c, computes the expected quadratic
+    (Brier-type) loss of the classifier's score distribution, reweighted to
+    reflect that operating condition.
+
+    Inputs
+    -------
+        y_true : array-like of shape (n_samples,), binary labels {0, 1}
+        y_prob : array-like of shape (n_samples,), predicted probabilities for class 1
+                (e.g., from catboost_model.predict_proba(X_test)[:, 1])
+
+    Returns
+    -------
+    c_values : array of operating conditions (x-axis)
+    loss_values : expected loss at each operating condition (y-axis)
+    """
+    y_true = np.asarray(y_true)
+    y_prob = np.asarray(y_prob)
+
+    pos_scores = y_prob[y_true == 1]
+    neg_scores = y_prob[y_true == 0]
+
+    n_pos = len(pos_scores)
+    n_neg = len(neg_scores)
+
+    c_values = np.linspace(0, 1, n_points)
+    loss_values = np.zeros(n_points)
+
+    for i, c in enumerate(c_values):
+        # Reweight the contribution of positive vs negative cases according
+        # to the hypothetical operating condition c, instead of using the
+        # empirical class balance directly.
+        if n_pos > 0:
+            loss_pos = np.mean((1 - pos_scores) ** 2) * c
+        else:
+            loss_pos = 0.0
+
+        if n_neg > 0:
+            loss_neg = np.mean(neg_scores ** 2) * (1 - c)
+        else:
+            loss_neg = 0.0
+
+        loss_values[i] = loss_pos + loss_neg
+
+    return c_values, loss_values
+
+
+def plot_brier_curve(
+        model, split_index, X, y, config, 
+        savedir=None, n_points=101, 
+        color="#d62728"):
+    """
+    Plots the Brier Curve: expected loss vs. operating condition.
+    Also reports the area under the curve (analogous to AUC, lower is better).
+    """
+    y_true = y
+    y_prob = model.predict_proba(X)[:, 1]
+
+    c_values, loss_values = brier_curve(y_true, y_prob, n_points=n_points)
+    auc_brier = np.trapz(loss_values, c_values)
+
+    plt.figure(figsize=(7, 7))
+
+    plt.plot(c_values, loss_values, color=color,
+             label=f"Model {split_index} (AUC = {auc_brier:.3f})")
+    plt.fill_between(c_values, loss_values, alpha=0.1, color=color)
+
+    plt.xlabel("Operating condition (assumed proportion of positives)")
+    plt.ylabel("Expected loss (Brier-type)")
+    plt.title("Brier Curve")
+    plt.xlim([0, 1])
+    plt.ylim(bottom=0)
+    plt.legend(loc="upper right")
+
+    plt.tight_layout()
+    if savedir:
+        filename = f'{config.model.code}_split{split_index}_brier'
+        plt.savefig(savedir / f'{filename}.png')
+    plt.show()
+    plt.close()
 
 
 def plot_shap(DPN_data, model, split_index, config, X_test, savedir=None):

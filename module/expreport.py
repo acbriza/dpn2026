@@ -174,13 +174,18 @@ def main():
 
     exp.plot_roc_auc_overlapping(roc_data, config, outputdir)
 
-    # DCA
+    # DCA, Calibration, Brier
     for s in range(len(split_results)): 
         X_test = split_results[s]['X_test']
         y_test = split_results[s]['y_test']
         model = trained_models[s]
         model_threshold = split_results[s]['metrics']['threshold']
         thresholds, nb = exp.plot_decision_curve_analysis(model, model_threshold, s, X_test, y_test, config, savedir=outputdir)
+
+        # exp.plot_calibration_curve(model, s, X_test, y_test, config, savedir=outputdir, n_bins=5, strategy="quantile")
+        exp.plot_calibration_with_ci(model, s, X_test, y_test, config, savedir=outputdir)
+        exp.plot_brier_curve(model, s, X_test, y_test, config, savedir=outputdir)
+
 
     # SHAP Individual Plots
     # for s in range(len(split_results)): 

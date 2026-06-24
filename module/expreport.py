@@ -180,12 +180,55 @@ def main():
         y_test = split_results[s]['y_test']
         model = trained_models[s]
         model_threshold = split_results[s]['metrics']['threshold']
-        thresholds, nb = exp.plot_decision_curve_analysis(model, model_threshold, s, X_test, y_test, config, savedir=outputdir)
+        # thresholds, nb = exp.plot_decision_curve_analysis(model, model_threshold, s, X_test, y_test, config, savedir=outputdir)
 
         # exp.plot_calibration_curve(model, s, X_test, y_test, config, savedir=outputdir, n_bins=5, strategy="quantile")
-        exp.plot_calibration_with_ci(model, s, X_test, y_test, config, savedir=outputdir)
+        # exp.plot_calibration_with_ci(model, s, X_test, y_test, config, savedir=outputdir)
         exp.plot_brier_curve(model, s, X_test, y_test, config, savedir=outputdir)
 
+    # Pooled plots
+    # thresholds, net_benefits, pooled_df = exp.plot_pooled_decision_curve_analysis(
+    #     split_results=split_results,
+    #     trained_models=trained_models,
+    #     config=config,
+    #     savedir=outputdir
+    # )    
+
+    # pooled_df, cal_stats = exp.plot_pooled_calibration_curve(
+    #     split_results=split_results,
+    #     trained_models=trained_models,
+    #     config=config,
+    #     n_bins=10,
+    #     n_bootstrap=1000,
+    #     confidence_level=0.95,
+    #     savedir=outputdir
+    # )
+
+    # Pool once
+    pooled_df, all_probs, all_labels, prevalence, N = exp.pool_fold_predictions(
+        split_results, trained_models
+    )
+    exp.print_distribution_audit(
+        split_results, trained_models, all_probs, all_labels, prevalence, N
+    )
+
+    # Four separate figures, each reusing the same pooled_df
+    pooled_df, auroc_stats = exp.plot_pooled_auroc(
+        split_results, trained_models, config,
+        pooled_df=pooled_df, savedir=outputdir
+    )
+    pooled_df, auprc_stats = exp.plot_pooled_auprc(
+        split_results, trained_models, config,
+        pooled_df=pooled_df, savedir=outputdir
+    )
+    pooled_df, cal_stats = exp.plot_pooled_calibration_curve(
+        split_results, trained_models, config,
+        pooled_df=pooled_df, savedir=outputdir
+    )
+    pooled_df, dca_stats = exp.plot_pooled_decision_curve_analysis(
+        split_results, trained_models, config,
+        pooled_df=pooled_df, savedir=outputdir
+    )
 
     # SHAP Individual Plots
     # for s in range(len(split_results)): 

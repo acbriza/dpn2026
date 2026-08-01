@@ -5,12 +5,15 @@ import matplotlib.patches as mpatches
 import seaborn as sns
 import matplotlib.colors as mcolors
 
-from sklearn.metrics import roc_curve, auc, confusion_matrix
+from sklearn.metrics import roc_curve, auc, auc, roc_auc_score, confusion_matrix
 from sklearn.model_selection import StratifiedKFold
 from catboost import CatBoostClassifier
 from skopt.space import Integer, Real, Categorical
 from sklearn.metrics import precision_recall_curve, average_precision_score
 from sklearn.calibration import calibration_curve
+
+import matplotlib.gridspec as gridspec
+from scipy.stats import beta as beta_dist
 
 from pathlib import Path
 import joblib
@@ -458,6 +461,9 @@ def plot_roc_auc_overlapping(roc_data, config, savedir=None):
     plt.show()
     plt.close()
 
+# ---------------------------------------------------------------------
+# DECISION CURVE ANALYSIS
+# ---------------------------------------------------------------------
 def plot_decision_curve_analysis(model, model_threshold, split_index, X, y, config, thresholds=None, savedir=None):
     """
     Perform Decision Curve Analysis (DCA) for a trained classifier.
@@ -628,10 +634,6 @@ Inputs expected:
     y_prob : array-like of shape (n_samples,), predicted probabilities for class 1
              (e.g., from catboost_model.predict_proba(X_test)[:, 1])
 """
-
-import matplotlib.gridspec as gridspec
-from scipy.stats import beta as beta_dist
-from sklearn.calibration import calibration_curve
 
 # ---------------------------------------------------------------------
 # clopper_pearson_ci - CALIBRATION PLOT HELPER
@@ -1163,467 +1165,10 @@ def plot_cv_auprc(y_reals, y_probas, config, savedir=None):
     plt.show()    
     plt.close()
 
-# ---------------------------------------------------------------------
-# POOLED PLOTS AUROC, AUPRC, CALIBRATION, DCA
-# ---------------------------------------------------------------------
 
-def plot_pooled_decision_curve_analysis(split_results, trained_models, config, thresholds=None, savedir=None):
-    """
-    Perform pooled Decision Curve Analysis (DCA) using fold-matched out-of-sample
-    predicted probabilities across all CV splits.
-
-    Each patient's probability is generated exclusively by the model fold in which
-    that patient served as a test case, preserving out-of-sample integrity across
-    the full dataset.
-
-    Parameters:
-    -----------
-    split_results : list of dict
-        Each dict must contain:
-            - 'X_test'               : array-like, feature matrix for the test fold
-            - 'y_test'               : array-like, true binary labels for the test fold
-            - 'metrics'              : dict with key 'threshold' (float)
-    trained_models : list
-        List of trained sklearn-like estimators (one per fold), each with predict_proba.
-    config : object
-        Config object with `model.name` and `model.code` attributes.
-    thresholds : array-like, optional
-        Threshold probabilities to evaluate. Defaults to np.arange(0.005, 1.0, 0.005).
-    savedir : Path, optional
-        Directory to save the plot and CSV output.
-
-    Returns:
-    --------
-    thresholds : np.ndarray
-        Threshold probabilities used.
-    net_benefits : list
-        Pooled net benefit values for the model at each threshold.
-    pooled_df : pd.DataFrame
-        DataFrame of pooled predicted probabilities and true labels (all 190 patients).
-    """
-
-    # --- Default thresholds ---
-    if thresholds is None:
-        thresholds = np.arange(0.005, 1.0, 0.005)
-    else:
-        thresholds = np.asarray(thresholds)
-        if np.any(thresholds >= 1.0):
-            raise ValueError("Thresholds must be < 1.0 to avoid division by zero.")
-
-    # --- Pool fold-matched predictions across all splits ---
-    all_probs = []
-    all_labels = []
-    fold_thresholds = []
-
-    for s in range(len(split_results)):
-        X_test = split_results[s]['X_test']
-        y_test = split_results[s]['y_test']
-        model = trained_models[s]
-        fold_threshold = split_results[s]['metrics']['threshold']
-
-        y_pred_prob = model.predict_proba(X_test)[:, 1]
-        all_probs.extend(y_pred_prob)
-        all_labels.extend(y_test)
-        fold_thresholds.append(fold_threshold)
-
-    all_probs = np.array(all_probs)
-    all_labels = np.array(all_labels)
-
-    # Store pooled predictions for return and optional audit
-    pooled_df = pd.DataFrame({
-        'y_true': all_labels,
-        'y_pred_prob': all_probs
-    })
-
-    N = len(all_labels)
-    prevalence = np.sum(all_labels) / N
-
-    # --- Verify probability distribution consistency across folds (optional audit) ---
-    print("=== Fold Probability Distribution Audit ===")
-    for s in range(len(split_results)):
-        X_test = split_results[s]['X_test']
-        fold_probs = trained_models[s].predict_proba(X_test)[:, 1]
-        print(f"  Fold {s}: mean={fold_probs.mean():.4f}, "
-              f"std={fold_probs.std():.4f}, "
-              f"min={fold_probs.min():.4f}, "
-              f"max={fold_probs.max():.4f}")
-    print(f"  Pooled : mean={all_probs.mean():.4f}, "
-          f"std={all_probs.std():.4f}, "
-          f"min={all_probs.min():.4f}, "
-          f"max={all_probs.max():.4f}")
-    print(f"  Total pooled patients : {N}")
-    print(f"  Pooled prevalence     : {prevalence:.4f} ({int(np.sum(all_labels))}/{N})")
-    print()
-
-    # --- Net benefit computation ---
-    def compute_net_benefit(probs, labels, n, thresh):
-        y_pred = (probs >= thresh).astype(int)
-        tn, fp, fn, tp = confusion_matrix(labels, y_pred).ravel()
-        return (tp / n) - (fp / n) * (thresh / (1 - thresh))
-
-    net_benefits = []
-    treat_all_net_benefits = []
-
-    for pt in thresholds:
-        nb = compute_net_benefit(all_probs, all_labels, N, pt)
-        net_benefits.append(nb)
-        treat_all_nb = prevalence - (1 - prevalence) * (pt / (1 - pt))
-        treat_all_net_benefits.append(treat_all_nb)
-
-    # --- Mean fold threshold for annotation ---
-    mean_threshold = np.mean(fold_thresholds)
-    mean_nb = compute_net_benefit(all_probs, all_labels, N, mean_threshold)
-
-    print(f"  Mean fold threshold   : {mean_threshold:.4f}")
-    print(f"  Net benefit at mean threshold: {mean_nb:.4f}")
-    for s, ft in enumerate(fold_thresholds):
-        nb_at_fold = compute_net_benefit(all_probs, all_labels, N, ft)
-        print(f"  Fold {s} threshold={ft:.4f} → net benefit={nb_at_fold:.4f}")
-
-    # --- Plot ---
-    fig, ax = plt.subplots(figsize=(8, 5))
-
-    ax.plot(thresholds, net_benefits,
-            label=f'{config.model.name} (Pooled, n={N})',
-            linewidth=2, color='steelblue')
-    ax.plot(thresholds, [0] * len(thresholds),
-            linestyle='--', label='Treat None', color='gray')
-    ax.plot(thresholds, treat_all_net_benefits,
-            linestyle='--', label='Treat All', color='firebrick')
-
-    # Annotate mean fold threshold on the pooled curve
-    ax.annotate(
-        f'Mean threshold\n({mean_threshold:.3f}, {mean_nb:.3f})',
-        xy=(mean_threshold, mean_nb),
-        xytext=(mean_threshold, mean_nb + 0.15),
-        ha='center',
-        va='bottom',
-        bbox=dict(boxstyle='round,pad=0.4', fc='#F0F0F0', ec='gray', lw=1),
-        arrowprops=dict(
-            color='gray', linewidth=1,
-            arrowstyle='-|>,head_length=0.2,head_width=0.1',
-            shrinkA=0, shrinkB=0
-        )
-    )
-
-    # Optionally mark individual fold thresholds as small tick marks
-    for s, ft in enumerate(fold_thresholds):
-        nb_at_fold = compute_net_benefit(all_probs, all_labels, N, ft)
-        ax.plot(ft, nb_at_fold, marker='|', color='steelblue',
-                markersize=10, markeredgewidth=1.5,
-                label=f'Fold {s} threshold ({ft:.3f})' if s == 0 else f'Fold {s} ({ft:.3f})')
-
-    ax.set_ylim(-0.1, prevalence + 0.1)
-    ax.set_xlim(0, 1)
-    ax.set_xlabel('Threshold Probability', fontsize=12)
-    ax.set_ylabel('Net Benefit', fontsize=12)
-    ax.set_title(
-        f'Pooled Decision Curve Analysis — {config.model.name}\n'
-        f'(Fold-matched out-of-sample predictions, n={N}, '
-        f'prevalence={prevalence:.1%})',
-        fontsize=11
-    )
-    ax.legend(loc='upper right', fontsize=9)
-    ax.grid(True, linestyle='--', alpha=0.6)
-    fig.tight_layout()
-
-    if savedir:
-        filename = f'{config.model.code}_pooled_dca'
-        fig.savefig(savedir / f'{filename}.png', dpi=300)
-
-    plt.show()
-    plt.close()
-
-    # --- Save CSV ---
-    dfnb = pd.DataFrame({
-        'threshold': thresholds,
-        'treat_all': treat_all_net_benefits,
-        'net_benefit_pooled': net_benefits
-    })
-    if savedir:
-        dfnb.to_csv(savedir / f'{config.model.code}_pooled_nb.csv', index=False)
-
-    return thresholds, net_benefits, pooled_df
-
-
-def plot_pooled_calibration_curve(
-    split_results,
-    trained_models,
-    config,
-    n_bins=10,
-    ci_method='bootstrap',
-    n_bootstrap=1000,
-    confidence_level=0.95,
-    savedir=None
-):
-    """
-    Plot a pooled calibration curve using fold-matched out-of-sample predicted
-    probabilities across all CV splits, with bootstrapped confidence intervals.
-
-    Each patient's probability is generated exclusively by the model fold in which
-    that patient served as a test case, preserving out-of-sample integrity across
-    the full dataset.
-
-    Parameters:
-    -----------
-    split_results : list of dict
-        Each dict must contain:
-            - 'X_test'   : array-like, feature matrix for the test fold
-            - 'y_test'   : array-like, true binary labels for the test fold
-    trained_models : list
-        List of trained sklearn-like estimators (one per fold), each with predict_proba.
-    config : object
-        Config object with `model.name` and `model.code` attributes.
-    n_bins : int
-        Number of bins for the reliability diagram. Default 10.
-    ci_method : str
-        Confidence interval method. Currently supports 'bootstrap'.
-    n_bootstrap : int
-        Number of bootstrap iterations for CI estimation. Default 1000.
-    confidence_level : float
-        Confidence level for intervals (e.g., 0.95 for 95% CI). Default 0.95.
-    savedir : Path, optional
-        Directory to save the plot and CSV output.
-
-    Returns:
-    --------
-    pooled_df : pd.DataFrame
-        DataFrame of pooled predicted probabilities and true labels (all patients).
-    calibration_stats : dict
-        Contains: fraction_of_positives, mean_predicted_value, ECE, MCE,
-                  brier_score, ece_ci, brier_ci
-    """
-    from sklearn.calibration import calibration_curve
-    from sklearn.metrics import brier_score_loss
-
-    # -------------------------------------------------------------------------
-    # 1. Pool fold-matched predictions
-    # -------------------------------------------------------------------------
-    all_probs  = []
-    all_labels = []
-
-    for s in range(len(split_results)):
-        X_test    = split_results[s]['X_test']
-        y_test    = split_results[s]['y_test']
-        model     = trained_models[s]
-        fold_prob = model.predict_proba(X_test)[:, 1]
-
-        all_probs.extend(fold_prob)
-        all_labels.extend(y_test)
-
-    all_probs  = np.array(all_probs)
-    all_labels = np.array(all_labels)
-
-    N          = len(all_labels)
-    prevalence = np.sum(all_labels) / N
-
-    pooled_df = pd.DataFrame({
-        'y_true':      all_labels,
-        'y_pred_prob': all_probs
-    })
-
-    # -------------------------------------------------------------------------
-    # 2. Probability distribution audit (mirrors DCA audit)
-    # -------------------------------------------------------------------------
-    print("=== Fold Probability Distribution Audit ===")
-    for s in range(len(split_results)):
-        fp = trained_models[s].predict_proba(split_results[s]['X_test'])[:, 1]
-        print(f"  Fold {s}: mean={fp.mean():.4f}, std={fp.std():.4f}, "
-              f"min={fp.min():.4f}, max={fp.max():.4f}")
-    print(f"  Pooled : mean={all_probs.mean():.4f}, std={all_probs.std():.4f}, "
-          f"min={all_probs.min():.4f}, max={all_probs.max():.4f}")
-    print(f"  Total pooled patients : {N}")
-    print(f"  Pooled prevalence     : {prevalence:.4f} ({int(np.sum(all_labels))}/{N})\n")
-
-    # -------------------------------------------------------------------------
-    # 3. Calibration curve (pooled)
-    # -------------------------------------------------------------------------
-    fraction_of_positives, mean_predicted_value = calibration_curve(
-        all_labels, all_probs, n_bins=n_bins, strategy='uniform'
-    )
-
-    # -------------------------------------------------------------------------
-    # 4. Scalar calibration metrics
-    # -------------------------------------------------------------------------
-    def compute_ece(probs, labels, n_bins):
-        """Expected Calibration Error."""
-        bin_edges  = np.linspace(0, 1, n_bins + 1)
-        ece        = 0.0
-        for i in range(n_bins):
-            mask = (probs >= bin_edges[i]) & (probs < bin_edges[i + 1])
-            if mask.sum() == 0:
-                continue
-            bin_acc  = labels[mask].mean()
-            bin_conf = probs[mask].mean()
-            ece     += (mask.sum() / len(probs)) * abs(bin_acc - bin_conf)
-        return ece
-
-    def compute_mce(probs, labels, n_bins):
-        """Maximum Calibration Error."""
-        bin_edges = np.linspace(0, 1, n_bins + 1)
-        mce       = 0.0
-        for i in range(n_bins):
-            mask = (probs >= bin_edges[i]) & (probs < bin_edges[i + 1])
-            if mask.sum() == 0:
-                continue
-            bin_acc  = labels[mask].mean()
-            bin_conf = probs[mask].mean()
-            mce      = max(mce, abs(bin_acc - bin_conf))
-        return mce
-
-    ece         = compute_ece(all_probs, all_labels, n_bins)
-    mce         = compute_mce(all_probs, all_labels, n_bins)
-    brier_score = brier_score_loss(all_labels, all_probs)
-
-    print(f"=== Pooled Calibration Metrics ===")
-    print(f"  ECE         : {ece:.4f}")
-    print(f"  MCE         : {mce:.4f}")
-    print(f"  Brier Score : {brier_score:.4f}\n")
-
-    # -------------------------------------------------------------------------
-    # 5. Bootstrap confidence intervals on ECE and Brier score
-    # -------------------------------------------------------------------------
-    alpha        = 1 - confidence_level
-    boot_ece     = []
-    boot_brier   = []
-    boot_curves  = []   # store bootstrapped reliability curves for CI band
-
-    rng = np.random.default_rng(seed=42)
-
-    for _ in range(n_bootstrap):
-        idx          = rng.integers(0, N, size=N)
-        b_probs      = all_probs[idx]
-        b_labels     = all_labels[idx]
-
-        boot_ece.append(compute_ece(b_probs, b_labels, n_bins))
-        boot_brier.append(brier_score_loss(b_labels, b_probs))
-
-        # Bootstrapped reliability curve at same bin positions
-        try:
-            fop, mpv = calibration_curve(b_labels, b_probs,
-                                         n_bins=n_bins, strategy='uniform')
-            # Interpolate onto fixed mean_predicted_value grid for band
-            interp_fop = np.interp(mean_predicted_value, mpv, fop,
-                                   left=np.nan, right=np.nan)
-            boot_curves.append(interp_fop)
-        except Exception:
-            pass
-
-    boot_ece   = np.array(boot_ece)
-    boot_brier = np.array(boot_brier)
-    boot_curves = np.array(boot_curves)   # shape: (n_bootstrap, n_bins)
-
-    ece_ci   = (np.nanpercentile(boot_ece,   alpha / 2 * 100),
-                np.nanpercentile(boot_ece,   (1 - alpha / 2) * 100))
-    brier_ci = (np.nanpercentile(boot_brier, alpha / 2 * 100),
-                np.nanpercentile(boot_brier, (1 - alpha / 2) * 100))
-
-    # CI band for reliability curve
-    curve_lower = np.nanpercentile(boot_curves, alpha / 2 * 100,       axis=0)
-    curve_upper = np.nanpercentile(boot_curves, (1 - alpha / 2) * 100, axis=0)
-
-    print(f"=== Bootstrap {confidence_level:.0%} Confidence Intervals (n={n_bootstrap}) ===")
-    print(f"  ECE   : {ece:.4f}  [{ece_ci[0]:.4f}, {ece_ci[1]:.4f}]")
-    print(f"  Brier : {brier_score:.4f}  [{brier_ci[0]:.4f}, {brier_ci[1]:.4f}]\n")
-
-    # -------------------------------------------------------------------------
-    # 6. Plot
-    # -------------------------------------------------------------------------
-    fig, ax = plt.subplots(figsize=(7, 7))
-
-    # Perfect calibration reference line
-    ax.plot([0, 1], [0, 1],
-            linestyle='--', color='gray', linewidth=1.5,
-            label='Perfect calibration')
-
-    # Bootstrapped CI band around reliability curve
-    valid = ~(np.isnan(curve_lower) | np.isnan(curve_upper))
-    if valid.any():
-        ax.fill_between(
-            mean_predicted_value[valid],
-            curve_lower[valid],
-            curve_upper[valid],
-            alpha=0.20, color='steelblue',
-            label=f'{confidence_level:.0%} CI (bootstrap, n={n_bootstrap})'
-        )
-
-    # Pooled reliability curve
-    ax.plot(mean_predicted_value, fraction_of_positives,
-            marker='o', linewidth=2, color='steelblue',
-            markersize=6, markerfacecolor='white', markeredgewidth=2,
-            label=f'{config.model.name} (Pooled, n={N})')
-
-    # Rug plot — predicted probability distribution along x-axis
-    ax.plot(all_probs[all_labels == 1],
-            np.full(np.sum(all_labels == 1), -0.03),
-            '|', color='steelblue', alpha=0.4, markersize=8,
-            label='DPN positive')
-    ax.plot(all_probs[all_labels == 0],
-            np.full(np.sum(all_labels == 0), -0.06),
-            '|', color='firebrick', alpha=0.4, markersize=8,
-            label='DPN negative')
-
-    # Metric annotation box
-    stats_text = (
-        f"ECE  : {ece:.3f} [{ece_ci[0]:.3f}–{ece_ci[1]:.3f}]\n"
-        f"MCE  : {mce:.3f}\n"
-        f"Brier: {brier_score:.3f} [{brier_ci[0]:.3f}–{brier_ci[1]:.3f}]"
-    )
-    ax.text(0.62, 0.12, stats_text,
-                transform=ax.transAxes,
-                fontsize=9,
-                verticalalignment='bottom',
-                horizontalalignment='left',
-                bbox=dict(boxstyle='round,pad=0.5', fc='#F0F0F0', ec='gray', lw=1),
-                family='monospace')
-
-    ax.set_xlim(-0.05, 1.05)
-    ax.set_ylim(-0.10, 1.05)
-    ax.set_xlabel('Mean Predicted Probability', fontsize=12)
-    ax.set_ylabel('Fraction of Positives', fontsize=12)
-    ax.set_title(
-        f'Pooled Calibration Curve — {config.model.name}\n'
-        f'(Fold-matched out-of-sample predictions, n={N}, '
-        f'prevalence={prevalence:.1%})',
-        fontsize=11
-    )
-    ax.legend(loc='upper left', fontsize=9)
-    ax.grid(True, linestyle='--', alpha=0.5)
-    fig.tight_layout()
-
-    if savedir:
-        filename = f'{config.model.code}_pooled_calibration'
-        fig.savefig(savedir / f'{filename}.png', dpi=300, bbox_inches='tight')
-
-    plt.show()
-    plt.close()
-
-    # -------------------------------------------------------------------------
-    # 7. Save CSV
-    # -------------------------------------------------------------------------
-    cal_df = pd.DataFrame({
-        'mean_predicted_value':  mean_predicted_value,
-        'fraction_of_positives': fraction_of_positives,
-        'ci_lower':              curve_lower,
-        'ci_upper':              curve_upper,
-        'fraction_of_positives': fraction_of_positives,
-        'mean_predicted_value':  mean_predicted_value,
-    })
-
-    calibration_stats = {
-        'ECE':                   ece,
-        'MCE':                   mce,
-        'brier_score':           brier_score,
-        'ece_ci':                ece_ci,
-        'brier_ci':              brier_ci
-    }
-
-    if savedir:
-        cal_df.to_csv(savedir / f'{config.model.code}_pooled_calibration.csv', index=False)
-        with open(savedir / f'{config.model.code}_pooled_calibration_stats.json', 'w') as f:
-            json.dump(calibration_stats, f, indent=4)
-
-    return pooled_df, calibration_stats
+# =============================================================================
+# HELPER FUNCTIONS FOR POOLED MODEL PERFORMANCE PLOTS 
+# =============================================================================
 
 def pool_fold_predictions(split_results, trained_models):
     """
@@ -1694,7 +1239,7 @@ def print_distribution_audit(split_results, trained_models, all_probs, all_label
 
 
 # =============================================================================
-# FIGURE 1 — AUROC
+# POOLED AUROC
 # =============================================================================
 def plot_pooled_auroc(
     split_results,
@@ -1732,13 +1277,11 @@ def plot_pooled_auroc(
     auroc_stats : dict
         auroc, auroc_ci, fold_aurocs, fpr, tpr
     """
-    from sklearn.metrics import roc_curve, auc, roc_auc_score
-
     # Pool predictions
     if pooled_df is None:
         pooled_df, all_probs, all_labels, prevalence, N = \
-            _pool_fold_predictions(split_results, trained_models)
-        _print_distribution_audit(split_results, trained_models,
+            pool_fold_predictions(split_results, trained_models)
+        print_distribution_audit(split_results, trained_models,
                                   all_probs, all_labels, prevalence, N)
     else:
         all_probs  = pooled_df['y_pred_prob'].values
@@ -1748,7 +1291,7 @@ def plot_pooled_auroc(
 
     # Pooled ROC
     fpr, tpr, _ = roc_curve(all_labels, all_probs)
-    auroc        = auc(fpr, tpr)
+    auroc       = auc(fpr, tpr)
 
     # Bootstrap CI
     alpha    = 1 - confidence_level
@@ -1797,32 +1340,33 @@ def plot_pooled_auroc(
     ax.fill_between(fpr_grid, tpr_lower, tpr_upper,
                     alpha=0.20, color='steelblue',
                     label=f'{confidence_level:.0%} CI '
-                          f'(bootstrap, n={n_bootstrap})')
+                          f'(bootstrap')
     ax.plot(fpr, tpr,
             color='steelblue', linewidth=2,
-            label=f'{config.model.name} (Pooled, n={N})')
+            label=f'{config.model.name} (pooled)')
     ax.plot([0, 1], [0, 1],
             linestyle='--', color='gray', linewidth=1.5,
             label='Random classifier')
 
     stats_text = (
-        f"AUROC : {auroc:.3f} [{auroc_ci[0]:.3f}–{auroc_ci[1]:.3f}]\n"
-        f"Mean  : {np.mean(fold_aurocs):.3f} ± {np.std(fold_aurocs):.3f}"
+        # f"Prevalence : {prevalence:.3f} %\n"
+        f"AUROC      : {auroc:.3f} [{auroc_ci[0]:.3f} – {auroc_ci[1]:.3f}]\n"
+        f"Mean & Std : {np.mean(fold_aurocs):.3f} ± {np.std(fold_aurocs):.3f}"
     )
-    ax.text(0.97, 0.03, stats_text,
-            transform=ax.transAxes, fontsize=9,
-            verticalalignment='bottom', horizontalalignment='right',
-            bbox=dict(boxstyle='round,pad=0.5', fc='#F0F0F0', ec='gray', lw=1),
-            family='monospace')
+    ax.text(
+            0.47, 0.15, 
+            stats_text,transform=ax.transAxes, fontsize=9,
+            verticalalignment='bottom', horizontalalignment='left',
+            bbox=dict(boxstyle='round,pad=0.5', fc='#F0F0F0', ec='gray', lw=0),
+            family='monospace'
+            )
 
     ax.set_xlim(-0.02, 1.02)
     ax.set_ylim(-0.02, 1.05)
-    ax.set_xlabel('1 - Specificity (False Positive Rate)', fontsize=11)
-    ax.set_ylabel('Sensitivity (True Positive Rate)',      fontsize=11)
+    ax.set_xlabel('False Positive Rate (1 - Specificity)', fontsize=11)
+    ax.set_ylabel('True Positive Rate (Sensitivity)',      fontsize=11)
     ax.set_title(
-        f'Receiver Operating Characteristic — {config.model.name}\n'
-        f'Pooled fold-matched predictions  |  n={N}  |  '
-        f'Prevalence {prevalence:.1%}',
+        f'Receiver Operating Characteristic (pooled)',
         fontsize=10
     )
     ax.legend(loc='lower right', fontsize=9)
@@ -1888,8 +1432,8 @@ def plot_pooled_auprc(
 
     if pooled_df is None:
         pooled_df, all_probs, all_labels, prevalence, N = \
-            _pool_fold_predictions(split_results, trained_models)
-        _print_distribution_audit(split_results, trained_models,
+            pool_fold_predictions(split_results, trained_models)
+        print_distribution_audit(split_results, trained_models,
                                   all_probs, all_labels, prevalence, N)
     else:
         all_probs  = pooled_df['y_pred_prob'].values
@@ -1951,36 +1495,35 @@ def plot_pooled_auprc(
     ax.fill_between(recall_grid, precision_lower, precision_upper,
                     alpha=0.20, color='darkorange',
                     label=f'{confidence_level:.0%} CI '
-                          f'(bootstrap, n={n_bootstrap})')
+                          f'(bootstrap)')
     ax.plot(recall, precision,
             color='darkorange', linewidth=2,
-            label=f'{config.model.name} (Pooled, n={N})')
+            label=f'{config.model.name}')
     ax.axhline(y=prevalence,
                linestyle='--', color='gray', linewidth=1.5,
                label=f'Random classifier (prevalence = {prevalence:.2f})')
 
     stats_text = (
-        f"AUPRC    : {auprc:.3f} [{auprc_ci[0]:.3f}–{auprc_ci[1]:.3f}]\n"
-        f"Mean     : {np.mean(fold_auprcs):.3f} ± {np.std(fold_auprcs):.3f}\n"
-        f"Baseline : {prevalence:.3f} (prevalence)"
+        f"AUPRC      : {auprc:.3f} [{auprc_ci[0]:.3f}–{auprc_ci[1]:.3f}]\n"
+        f"Mean & Std : {np.mean(fold_auprcs):.3f} ± {np.std(fold_auprcs):.3f}"
+        # f"Baseline : {prevalence:.3f} (prevalence)"
     )
-    ax.text(0.97, 0.03, stats_text,
-            transform=ax.transAxes, fontsize=9,
-            verticalalignment='bottom', horizontalalignment='right',
-            bbox=dict(boxstyle='round,pad=0.5', fc='#F0F0F0', ec='gray', lw=1),
+    ax.text(
+            0.5, 0.15,  
+            stats_text, transform=ax.transAxes, fontsize=9,
+            verticalalignment='bottom', horizontalalignment='left',
+            bbox=dict(boxstyle='round,pad=0.5', fc='#F0F0F0', ec='gray', lw=0),
             family='monospace')
 
     ax.set_xlim(-0.02, 1.02)
     ax.set_ylim(-0.02, 1.05)
     ax.set_xlabel('Recall (Sensitivity)',  fontsize=11)
-    ax.set_ylabel('Precision (PPV)',       fontsize=11)
+    ax.set_ylabel('Precision (PPV)',  fontsize=11)
     ax.set_title(
-        f'Precision-Recall Curve — {config.model.name}\n'
-        f'Pooled fold-matched predictions  |  n={N}  |  '
-        f'Prevalence {prevalence:.1%}',
+        f'Precision-Recall Curve',
         fontsize=10
     )
-    ax.legend(loc='lower left', fontsize=9)
+    ax.legend(loc='lower right', fontsize=9)
     ax.grid(True, linestyle='--', alpha=0.5)
     fig.tight_layout()
 
@@ -2047,8 +1590,8 @@ def plot_pooled_calibration_curve(
 
     if pooled_df is None:
         pooled_df, all_probs, all_labels, prevalence, N = \
-            _pool_fold_predictions(split_results, trained_models)
-        _print_distribution_audit(split_results, trained_models,
+            pool_fold_predictions(split_results, trained_models)
+        print_distribution_audit(split_results, trained_models,
                                   all_probs, all_labels, prevalence, N)
     else:
         all_probs  = pooled_df['y_pred_prob'].values
@@ -2139,12 +1682,12 @@ def plot_pooled_calibration_curve(
                         curve_lower[valid], curve_upper[valid],
                         alpha=0.20, color='steelblue',
                         label=f'{confidence_level:.0%} CI '
-                              f'(bootstrap, n={n_bootstrap})')
+                              f'(bootstrap)')
 
     ax.plot(mean_predicted_value, fraction_of_positives,
             marker='o', linewidth=2, color='steelblue',
             markersize=6, markerfacecolor='white', markeredgewidth=2,
-            label=f'{config.model.name} (Pooled, n={N})')
+            label=f'{config.model.name}')
 
     # Rug plot
     ax.plot(all_probs[all_labels == 1],
@@ -2161,10 +1704,10 @@ def plot_pooled_calibration_curve(
         f"MCE  : {mce:.3f}\n"
         f"Brier: {brier_score:.3f} [{brier_ci[0]:.3f}–{brier_ci[1]:.3f}]"
     )
-    ax.text(0.97, 0.03, stats_text,
+    ax.text(0.02, 0.78, stats_text,
             transform=ax.transAxes, fontsize=9,
-            verticalalignment='bottom', horizontalalignment='right',
-            bbox=dict(boxstyle='round,pad=0.5', fc='#F0F0F0', ec='gray', lw=1),
+            verticalalignment='top', horizontalalignment='left',
+            bbox=dict(boxstyle='round,pad=0.5', fc='#F0F0F0', ec='gray', lw=0),
             family='monospace')
 
     ax.set_xlim(-0.05, 1.05)
@@ -2172,9 +1715,7 @@ def plot_pooled_calibration_curve(
     ax.set_xlabel('Mean Predicted Probability', fontsize=11)
     ax.set_ylabel('Fraction of Positives',      fontsize=11)
     ax.set_title(
-        f'Calibration Curve — {config.model.name}\n'
-        f'Pooled fold-matched predictions  |  n={N}  |  '
-        f'Prevalence {prevalence:.1%}',
+        f'Calibration Curve',
         fontsize=10
     )
     ax.legend(loc='upper left', fontsize=9)
@@ -2214,6 +1755,176 @@ def plot_pooled_calibration_curve(
 # FIGURE 4 — DECISION CURVE ANALYSIS
 # =============================================================================
 def plot_pooled_decision_curve_analysis(
+    split_results,
+    trained_models,
+    config,
+    pooled_df=None,
+    thresholds=None,
+    n_bootstrap=1000,
+    confidence_level=0.95,
+    clinical_threshold_range=(0.30, 0.60),
+    savedir=None
+):
+    from sklearn.metrics import confusion_matrix
+
+    if pooled_df is None:
+        pooled_df, all_probs, all_labels, prevalence, N = \
+            _pool_fold_predictions(split_results, trained_models)
+        _print_distribution_audit(split_results, trained_models,
+                                  all_probs, all_labels, prevalence, N)
+    else:
+        all_probs  = pooled_df['y_pred_prob'].values
+        all_labels = pooled_df['y_true'].values
+        N          = len(all_labels)
+        prevalence = np.mean(all_labels)
+
+    if thresholds is None:
+        thresholds = np.arange(0.005, 1.0, 0.005)
+    thresholds = np.asarray(thresholds)
+
+    # --- Vectorised net benefit computation ---
+    def compute_nb_vectorised(probs, labels, thresh_arr):
+        n          = len(labels)
+        pred_mat   = (probs[np.newaxis, :] >= thresh_arr[:, np.newaxis])
+        tp         = (pred_mat &  labels[np.newaxis, :].astype(bool)).sum(axis=1)
+        fp         = (pred_mat & ~labels[np.newaxis, :].astype(bool)).sum(axis=1)
+        nb         = (tp / n) - (fp / n) * (thresh_arr / (1 - thresh_arr))
+        treat_all  = np.mean(labels) - (1 - np.mean(labels)) * \
+                     (thresh_arr / (1 - thresh_arr))
+        return nb, treat_all
+
+    net_benefits, treat_all_nb = compute_nb_vectorised(
+        all_probs, all_labels, thresholds
+    )[:2]
+
+    # --- Bootstrap CI on model net benefit curve ---
+    alpha          = 1 - confidence_level
+    rng            = np.random.default_rng(seed=42)
+    boot_nb_curves = []
+
+    for _ in range(n_bootstrap):
+        idx    = rng.integers(0, N, size=N)
+        b_nb, _ = compute_nb_vectorised(
+            all_probs[idx], all_labels[idx], thresholds
+        )
+        boot_nb_curves.append(b_nb)
+
+    boot_nb_curves = np.array(boot_nb_curves)
+    nb_lower = np.percentile(boot_nb_curves, alpha / 2 * 100,       axis=0)
+    nb_upper = np.percentile(boot_nb_curves, (1 - alpha / 2) * 100, axis=0)
+
+    # --- Fold thresholds ---
+    fold_thresholds = [split_results[s]['metrics']['threshold']
+                       for s in range(len(split_results))]
+    mean_threshold  = np.mean(fold_thresholds)
+    mean_nb_idx     = np.argmin(np.abs(thresholds - mean_threshold))
+    mean_nb         = net_benefits[mean_nb_idx]
+
+    print(f"=== DCA ===")
+    print(f"  Mean threshold               : {mean_threshold:.4f}")
+    print(f"  Net benefit at mean threshold: {mean_nb:.4f}")
+    for s, ft in enumerate(fold_thresholds):
+        idx_ft = np.argmin(np.abs(thresholds - ft))
+        print(f"  Fold {s}: threshold={ft:.4f}, "
+              f"net benefit={net_benefits[idx_ft]:.4f}")
+    print()
+
+    # --- Plot ---
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    # Clinically relevant threshold shading
+    ax.axvspan(*clinical_threshold_range,
+               alpha=0.09, color='orange',
+               label=f'Clinically relevant range '
+                     f'({clinical_threshold_range[0]}–'
+                     f'{clinical_threshold_range[1]})')
+
+    # Zero net benefit reference
+    ax.axhline(y=0, color='gray', linewidth=0.8, linestyle='-', alpha=0.5)
+
+    # CI band
+    ax.fill_between(thresholds, nb_lower, nb_upper,
+                    alpha=0.12, color='steelblue',
+                    label=f'{confidence_level:.0%} CI '
+                          f'(bootstrap)')
+
+    # Model curve
+    ax.plot(thresholds, net_benefits,
+            color='steelblue', linewidth=2,
+            label=f'{config.model.name}')
+
+    # Reference lines
+    ax.plot(thresholds, [0] * len(thresholds),
+            linestyle='--', color='gray', linewidth=1.5,
+            label='Treat None')
+    ax.plot(thresholds, treat_all_nb,
+            linestyle='--', color='firebrick', linewidth=1.5,
+            label='Treat All')
+
+    # Mean threshold annotation
+    # ax.annotate(
+    #     f'Mean threshold\n({mean_threshold:.3f}, {mean_nb:.3f})',
+    #     xy=(mean_threshold, mean_nb),
+    #     xytext=(mean_threshold, mean_nb + 0.12),
+    #     ha='center', va='bottom',
+    #     bbox=dict(boxstyle='round,pad=0.4', fc='#F0F0F0', ec='gray', lw=1),
+    #     arrowprops=dict(color='gray', linewidth=1,
+    #                     arrowstyle='-|>,head_length=0.2,head_width=0.1',
+    #                     shrinkA=0, shrinkB=0)
+    # )
+
+    # Fold threshold summary (replaces individual tick marks)
+    threshold_text = (
+        # f"Fold thresholds: "
+        # f"{', '.join([f'{ft:.3f}' for ft in fold_thresholds])}\n"
+        f"Threshold Mean: {mean_threshold:.3f} ± {np.std(fold_thresholds):.3f}\n"
+        f"Net Benefit Mean: {mean_nb:.3f} ± {np.std(net_benefits):.3f}"
+    )
+    ax.text(0.98, 0.7, threshold_text,
+            transform=ax.transAxes, fontsize=8,
+            verticalalignment='top', horizontalalignment='right',
+            bbox=dict(boxstyle='round,pad=0.4', fc='#F0F0F0', ec='gray', lw=0),
+            family='monospace')
+
+    ax.set_ylim(-0.1, prevalence + 0.1)
+    ax.set_xlim(0, 1)
+    ax.set_xlabel('Threshold Probability', fontsize=11)
+    ax.set_ylabel('Net Benefit',           fontsize=11)
+    ax.set_title(
+        f'Decision Curve Analysis',
+        fontsize=10
+    )
+    ax.legend(loc='upper right', fontsize=9)
+    ax.grid(True, linestyle='--', alpha=0.5)
+    fig.tight_layout()
+
+    if savedir:
+        fig.savefig(savedir / f'{config.model.code}_pooled_dca.png',
+                    dpi=300, bbox_inches='tight')
+    plt.show()
+    plt.close()
+
+    # --- Save CSV ---
+    pd.DataFrame({
+        'threshold':   thresholds,
+        'net_benefit': net_benefits,
+        'treat_all':   treat_all_nb,
+        'ci_lower':    nb_lower,
+        'ci_upper':    nb_upper
+    }).to_csv(savedir / f'{config.model.code}_pooled_dca.csv', index=False)
+
+    return pooled_df, {
+        'thresholds':                    thresholds,
+        'net_benefits':                  net_benefits,
+        'treat_all_net_benefits':        treat_all_nb,
+        'nb_lower':                      nb_lower,
+        'nb_upper':                      nb_upper,
+        'mean_threshold':                mean_threshold,
+        'net_benefit_at_mean_threshold': mean_nb,
+        'fold_thresholds':               fold_thresholds
+    }
+
+def plot_pooled_decision_curve_analysis_referenced(
     split_results,
     trained_models,
     config,

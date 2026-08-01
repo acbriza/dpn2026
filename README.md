@@ -1,10 +1,29 @@
-dependencies setup:
+Installation and Dependencies
+=======================================================================================
+1. Create conda environment dpncf:
+```
+conda env create -f dpncf.yml --name dpncf
+```  
+This will create a python environment and install pip with the following versions:
+    - python=3.12.1
+    - pip=26.0.1
 
-python version 3.12.1
-pip version 25.1.1
+2. Activate the new environment 
+```
+conda activate dpncf
+```  
 
-install these dependencies
-"pip install numpy==1.26.4 scipy==1.13.0 pandas==2.2.2 scikit-learn==1.4.2 dice-ml==0.9 xgboost"
+3. Install these dependencies via pip
+```
+pip install numpy==1.26.4 scipy==1.13.0 pandas==2.2.2 scikit-learn==1.4.2 dice-ml==0.9 \
+xgboost matplotlib seaborn openpyxl lightgbm catboost shap
+```
+Module versions for conda and pip are provided in the *installation* folder through the commands
+```
+conda list > installation/condalist.txt
+pip list > installation/piplist.txt
+pip list | grep -E "numpy|scipy|pandas|scikit-learn|dice-ml|xgboost|matplotlib|seaborn|openpyxl|lightgbm|catboost|shap|statsmodels|optuna|ipython" > installation/piplistinstalled.txt
+```
 
 Method
 =======================================================================================

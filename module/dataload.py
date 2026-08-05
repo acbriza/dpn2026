@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
@@ -14,11 +16,14 @@ class DPN_data:
                 'SSA_R', 'SSC_R', 'SPSA_R', 'SPSC_R', 'MCV_R', 'DL_R', 'CMAPANK_R', 'CMAPKNE_R', 'FWAVE_R']
     sudo_cols = ['FEET_MEAN_ESC', 'FEET_PCT_ASYM', 'HAND_MEAN_ESC', 'HAND_PCT_ASYM', 'NS', 'CAS']
     column_classes = ['Confirmed', 'Probable', 'Possible', 'Any_DPN']
-    binary_cols = ['SEX', 'SUBJ', 'DM_DUR', 'INSULIN'] + comorbidity_cols  
-     
+    binary_cols = ['SEX', 'SUBJ', 'DM_DUR', 'INSULIN'] + comorbidity_cols
+
     # These are initial definitions; numeric_cols will be adjusted in load()
+    # (column_classes is deliberately excluded here -- it holds the raw
+    # classification columns, which are consolidated into DPN_Status in load()
+    # rather than treated as a numeric feature)
     initial_numeric_cols = ['AGE', 'DM_DUR', 'HBA1C'] + [
-        'MNSI'] + ncs_cols + sudo_cols  # Keep column_classes here for initial load
+        'MNSI'] + ncs_cols + sudo_cols
     categorical_cols = ['SEX', 'SUBJ', 'INSULIN'] + comorbidity_cols + neuro_cols
     col_types = [profile_cols, comorbidity_cols, neuro_cols, mnsi_col, ncs_cols, sudo_cols, column_classes]
     col_names = profile_cols + comorbidity_cols + neuro_cols + mnsi_col + ncs_cols + sudo_cols + column_classes
@@ -32,31 +37,69 @@ class DPN_data:
     non_data_cols = multi_classes_labels + [binary_class_column] + [multi_class_column]  # Adjusting this based on what's added/removed later
     data_cols = profile_cols + comorbidity_cols + neuro_cols + mnsi_col + ncs_cols + sudo_cols
 
-    def __init__(self, filepath):
+    def __init__(self, filepath: str):
         self.filepath = filepath
-        self.df = None  # Initialize df to None
-        self.current_numeric_cols = []  # To store numeric columns after classification choice
-        self.current_target_column = None  # To store the name of the active target column
+        self.df: Optional[pd.DataFrame] = None  # Initialize df to None
+        self.current_numeric_cols: list[str] = []  # To store numeric columns after classification choice
+        self.current_target_column: Optional[str] = None  # To store the name of the active target column
 
-    def load(self, one_hot_encode=False, one_hot_drop="first", classification="binary"):
+    def load(self, one_hot_encode: bool = False, one_hot_drop: str = "first",
+              classification: str = "binary") -> pd.DataFrame:
         """
         Load data and return a dataframe, possibly with one-hot-encoded categorical data.
         Allows for 'binary' or 'multiclass' DPN classification.
+
+        Args:
+            one_hot_encode: If True, one-hot encode categorical_cols and join the
+                result back onto the returned dataframe in place of the originals.
+            one_hot_drop: Passed through to sklearn's OneHotEncoder(drop=...).
+            classification: 'binary' or 'multiclass'; selects which DPN target
+                column is built and exposed via get_target_column().
+
+        Returns:
+            The loaded, cleaned dataframe (also stored on self.df).
+
+        Side effects:
+            Sets self.df, self.current_numeric_cols, self.current_target_column,
+            and self.current_labels.
         """
         if classification not in ["binary", "multiclass"]:
             raise ValueError("Invalid value for 'classification'. Must be 'binary' or 'multiclass'.")
 
+        df = self._read_raw()
+        df = self._clean_raw_values(df)
+        df = self._build_dpn_status(df)
+        df = self._apply_classification_target(df, classification)
+
+        # Now, self.df will store the DataFrame with the chosen classification target and features
+        self.df = df
+
+        if one_hot_encode:
+            self.df = self._one_hot_encode(self.df, one_hot_drop)
+        # If no one-hot encoding, self.df is already assigned above
+
+        # The 'Negative' column from before is no longer relevant as the binary target is now 'Confirmed_Binary_DPN'
+        # and the multiclass target is 'DPN_Status' directly.
+        # So, no need to create df['Negative'] = 1 - df['Any_DPN']
+
+        return self.df
+
+    def _read_raw(self) -> pd.DataFrame:
+        """Read the source spreadsheet and trim it down to the 190 subject rows."""
         df = pd.read_excel(self.filepath, skiprows=3, usecols="B:G, I:AT", names=self.col_names, na_values=['-'],
                            decimal=',')
         df = df.dropna(how='all')
-        df = df[:-1]
-        assert df.shape == (190, len(self.col_names))
-        # pd.set_option('future.no_silent_downcasting', True)
+        df = df[:-1]  # the sheet's last row is a totals row, not a subject record, so drop it
+        if df.shape != (190, len(self.col_names)):
+            raise ValueError(f"Expected 190 rows x {len(self.col_names)} columns after cleanup, got {df.shape}")
+        return df
+
+    def _clean_raw_values(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Normalize raw cell values (units, response codes, Y/N flags) and impute missing numerics."""
         df["DM_DUR"] = df["DM_DUR"].replace({"<1": "1", ">10": "11"}).astype('float')
         df.replace('NR', 0, inplace=True)
         df.replace('NO F WAVE', 0, inplace=True)
         df.replace({'Y': 1, 'M': 1, 'N': 0, 'F': 0, np.nan: 0}, inplace=True)
-
 
         # --- Explicitly convert all intended numeric columns to float ---
         # This is the crucial step to resolve the 'object' dtype error
@@ -73,6 +116,10 @@ class DPN_data:
                 if df[col].isnull().any():
                     df[col] = df[col].fillna(df[col].mean())  # Fill with mean for numeric NaNs
 
+        return df
+
+    def _build_dpn_status(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Consolidate the raw Confirmed/Probable/Possible/Any_DPN columns into an ordinal DPN_Status column."""
         # --- First, create the DPN_Status (ordinal) column regardless of final classification ---
         # This acts as an intermediate step to derive both binary and multiclass targets
         def combine_dpn_status_ordinal(row):
@@ -97,6 +144,10 @@ class DPN_data:
                 self.current_numeric_cols.remove(col)
         # Add the newly created 'DPN_Status' to numeric columns as it's an ordinal numerical value
 
+        return df
+
+    def _apply_classification_target(self, df: pd.DataFrame, classification: str) -> pd.DataFrame:
+        """Derive the active target column (and its labels) from DPN_Status for the chosen classification mode."""
         # --- Now, handle the final classification target based on user choice ---
         if classification == "binary":
             # The binary target is 1 if DPN_Status is 'Confirmed' (value 3), else 0
@@ -116,33 +167,31 @@ class DPN_data:
             self.current_labels = self.multi_classes_labels
             # No need to drop 'DPN_Status' here, as it is the target
 
-        # Now, self.df will store the DataFrame with the chosen classification target and features
-        self.df = df
+        return df
 
-        if one_hot_encode:
-            encoder = OneHotEncoder(sparse_output=False, drop=one_hot_drop)
-            encoded_data = encoder.fit_transform(self.df[self.categorical_cols])
+    def _one_hot_encode(self, df: pd.DataFrame, one_hot_drop: str) -> pd.DataFrame:
+        """One-hot encode categorical_cols and join the result back onto df in their place."""
+        encoder = OneHotEncoder(sparse_output=False, drop=one_hot_drop)
+        encoded_data = encoder.fit_transform(df[self.categorical_cols])
 
-            df_encoded = pd.DataFrame(encoded_data, columns=encoder.get_feature_names_out(self.categorical_cols))
-            # Drop original categorical columns from self.df before joining encoded ones
-            self.df = self.df.drop(columns=self.categorical_cols).join(df_encoded)
-        # If no one-hot encoding, self.df is already assigned from the classification block
+        # index=df.index keeps the join below aligned by row even if df's index
+        # isn't a clean 0..n-1 range (e.g. if dropna(how='all') in _read_raw dropped
+        # rows out of the middle of the sheet); df_encoded would otherwise get its
+        # own default RangeIndex and rows could silently mismatch on join.
+        df_encoded = pd.DataFrame(encoded_data, columns=encoder.get_feature_names_out(self.categorical_cols),
+                                   index=df.index)
+        # Drop original categorical columns from df before joining encoded ones
+        return df.drop(columns=self.categorical_cols).join(df_encoded)
 
-        # The 'Negative' column from before is no longer relevant as the binary target is now 'Confirmed_Binary_DPN'
-        # and the multiclass target is 'DPN_Status' directly.
-        # So, no need to create df['Negative'] = 1 - df['Any_DPN']
-
-        return self.df
-
-    def get_numeric_cols(self):
+    def get_numeric_cols(self) -> list[str]:
         """Returns the list of numeric columns after loading and classification choice."""
         return self.current_numeric_cols
 
-    def get_categorical_cols(self):
+    def get_categorical_cols(self) -> list[str]:
         """Returns the list of categorical columns."""
         # These remain consistent regardless of encoding choice in terms of list of original columns
         return self.categorical_cols
 
-    def get_target_column(self):
+    def get_target_column(self) -> Optional[str]:
         """Returns the name of the active target column ('Confirmed_Binary_DPN' or 'DPN_Status')."""
         return self.current_target_column

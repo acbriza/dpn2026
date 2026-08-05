@@ -16,7 +16,7 @@ class DPN_data:
                 'SSA_R', 'SSC_R', 'SPSA_R', 'SPSC_R', 'MCV_R', 'DL_R', 'CMAPANK_R', 'CMAPKNE_R', 'FWAVE_R']
     sudo_cols = ['FEET_MEAN_ESC', 'FEET_PCT_ASYM', 'HAND_MEAN_ESC', 'HAND_PCT_ASYM', 'NS', 'CAS']
     column_classes = ['Confirmed', 'Probable', 'Possible', 'Any_DPN']
-    binary_cols = ['SEX', 'SUBJ', 'DM_DUR', 'INSULIN'] + comorbidity_cols
+    binary_cols = ['SEX', 'SUBJ', 'INSULIN'] + comorbidity_cols
 
     # These are initial definitions; numeric_cols will be adjusted in load()
     # (column_classes is deliberately excluded here -- it holds the raw

@@ -25,7 +25,6 @@ class DPN_data:
     initial_numeric_cols = ['AGE', 'DM_DUR', 'HBA1C'] + [
         'MNSI'] + ncs_cols + sudo_cols
     categorical_cols = ['SEX', 'SUBJ', 'INSULIN'] + comorbidity_cols + neuro_cols
-    col_types = [profile_cols, comorbidity_cols, neuro_cols, mnsi_col, ncs_cols, sudo_cols, column_classes]
     col_names = profile_cols + comorbidity_cols + neuro_cols + mnsi_col + ncs_cols + sudo_cols + column_classes
 
     # define list for training purposes
@@ -78,17 +77,13 @@ class DPN_data:
             self.df = self._one_hot_encode(self.df, one_hot_drop)
         # If no one-hot encoding, self.df is already assigned above
 
-        # The 'Negative' column from before is no longer relevant as the binary target is now 'Confirmed_Binary_DPN'
-        # and the multiclass target is 'DPN_Status' directly.
-        # So, no need to create df['Negative'] = 1 - df['Any_DPN']
-
         return self.df
 
     def _read_raw(self) -> pd.DataFrame:
         """Read the source spreadsheet and trim it down to the 190 subject rows."""
         df = pd.read_excel(self.filepath, skiprows=3, usecols="B:G, I:AT", names=self.col_names, na_values=['-'],
                            decimal=',')
-        df = df.dropna(how='all')
+        df = df.dropna(how='all') # drop blank row
         df = df[:-1]  # the sheet's last row is a totals row, not a subject record, so drop it
         if df.shape != (190, len(self.col_names)):
             raise ValueError(f"Expected 190 rows x {len(self.col_names)} columns after cleanup, got {df.shape}")
@@ -99,7 +94,10 @@ class DPN_data:
         df["DM_DUR"] = df["DM_DUR"].replace({"<1": "1", ">10": "11"}).astype('float')
         df.replace('NR', 0, inplace=True)
         df.replace('NO F WAVE', 0, inplace=True)
-        df.replace({'Y': 1, 'M': 1, 'N': 0, 'F': 0, np.nan: 0}, inplace=True)
+        df.replace({'Y': 1, 'M': 1, 'N': 0, 'F': 0}, inplace=True)
+
+        #add code here where nans are converted
+        # TO DO
 
         # --- Explicitly convert all intended numeric columns to float ---
         # This is the crucial step to resolve the 'object' dtype error
@@ -167,6 +165,7 @@ class DPN_data:
             self.current_labels = self.multi_classes_labels
             # No need to drop 'DPN_Status' here, as it is the target
 
+        # The binary target is now 'Confirmed_Binary_DPN' and the multiclass target is 'DPN_Status'.
         return df
 
     def _one_hot_encode(self, df: pd.DataFrame, one_hot_drop: str) -> pd.DataFrame:

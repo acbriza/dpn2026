@@ -43,7 +43,9 @@ class DPN_data:
         self.current_target_column: Optional[str] = None  # To store the name of the active target column
 
     def read_raw(self) -> pd.DataFrame:
-        """Read the source spreadsheet."""
+        """
+        Read the source spreadsheet. Expose this method to allow checking the raw data 
+        externally before cleaning and classification."""
         df = pd.read_excel(self.filepath, skiprows=3, usecols="B:G, I:AT", names=self.col_names, na_values=['-'],
                            decimal=',')
         return df
@@ -72,7 +74,7 @@ class DPN_data:
             raise ValueError("Invalid value for 'classification'. Must be 'binary' or 'multiclass'.")
 
         df = self.read_raw()
-        df = self._verify_rows()
+        df = self._verify_rows(df)
         df = self._clean_raw_values(df)
         df = self._build_dpn_status(df)
         df = self._apply_classification_target(df, classification)
@@ -86,7 +88,7 @@ class DPN_data:
 
         return self.df
 
-    def _verify_rows(self) -> pd.DataFrame:
+    def _verify_rows(self, df: pd.DataFrame) -> pd.DataFrame:
         """Trim dataframe to the 190 subject rows."""
         df = df.dropna(how='all') # drop blank row (2nd to the last row)
         df = df[:-1]  # the sheet's last row is a totals row, not a subject record, so drop it

@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
@@ -51,7 +52,7 @@ class DPN_data:
         return df
 
     def load(self, one_hot_encode: bool = False, one_hot_drop: str = "first",
-              classification: str = "binary") -> pd.DataFrame:
+              classification: str = "binary", report_path: Optional[str] = None) -> pd.DataFrame:
         """
         Load data and return a dataframe, possibly with one-hot-encoded categorical data.
         Allows for 'binary' or 'multiclass' DPN classification.
@@ -62,6 +63,8 @@ class DPN_data:
             one_hot_drop: Passed through to sklearn's OneHotEncoder(drop=...).
             classification: 'binary' or 'multiclass'; selects which DPN target
                 column is built and exposed via get_target_column().
+            report_path: Where to write the text report of value-replacement cleaning
+                (see _clean_raw_values). Defaults to "cleaning_report.txt" next to filepath.
 
         Returns:
             The loaded, cleaned dataframe (also stored on self.df).
@@ -75,7 +78,7 @@ class DPN_data:
 
         df = self.read_raw()
         df = self._verify_rows(df)
-        df = self._clean_raw_values(df)
+        df = self._clean_raw_values(df, report_path=report_path)
         df = self._build_dpn_status(df)
         df = self._apply_classification_target(df, classification)
 
@@ -96,11 +99,20 @@ class DPN_data:
             raise ValueError(f"Expected 190 rows x {len(self.col_names)} columns after cleanup, got {df.shape}")
         return df
     
-    def _clean_raw_values(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _clean_raw_values(self, df: pd.DataFrame, report_path: Optional[str] = None) -> pd.DataFrame:
         """Normalize raw cell values (units, response codes, Y/N flags) and impute missing numerics."""
+        replaced_cells = []  # (row index, column, old value, new value) for every value replaced below
+
+        self._record_replacements(df, {"<1": "1", ">10": "11"}, replaced_cells, column="DM_DUR")
         df["DM_DUR"] = df["DM_DUR"].replace({"<1": "1", ">10": "11"}).astype('float')
+
+        self._record_replacements(df, {'NR': 0}, replaced_cells)
         df.replace('NR', 0, inplace=True)
+
+        self._record_replacements(df, {'NO F WAVE': 0}, replaced_cells)
         df.replace('NO F WAVE', 0, inplace=True)
+
+        # no need to record replacements for Y/M/N/F since they are being replaced with 1/0, which is a standard mapping
         df.replace({'Y': 1, 'M': 1, 'N': 0, 'F': 0}, inplace=True)
 
         #add code here where nans are converted
@@ -115,13 +127,49 @@ class DPN_data:
         # Start with a copy of initial_numeric_cols
         self.current_numeric_cols = list(self.initial_numeric_cols)
 
+
+        # check fo nans:
+
         # Impute NaNs in numeric columns AFTER conversion to float
+        imputed_cells = []  # (row index, column, NaN, column mean) for every value imputed below
         for col in self.current_numeric_cols:
             if col in df.columns:
                 if df[col].isnull().any():
-                    df[col] = df[col].fillna(df[col].mean())  # Fill with mean for numeric NaNs
+                    col_mean = df[col].mean()
+                    for idx in df.index[df[col].isnull()]:
+                        imputed_cells.append((idx, col, np.nan, col_mean))
+                    df[col] = df[col].fillna(col_mean)  # Fill with mean for numeric NaNs
+
+        self._write_cleaning_report(replaced_cells, imputed_cells, report_path)
 
         return df
+
+    @staticmethod
+    def _record_replacements(df: pd.DataFrame, mapping: dict, sink: list, column: Optional[str] = None) -> None:
+        """Record which (row, column) cells currently hold each key in mapping, before it gets replaced."""
+        cols = [column] if column else list(df.columns)
+        for old_value, new_value in mapping.items():
+            mask = df[cols] == old_value
+            for col in cols:
+                for idx in df.index[mask[col]]:
+                    sink.append((idx, col, old_value, new_value))
+
+    def _write_cleaning_report(self, replaced_cells: list, imputed_cells: list, report_path: Optional[str] = None) -> None:
+        """Write a text file documenting every cell _clean_raw_values changed: value replacements and NaN imputations."""
+        def fmt(value):
+            return f"{value:.4f}" if isinstance(value, float) else repr(value)
+
+        path = Path(report_path) if report_path else Path(self.filepath).with_name("cleaning_report.txt")
+        with open(path, "w") as f:
+            f.write(f"Value replacement report - {len(replaced_cells)} cells changed\n")
+            f.write("(row index = dataframe row position after header/blank/totals rows are dropped)\n")
+            f.write("Thus, the patient's Code is row+1\n\n")
+            for idx, col, old_value, new_value in replaced_cells:
+                f.write(f"row {idx:>4}  {col:<12}  {fmt(old_value)} -> {fmt(new_value)}\n")
+
+            f.write(f"\nMean-imputation report - {len(imputed_cells)} cells filled\n\n")
+            for idx, col, old_value, new_value in imputed_cells:
+                f.write(f"row {idx:>4}  {col:<12}  {fmt(old_value)} -> {fmt(new_value)}\n")
 
     def _build_dpn_status(self, df: pd.DataFrame) -> pd.DataFrame:
         """Consolidate the raw Confirmed/Probable/Possible/Any_DPN columns into an ordinal DPN_Status column."""

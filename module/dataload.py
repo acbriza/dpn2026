@@ -42,6 +42,12 @@ class DPN_data:
         self.current_numeric_cols: list[str] = []  # To store numeric columns after classification choice
         self.current_target_column: Optional[str] = None  # To store the name of the active target column
 
+    def read_raw(self) -> pd.DataFrame:
+        """Read the source spreadsheet."""
+        df = pd.read_excel(self.filepath, skiprows=3, usecols="B:G, I:AT", names=self.col_names, na_values=['-'],
+                           decimal=',')
+        return df
+
     def load(self, one_hot_encode: bool = False, one_hot_drop: str = "first",
               classification: str = "binary") -> pd.DataFrame:
         """
@@ -65,7 +71,8 @@ class DPN_data:
         if classification not in ["binary", "multiclass"]:
             raise ValueError("Invalid value for 'classification'. Must be 'binary' or 'multiclass'.")
 
-        df = self._read_raw()
+        df = self.read_raw()
+        df = self._verify_rows()
         df = self._clean_raw_values(df)
         df = self._build_dpn_status(df)
         df = self._apply_classification_target(df, classification)
@@ -79,16 +86,14 @@ class DPN_data:
 
         return self.df
 
-    def _read_raw(self) -> pd.DataFrame:
-        """Read the source spreadsheet and trim it down to the 190 subject rows."""
-        df = pd.read_excel(self.filepath, skiprows=3, usecols="B:G, I:AT", names=self.col_names, na_values=['-'],
-                           decimal=',')
-        df = df.dropna(how='all') # drop blank row
+    def _verify_rows(self) -> pd.DataFrame:
+        """Trim dataframe to the 190 subject rows."""
+        df = df.dropna(how='all') # drop blank row (2nd to the last row)
         df = df[:-1]  # the sheet's last row is a totals row, not a subject record, so drop it
         if df.shape != (190, len(self.col_names)):
             raise ValueError(f"Expected 190 rows x {len(self.col_names)} columns after cleanup, got {df.shape}")
         return df
-
+    
     def _clean_raw_values(self, df: pd.DataFrame) -> pd.DataFrame:
         """Normalize raw cell values (units, response codes, Y/N flags) and impute missing numerics."""
         df["DM_DUR"] = df["DM_DUR"].replace({"<1": "1", ">10": "11"}).astype('float')

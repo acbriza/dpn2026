@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
 
+pd.set_option('future.no_silent_downcasting', True)
 
 class DPN_data:
     # define columns
@@ -197,6 +198,8 @@ class DPN_data:
             f.write(f"\nDropped-rows report - {len(dropped_rows)} rows dropped for NaN numeric values\n\n")
             for idx, nan_cols in dropped_rows:
                 f.write(f"row {idx:>4}  NaN in: {', '.join(nan_cols)}\n")
+
+        print(f"Data laoding cleaning report written to {path}.")
 
     def _build_dpn_status(self, df: pd.DataFrame) -> pd.DataFrame:
         """Consolidate the raw Confirmed/Probable/Possible/Any_DPN columns into an ordinal DPN_Status column."""

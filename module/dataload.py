@@ -42,6 +42,7 @@ class DPN_data:
         self.df: Optional[pd.DataFrame] = None  # Initialize df to None
         self.current_numeric_cols: list[str] = []  # To store numeric columns after classification choice
         self.current_target_column: Optional[str] = None  # To store the name of the active target column
+        self.patient_codes: Optional[np.ndarray] = None  # To store the original patient codes after dropping rows
 
     def read_raw(self) -> pd.DataFrame:
         """
@@ -160,6 +161,9 @@ class DPN_data:
                 dropped_rows.append((idx, nan_cols))
             df = df[~rows_with_nan]
 
+            self.patient_codes = df.index.to_numpy() + 1 # Get original Patient Code in the Excel sheet (1-based) 
+            df = df.reset_index() # Reset index after dropping rows to maintain a clean 0..n-1 range            
+
         self._write_cleaning_report(replaced_cells, imputed_cells, dropped_rows, report_path)
 
         return df
@@ -262,6 +266,14 @@ class DPN_data:
                                    index=df.index)
         # Drop original categorical columns from df before joining encoded ones
         return df.drop(columns=self.categorical_cols).join(df_encoded)
+
+    def get_patient_code(self, index: int) -> int:
+        """Returns the original patient code (1-based) for a given row index in the cleaned dataframe."""
+        if self.patient_codes is None:
+            raise ValueError("Patient codes are not available. Ensure that 'load' has been called and rows have been processed.")
+        if index < 0 or index >= len(self.patient_codes):
+            raise IndexError(f"Index {index} is out of bounds for patient codes of length {len(self.patient_codes)}.")
+        return self.patient_codes[index]
 
     def get_numeric_cols(self) -> list[str]:
         """Returns the list of numeric columns after loading and classification choice."""

@@ -68,14 +68,14 @@ class DPN_data:
             report_path: Where to write the text report of value-replacement cleaning
                 (see _clean_raw_values). Defaults to "cleaning_report.txt" next to filepath.
             nan_strategy: 'drop' to remove rows with a NaN in any numeric column (default),
-                or 'impute' to fill NaNs with the column mean instead. See _clean_raw_values.
+                or 'impute_mean' to fill NaNs with the column mean instead. See _clean_raw_values.
 
         Returns:
             The loaded, cleaned dataframe (also stored on self.df).
 
         Side effects:
             Sets self.df, self.current_numeric_cols, self.current_target_column,
-            and self.current_labels.
+            and self.current_labels and self.patient_codes.
         """
         if classification not in ["binary", "multiclass"]:
             raise ValueError("Invalid value for 'classification'. Must be 'binary' or 'multiclass'.")
@@ -102,17 +102,17 @@ class DPN_data:
         if df.shape != (190, len(self.col_names)):
             raise ValueError(f"Expected 190 rows x {len(self.col_names)} columns after cleanup, got {df.shape}")
         return df
-    
+
     def _clean_raw_values(self, df: pd.DataFrame, report_path: Optional[str] = None,
                            nan_strategy: str = "drop") -> pd.DataFrame:
         """Normalize raw cell values (units, response codes, Y/N flags) and handle missing numerics.
 
         Args:
             nan_strategy: 'drop' to remove rows with a NaN in any numeric column (default),
-                or 'impute' to fill NaNs with the column mean instead.
+                or 'impute_mean' to fill NaNs with the column mean instead.
         """
-        if nan_strategy not in ("drop", "impute"):
-            raise ValueError("Invalid value for 'nan_strategy'. Must be 'drop' or 'impute'.")
+        if nan_strategy not in ("drop", "impute_mean"):
+            raise ValueError("Invalid value for 'nan_strategy'. Must be 'drop' or 'impute_mean'.")
 
         replaced_cells = []  # (row index, column, old value, new value) for every value replaced below
 
@@ -128,9 +128,6 @@ class DPN_data:
         # no need to record replacements for Y/M/N/F since they are being replaced with 1/0, which is a standard mapping
         df.replace({'Y': 1, 'M': 1, 'N': 0, 'F': 0}, inplace=True)
 
-        #add code here where nans are converted
-        # TO DO
-
         # --- Explicitly convert all intended numeric columns to float ---
         # This is the crucial step to resolve the 'object' dtype error
         for col in self.initial_numeric_cols:
@@ -144,7 +141,7 @@ class DPN_data:
         # column mean, or drop the whole row (default), depending on nan_strategy.
         imputed_cells = []  # (row index, column, NaN, column mean) for every value imputed below
         dropped_rows = []  # (row index, [columns with NaN]) for every row dropped below
-        if nan_strategy == "impute":
+        if nan_strategy == "impute_mean":
             for col in self.current_numeric_cols:
                 if col in df.columns:
                     if df[col].isnull().any():
@@ -161,7 +158,7 @@ class DPN_data:
                 dropped_rows.append((idx, nan_cols))
             df = df[~rows_with_nan]
 
-            self.patient_codes = df.index.to_numpy() + 1 # Get original Patient Code in the Excel sheet (1-based) 
+            self.patient_codes = df.index.to_numpy() + 1 # Get original Patient Code in the Excel sheet (1-based)
             df = df.reset_index() # Reset index after dropping rows to maintain a clean 0..n-1 range            
 
         self._write_cleaning_report(replaced_cells, imputed_cells, dropped_rows, report_path)
@@ -225,7 +222,6 @@ class DPN_data:
         for col in self.column_classes:
             if col in self.current_numeric_cols:
                 self.current_numeric_cols.remove(col)
-        # Add the newly created 'DPN_Status' to numeric columns as it's an ordinal numerical value
 
         return df
 
@@ -267,10 +263,10 @@ class DPN_data:
         # Drop original categorical columns from df before joining encoded ones
         return df.drop(columns=self.categorical_cols).join(df_encoded)
 
-    def get_patient_code(self, index: int) -> int:
+    def index_to_patient_code(self, index: int) -> int:
         """Returns the original patient code (1-based) for a given row index in the cleaned dataframe."""
         if self.patient_codes is None:
-            raise ValueError("Patient codes are not available. Ensure that 'load' has been called and rows have been processed.")
+            raise ValueError("Patient codes are not available. Ensure that 'load' has been called.")
         if index < 0 or index >= len(self.patient_codes):
             raise IndexError(f"Index {index} is out of bounds for patient codes of length {len(self.patient_codes)}.")
         return self.patient_codes[index]

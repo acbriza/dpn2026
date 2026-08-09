@@ -1,12 +1,10 @@
 """
     Produce feature and model selection reports based on study from selection.ipynb
 """
-import numpy as np
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 
-import joblib
 from pathlib import Path
 import shutil
 from datetime import datetime
@@ -23,16 +21,17 @@ import ymlconfig
 from utils2 import selection as sel
 
 def main():
+    overwrite_benchmarks = False
     if len(sys.argv) < 2:
         print("Usage: python selreports.py <config file> <n_cores> <overwrite>")
         sys.exit(1)
     if len(sys.argv) == 2:
         n_cpus = -1
-        overwrite_benchmarks = False
     if len(sys.argv) >= 3:
         n_cpus = int(sys.argv[2])
     if len(sys.argv) >= 4:
-        overwrite_benchmarks = sys.argv[3]=='overwrite'
+         if sys.argv[3]=='overwrite':
+             overwrite_benchmarks = True
     
     config_path = Path(r'experiments')
 

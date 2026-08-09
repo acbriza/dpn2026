@@ -100,8 +100,6 @@ class DPN_data:
 
     def _verify_rows(self, df: pd.DataFrame) -> pd.DataFrame:
         """Trim dataframe to the 190 subject rows."""
-        df = df.dropna(how='all') # drop blank row (2nd to the last row)
-        df = df[:-1]  # the sheet's last row is a totals row, not a subject record, so drop it
         if df.shape != (190, len(self.col_names)):
             raise ValueError(f"Expected 190 rows x {len(self.col_names)} columns after cleanup, got {df.shape}")
         return df
@@ -136,6 +134,14 @@ class DPN_data:
         for col in self.initial_numeric_cols:
             if col in df.columns:  # Check if column exists in the dataframe
                 df[col] = pd.to_numeric(df[col], errors='coerce')  # Convert to numeric, coerce errors to NaN
+
+        # Categorical/binary flag columns hold only 0/1 values after the Y/M/N/F
+        # replacement above, but replace() leaves the column as object dtype.
+        # Convert them to numeric too so downstream numeric-only operations
+        # (e.g. VIF, correlation matrices) don't choke on object arrays.
+        for col in self.categorical_cols:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce')
 
         # Start with a copy of initial_numeric_cols
         self.current_numeric_cols = list(self.initial_numeric_cols)
@@ -209,7 +215,8 @@ class DPN_data:
             'Confirmed': df['Confirmed'].sum(),
             'Probable': df['Probable'].sum(),
             'Possible': df['Possible'].sum(),
-            'Any_DPN': df['Any_DPN'].sum()
+            'Any_DPN': df['Any_DPN'].sum(),
+            'Negative': df.shape[0] - df['Any_DPN'].sum()
         }
         return pd.DataFrame([counts])
         

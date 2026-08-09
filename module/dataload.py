@@ -159,7 +159,7 @@ class DPN_data:
             df = df[~rows_with_nan]
 
             self.patient_codes = df.index.to_numpy() + 1 # Get original Patient Code in the Excel sheet (1-based)
-            df = df.reset_index() # Reset index after dropping rows to maintain a clean 0..n-1 range            
+            df = df.reset_index(drop=True) # Reset index after dropping rows to maintain a clean 0..n-1 range            
 
         self._write_cleaning_report(replaced_cells, imputed_cells, dropped_rows, report_path)
 

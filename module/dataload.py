@@ -43,6 +43,8 @@ class DPN_data:
         self.current_numeric_cols: list[str] = []  # To store numeric columns after classification choice
         self.current_target_column: Optional[str] = None  # To store the name of the active target column
         self.patient_codes: Optional[np.ndarray] = None  # To store the original patient codes after dropping rows
+        self.classification_df: Optional[pd.DataFrame] = None  # To store classification counts after cleaning
+
 
     def read_raw(self) -> pd.DataFrame:
         """
@@ -75,7 +77,7 @@ class DPN_data:
 
         Side effects:
             Sets self.df, self.current_numeric_cols, self.current_target_column,
-            and self.current_labels and self.patient_codes.
+            and self.current_labels and self.patient_codes, self.classification_df
         """
         if classification not in ["binary", "multiclass"]:
             raise ValueError("Invalid value for 'classification'. Must be 'binary' or 'multiclass'.")
@@ -83,6 +85,7 @@ class DPN_data:
         df = self.read_raw()
         df = self._verify_rows(df)
         df = self._clean_raw_values(df, report_path=report_path, nan_strategy=nan_strategy)
+        self.classification_df = self._get_classification_counts(df)  # Store counts of each classification type before building DPN_Status
         df = self._build_dpn_status(df)
         df = self._apply_classification_target(df, classification)
 
@@ -200,6 +203,16 @@ class DPN_data:
 
         print(f"Data laoding cleaning report written to {path}.")
 
+    def _get_classification_counts(self, df: pd.DataFrame) -> pd.DataFrame: 
+        """Return a DataFrame with counts of each classification type."""
+        counts = {
+            'Confirmed': df['Confirmed'].sum(),
+            'Probable': df['Probable'].sum(),
+            'Possible': df['Possible'].sum(),
+            'Any_DPN': df['Any_DPN'].sum()
+        }
+        return pd.DataFrame([counts])
+        
     def _build_dpn_status(self, df: pd.DataFrame) -> pd.DataFrame:
         """Consolidate the raw Confirmed/Probable/Possible/Any_DPN columns into an ordinal DPN_Status column."""
         # --- First, create the DPN_Status (ordinal) column regardless of final classification ---

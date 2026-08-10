@@ -30,8 +30,6 @@ from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
 from catboost import CatBoostClassifier
 
-import numpy as np
-import pandas as pd
 from matplotlib import pyplot as plt
 from pathlib import Path
 
@@ -192,8 +190,8 @@ def benchmark_models(
     Model benchmarking using repeated stratified k-fold 
     Returns:
         A list of dictionary with kv-pairs:
-            model:      <string> (e.g. all, ncs), 
-            rcv_cores:  <Dataframe> Perfomance metrics of repeated k-fold of algorithms
+            model:      <string> (e.g. all, ncs),
+            rcv_scores: <Dataframe> Performance metrics of repeated k-fold of algorithms
     """
     savedir = savedir / 'benchmarking'
     savedir.mkdir(parents=True, exist_ok=True)
@@ -242,15 +240,15 @@ def benchmark_models(
             print(f'\nError cross validating {name}')
             print(f"\nError message: {e}")
             algo_results = {
-                "accuracy": np.NaN,
-                "precision": np.NaN,
-                "sensitivity": np.NaN,
-                "specificity": np.NaN,
-                "youden": np.NaN,
-                "f1": np.NaN,
-                "f2": np.NaN,
-                "roc-auc": np.NaN,
-                "auprc": np.NaN,
+                "accuracy": np.nan,
+                "precision": np.nan,
+                "sensitivity": np.nan,
+                "specificity": np.nan,
+                "youden": np.nan,
+                "f1": np.nan,
+                "f2": np.nan,
+                "roc-auc": np.nan,
+                "auprc": np.nan,
             }
             results.append({
                 "model": name,
@@ -310,7 +308,7 @@ def _evaluate_single_model(name, model, X, y, rcv, scoring, verbosity):
 
     except Exception as e:
         print(f'\nError cross validating {name}: {e}')
-        algo_results = {k: np.NaN for k in
+        algo_results = {k: np.nan for k in
                         ["accuracy","precision","sensitivity","specificity",
                          "youden","f1","f2","roc-auc","auprc"]}
         return {
@@ -418,17 +416,19 @@ def calculate_metric_statistics(
     
     if sorting_metric:
         metric_stats['mean'] = metric_stats['mean'].sort_values(by=sorting_metric, ascending=False)
-        column_order =  metric_stats['mean'].columns.to_list()
-    
+
     metric_stats['std'] = pd.concat(
         [pd.DataFrame({algo['model']: algo['rcv_scores'].std()}) for algo in experiment_metrics],
         axis=1
-        ).T   
+        ).T
 
-    # reorder according to sorting
+    # reorder rows (models) to match the sorted order of 'mean' above.
+    # (previously reindexed by .columns -- the metric names, which the row sort
+    # above never touches -- so this was a no-op and 'std' stayed in insertion order;
+    # fixed to reindex by the sorted model index instead)
     if sorting_metric:
-        metric_stats['std'] = metric_stats['std'][column_order]
-        
+        metric_stats['std'] = metric_stats['std'].loc[metric_stats['mean'].index]
+
     joblib.dump(metric_stats, filename)
     print(f'Saved metrics statistics to {filename.name}.')
     
@@ -477,8 +477,8 @@ def plot_metric_scores(metric_scores, config, exp_code, sorted=True, target_metr
     
 
 def get_high_vif(df, config):
-    vif_threshold = config.feature_selection.vif_threshold, 
-    verbosity = config.experiment.verbosity    
+    vif_threshold = config.feature_selection.vif_threshold
+    verbosity = config.experiment.verbosity
     # Example: df is your DataFrame with predictors
     df2 = df.copy()
 
@@ -488,8 +488,12 @@ def get_high_vif(df, config):
     # Compute VIF for each column
     vif_data = pd.DataFrame()
     vif_data["feature"] = df2.columns
-    vif_data["VIF"] = [variance_inflation_factor(df2.values, i) 
+    vif_data["VIF"] = [variance_inflation_factor(df2.values, i)
                     for i in range(df2.shape[1])]
+    # Exclude the intercept added above: its VIF reflects collinearity with the
+    # constant term, not a real predictor, so it shouldn't be reported/excluded
+    # as a feature.
+    vif_data = vif_data[vif_data["feature"] != "const"]
     high_vif = vif_data[vif_data["VIF"]>vif_threshold]
     if verbosity>0:
         print(f'Features with VIF higher than {vif_threshold}')

@@ -1,7 +1,6 @@
 """
-    Produce feature and model selection reports based on study from selection.ipynb
+    Produce feature and model selection reports
 """
-import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 
@@ -23,7 +22,7 @@ from utils2 import selection as sel
 def main():
     overwrite_benchmarks = False
     if len(sys.argv) < 2:
-        print("Usage: python selreports.py <config file> <n_cores> <overwrite>")
+        print("Usage: python selreport.py <config file> <n_cores> <overwrite>")
         sys.exit(1)
     if len(sys.argv) == 2:
         n_cpus = -1
@@ -33,8 +32,6 @@ def main():
          if sys.argv[3]=='overwrite':
              overwrite_benchmarks = True
     
-    config_path = Path(r'experiments')
-
     # sample config_filename = bin_sel_final.yml
     config_filename = sys.argv[1]
 
@@ -56,16 +53,20 @@ def main():
     shutil.copy(source, destination)
 
     # ## Data Loading
-    D = DPN_data(config.data.dataset_path[3:])
+    # dataset_path (e.g. '../dataset/EAMC_DPN_Dataset.xlsx') is written relative to this
+    # script's directory, same as config_path above; resolving it against script_dir
+    # rather than the process's current working directory keeps this independent of
+    # where the script is invoked from.
+    D = DPN_data(str(script_dir / config.data.dataset_path))
     D.load(classification=config.experiment.classification_type)
     dfdpn = D.df
     data_cols = dfdpn.drop(D.non_data_cols, axis=1, errors="ignore").columns
     X = dfdpn[data_cols]
-    y = dfdpn['Confirmed_Binary_DPN']
-    dfXy = pd.concat([X, y], axis=1)    
+    y = dfdpn[D.get_target_column()]
 
-    # ## Global Variables   
-    model_metrics = {} # key: experiment code, value: {model: <string> (e.g. all, ncs), rcv_cores: <Dataframe> Perfomance metrics of repeated k-fold of algorithms}
+    # ## Global Variables
+    # (key was "rcv_cores" in this comment; corrected to "rcv_scores" to match the actual dict key set in selection.py)
+    model_metrics = {} # key: experiment code, value: {model: <string> (e.g. all, ncs), rcv_scores: <Dataframe> Performance metrics of repeated k-fold of algorithms}
     metrics_stats = {} # key: experiment code, value: {stat: <string> (e.g. mean, std), stat (mean/std) of the performance of all algorithms}
 
     # ## Iterative Group Feature Elimination
@@ -86,7 +87,7 @@ def main():
         print(f'{feature_set_code} benchmarking models for feature set took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%m-%d %H:%M:%S"))
 
     high_vif = sel.get_high_vif(Xnoncs, config)
-    high_vif_features = high_vif.feature.values.tolist()[1:]
+    high_vif_features = high_vif.feature.values.tolist()
 
     feature_sets ={
         'All' : None,

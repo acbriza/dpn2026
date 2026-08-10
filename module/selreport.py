@@ -9,10 +9,16 @@ import shutil
 from datetime import datetime
 from tqdm import tqdm
 
-import sys 
-sys.path.append('..')  
+import sys
 import warnings
-warnings.filterwarnings('ignore')
+from sklearn.exceptions import ConvergenceWarning, UndefinedMetricWarning
+# Repeated k-fold benchmarking across many models/feature sets routinely hits
+# non-convergence (e.g. SGDClassifier, LogisticRegression) and undefined-metric
+# folds (e.g. precision/recall with no positive predictions); both are already
+# handled downstream (NaN'd out or reported as 0 via zero_division). Only these
+# two categories are silenced so other warnings (e.g. FutureWarning) still surface.
+warnings.filterwarnings('ignore', category=ConvergenceWarning)
+warnings.filterwarnings('ignore', category=UndefinedMetricWarning)
 
 from dataload import DPN_data
 import ymlconfig

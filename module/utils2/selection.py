@@ -33,8 +33,6 @@ from catboost import CatBoostClassifier
 from matplotlib import pyplot as plt
 from pathlib import Path
 
-import sys 
-sys.path.append('..')  
 import joblib
 from joblib import Parallel, delayed
 
@@ -158,13 +156,15 @@ def build_smart_pipeline(model_name, model_instance, X_train, verbosity):
     return Pipeline(steps)
 
 def youden_index_score(y_true, y_pred):
-    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+    # labels=[0, 1] pins the matrix to a fixed 2x2 shape even if a degenerate
+    # CV fold contains only one class, so .ravel() always unpacks to 4 values.
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
     sensitivity = recall_score(y_true, y_pred, zero_division=0)
     specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
     return sensitivity + specificity - 1
 
 def specificity_score(y_true, y_pred):
-    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
     return tn / (tn + fp) if (tn + fp) > 0 else 0
 
 def get_youden_scorer():
@@ -175,6 +175,9 @@ def get_specificity_scorer():
 
 
 
+# Serial (non-parallel) benchmarking. Superseded by benchmark_models_in_parallel()
+# below, which the current reporting scripts call; kept here as a serial
+# fallback/debug path (e.g. for easier single-process debugging).
 def benchmark_models(
     code: str,
     X: pd.DataFrame,
@@ -183,11 +186,11 @@ def benchmark_models(
     config: SimpleNamespace,
     *,
     savedir: Path,
-    overwrite: bool = False, 
+    overwrite: bool = False,
     verbosity: int | None = None
 ):
     """
-    Model benchmarking using repeated stratified k-fold 
+    Model benchmarking using repeated stratified k-fold
     Returns:
         A list of dictionary with kv-pairs:
             model:      <string> (e.g. all, ncs),

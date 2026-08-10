@@ -542,3 +542,48 @@ def create_model_summary_table(metrics_stats, config, *,
     if show_plot:
         plt.show()
     plt.close()
+
+def create_latex_stat_tables(config, *,
+                             target_metric=None, exclude_features=None, savedir=None):
+    """
+    Read each per-feature-set '*_benchmarking_scores.joblib' file (the raw,
+    per-fold rcv_scores saved by benchmark_models_in_parallel) from
+    savedir/'benchmarking', and write one LaTeX table per joblib file
+    listing every model's mean, standard deviation, and median of
+    target_metric across the repeated k-fold runs.
+    """
+    if target_metric is None:
+        target_metric = config.feature_selection.cross_validation.scoring
+    if exclude_features is None:
+        exclude_features = []
+    if savedir is None:
+        raise ValueError("savedir is required to locate the benchmarking joblib files")
+
+    benchmarking_dir = savedir / 'benchmarking'
+    latex_dir = savedir / 'summaries_latex'
+    latex_dir.mkdir(parents=True, exist_ok=True)
+
+    for scores_file in sorted(benchmarking_dir.glob('*_benchmarking_scores.joblib')):
+        feature_set_name = scores_file.name[:-len('_benchmarking_scores.joblib')]
+        if feature_set_name in exclude_features:
+            continue
+        experiment_metrics = joblib.load(scores_file)
+
+        stat_table = pd.DataFrame({
+            algo['model']: {
+                'mean': algo['rcv_scores'][target_metric].mean(),
+                'std': algo['rcv_scores'][target_metric].std(),
+                'median': algo['rcv_scores'][target_metric].median(),
+            }
+            for algo in experiment_metrics
+        }).T
+        stat_table.sort_values(by='mean', ascending=False, inplace=True)
+
+        feature_set_dir = latex_dir / feature_set_name
+        feature_set_dir.mkdir(parents=True, exist_ok=True)
+        savename = feature_set_dir / f'{target_metric}_stats.tex'
+        with open(savename, 'w') as f:
+            f.write(stat_table.to_latex(
+                float_format="%.4f",
+                caption=f"{metric_fullname[target_metric]} statistics ({feature_set_name} feature set)",
+                label=f"tab:{target_metric}_{feature_set_name}_stats"))

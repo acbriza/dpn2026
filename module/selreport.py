@@ -137,8 +137,14 @@ def main():
                                 include_topk=False,
                                 sorting_field='mean',
                                 show_plot=False,
-                                savedir=outputdir);                           
-    print(f"Generating summaries: Done.") 
+                                savedir=outputdir);
+
+        # LaTeX tables of mean, std, median for all models, per feature set
+        sel.create_latex_stat_tables(config,
+                                target_metric=metric,
+                                exclude_features=[],
+                                savedir=outputdir)
+    print(f"Generating summaries: Done.")
 
     #### Make violin plots of Best Feature Set
     print(f"Plotting violin plots...") 

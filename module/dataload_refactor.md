@@ -1,6 +1,10 @@
 # `dataload.py` Review & Refactor Summary
 
+_2026-08-05_
+
 Session summary of a correctness review and documentation/refactoring pass on `DPN_data` in [dataload.py](dataload.py).
+
+> **Note (2026-08-11):** the "Applied changes" and "Verification" sections below describe `dataload.py` as it stood on 2026-08-05. 12 commits have landed since (`2d94311`..`e8b1a20`), including a public/private split of raw-reading (`read_raw()` + `_verify_rows()`, replacing the `_read_raw` described here), removal of the totals-row trim, NaN-strategy support, patient-code tracking, and a classification-counts helper. Treat this as a historical record, not current-state documentation — see the 2026-08-11 addendum at the bottom for what's true of the code now.
 
 ## Applied changes
 
@@ -30,3 +34,12 @@ Full one-hot encoding could not be run in this environment: the installed sklear
 - **`self.current_labels`** not initialized in `__init__` (inconsistent with `current_numeric_cols`/`current_target_column`, which are) — left alone at the user's request.
 - **`DPN_data` class name** doesn't follow PEP8 `CapWords` — flagged only, not renamed (would ripple through every caller).
 - **`binary_cols`** class attribute includes `DM_DUR`, which is treated as continuous everywhere else in the class. Unused in the active module but referenced from legacy notebooks, so flagged rather than changed.
+
+## Addendum: `tests/test_dataload.py` rewrite against the real dataset (2026-08-11)
+
+`tests/test_dataload.py` was replaced to load `dataset/EAMC_DPN_Dataset.xlsx` directly instead of a synthetic monkeypatched fixture (the synthetic fixture had the duplicate-column bug noted above, and couldn't exercise real-world data quirks like missing values). This surfaced one new bug and confirmed the doc above is stale.
+
+- **New bug found — categorical-column NaNs bypass `nan_strategy` entirely.** `_clean_raw_values` only inspects `self.current_numeric_cols` (from `initial_numeric_cols`) when applying `nan_strategy`. `categorical_cols` (SEX, SUBJ, INSULIN, HPN, PAOD, DSLPDMIA, CKD, GBS, DEC_VS/PPS/LTS/AR) are coerced to numeric via `pd.to_numeric(errors='coerce')` but any resulting NaNs are never dropped or imputed. Concretely, patient `CODE=46` has a missing `INSULIN` value: under `nan_strategy="impute_mean"` it survives straight through to the returned dataframe as a live NaN; under `nan_strategy="drop"` it's only removed because that same row *also* happens to have a missing `DM_DUR` (a numeric column) — the drop path isn't actually handling the categorical NaN, it's coincidentally catching the row for an unrelated reason. Captured as an `xfail(strict=True)` regression test (`test_impute_mean_strategy_leaves_no_nan_anywhere`) so a future fix will surface as a loud XPASS failure rather than silently going unnoticed.
+- **This doc's "Applied changes"/"Verification" sections are stale**, as noted at the top: `_read_raw` (trim + validate combined) no longer exists — it's now `read_raw()` (pure read, public) plus a separate `_verify_rows()` (shape check only); the `df[:-1]` totals-row drop was removed entirely (commit `e8b1a20`, "remove code for deleting last two rows") since the real spreadsheet has no totals row to drop. `load()` has also grown `nan_strategy`, `report_path`, cleaning-report writing, and patient-code tracking since this doc was written, none of which are documented here.
+- **Environment note**: this repo's default Python environment (Anaconda base, `openpyxl==3.0.9`) can't open the real `.xlsx` at all — pandas requires `openpyxl>=3.1.0`. The conda env at `/home/toni_briza/.conda/envs/dpncf` (matching `installation/dpncf.yml` / `piplist.txt`: pandas 2.2.2, openpyxl 3.1.5, scikit-learn 1.4.2) is the one that actually works and is what the new tests were run against. This resolves the sklearn version concern raised in the "Verification" section above — 1.4.2 supports `sparse_output` fine.
+- **Confirmed as non-issues** against the real file: the one-hot `index=df.index` join fix (line above) is correct but currently unreachable in practice, since `read_raw()` always returns a contiguous `0..189` index for this dataset; `_get_classification_counts` is internally consistent (`Confirmed+Probable+Possible == Any_DPN`, `Negative+Any_DPN == 190`); the `CODE` column is a clean sequential `1..190` with no gaps, so `index_to_patient_code` is trustworthy.

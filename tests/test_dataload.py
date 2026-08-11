@@ -2,6 +2,10 @@ from pathlib import Path
 
 import pytest
 
+import sys
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
+
 from module import dataload
 
 DATASET_PATH = Path(__file__).resolve().parent.parent / "dataset" / "EAMC_DPN_Dataset.xlsx"

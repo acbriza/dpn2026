@@ -1,25 +1,14 @@
 """
-    Produce optimization report for selected selected top model (CatBoost)
+    Produce optimization report for selected model (CatBoost)
 """
-import numpy as np
-import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 
-import joblib
-import json
 from pathlib import Path
 import shutil
 from datetime import datetime
-from tqdm import tqdm
 
-from sklearn.metrics import roc_curve, confusion_matrix, roc_auc_score
-from catboost import CatBoostClassifier
-from skopt.space import Integer, Real
-
-
-import sys 
-sys.path.append('..')  
+import sys
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -30,7 +19,7 @@ from utils2 import optimization as hpo
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python optreports.py <config file> <overwrite>")
+        print("Usage: python optreport.py <config file> <overwrite>")
         sys.exit(1)
 
     if len(sys.argv) == 2:
@@ -38,8 +27,6 @@ def main():
     else:
         overwrite_optimization_reports = sys.argv[2]=='overwrite'
     
-    config_path = Path(r'experiments')
-
     # sample config_filename = bin_opt_final.yml
     config_filename = sys.argv[1]
 
@@ -62,15 +49,18 @@ def main():
     shutil.copy(source, destination)
 
     # ## Data Loading
-    D = DPN_data(config.data.dataset_path[3:])
+    # dataset_path (e.g. '../dataset/EAMC_DPN_Dataset.xlsx') is written relative to this
+    # script's directory, same as config_path above; resolving it against script_dir
+    # rather than the process's current working directory keeps this independent of
+    # where the script is invoked from.
+    D = DPN_data(str(script_dir / config.data.dataset_path))
     D.load(classification=config.experiment.classification_type)
     dfdpn = D.df
     data_cols = dfdpn.drop(D.non_data_cols, axis=1, errors="ignore").columns
     no_ncs_datacols = [c for c in data_cols if c not in D.ncs_cols]
     X = dfdpn[no_ncs_datacols]
-    y = dfdpn['Confirmed_Binary_DPN']
+    y = dfdpn[D.get_target_column()]
     print(f'X: {X.shape}, y:{y.shape}')
-    dfXy = pd.concat([X, y], axis=1)    
 
 
     def param_space_fn(trial):
@@ -102,7 +92,7 @@ def main():
         }
     
     start_time = datetime.now()    
-    print(f'Running repeated crossvalidation, started at: ', start_time.strftime("%m-%d %H:%M:%S"))
+    print('Running repeated crossvalidation, started at: ', start_time.strftime("%m-%d %H:%M:%S"))
     opt_results = hpo.nested_cv_optimization(
         X,
         y,
@@ -116,7 +106,7 @@ def main():
     end_time = datetime.now()
     elapsed = end_time - start_time
     print(opt_results)
-    print(f'Running repeated crossvalidation, took: {elapsed.total_seconds()/60:.2f}, ended at: ',  start_time.strftime("%m-%d %H:%M:%S"))
+    print(f'Running repeated crossvalidation, took: {elapsed.total_seconds()/60:.2f}, ended at: ',  end_time.strftime("%m-%d %H:%M:%S"))
 
     # ### Calculate Confidence Interval 
     opt_ci_df  = hpo.mean_confidence_interval(

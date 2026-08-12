@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold, cross_val_predict
 from sklearn.metrics import (
     confusion_matrix, roc_auc_score, accuracy_score, roc_curve, make_scorer,
@@ -13,16 +12,13 @@ from sklearn.ensemble import RandomForestClassifier
 from catboost import CatBoostClassifier
 
 import optuna
-import optuna.visualization as vis
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 from skopt import BayesSearchCV
 
 from scipy import stats
 from tqdm import tqdm
 
-import sys 
 from pathlib import Path
-sys.path.append('..')  
 import json
 import joblib
 from datetime import datetime
@@ -80,7 +76,7 @@ def nested_cv_optimization(
     fbeta = config.optimization.fscore_beta
     random_state = config.experiment.random_seed
         
-    opt_results_filename = savedir / f'optimization_results.json'
+    opt_results_filename = savedir / 'optimization_results.json'
     if not overwrite and opt_results_filename.is_file():
         print(f'{opt_results_filename.name} exists. Returning values from contents.')
         with open(opt_results_filename, "r") as f:
@@ -116,14 +112,34 @@ def nested_cv_optimization(
         # ── Optuna objective ─────────────────────────────────────────────────
         def objective(trial):
             params = param_space_fn(trial)
+            # study.best_params (below) only ever contains keys registered via
+            # trial.suggest_*, so any fixed, non-suggested entries in params
+            # (e.g. this project's loss_function/eval_metric/iterations/
+            # early_stopping_rounds) would otherwise be silently lost once the
+            # winning trial is looked up, and the refits below would fall back
+            # to model_class's own defaults instead of the config's values.
+            # Stash the full dict so the refits can use exactly what this
+            # trial was scored with.
+            trial.set_user_attr("full_params", params)
 
             fold_scores = []
             for inner_train_idx, inner_val_idx in inner_splits:
                 m = model_class(**params, random_state=random_state)
+                fit_kwargs = {"verbose": 0}
+                if "early_stopping_rounds" in params:
+                    # Only meaningful for estimators that support eval_set-driven
+                    # early stopping (e.g. CatBoost); without an eval_set,
+                    # early_stopping_rounds has no effect and the model trains
+                    # for the full `iterations` regardless. inner_val_idx is
+                    # never trained on, so using it here doesn't leak into the
+                    # fold_scores computed from it below.
+                    fit_kwargs["eval_set"] = (
+                        X_outer_train[inner_val_idx], y_outer_train[inner_val_idx]
+                    )
                 m.fit(
                     X_outer_train[inner_train_idx],
                     y_outer_train[inner_train_idx],
-                    verbose=0,
+                    **fit_kwargs,
                 )
                 val_proba = m.predict_proba(X_outer_train[inner_val_idx])[:, 1]
 
@@ -138,7 +154,7 @@ def nested_cv_optimization(
                         )
                     else:
                         raise ValueError(f"Optimization criteria not implemented: {optimization_metric}.")
-                    
+
 
             return float(np.mean(fold_scores)) if fold_scores else 0.0
 
@@ -146,9 +162,15 @@ def nested_cv_optimization(
         study = optuna.create_study(direction="maximize", sampler=sampler)
         study.optimize(objective, n_trials=optuna_n_trials, show_progress_bar=False)
 
-        best_params = study.best_params
+        # Use the winning trial's full params (tunable + fixed), not
+        # study.best_params -- see the comment in objective() above.
+        best_params = study.best_trial.user_attrs["full_params"]
 
         # ── Refit best model on full outer training set ───────────────────────
+        # No inner-fold holdout is available here (this refit is meant to use
+        # ALL of outer-train), so early_stopping_rounds has no effect without
+        # one and the model trains for the full best_params["iterations"]
+        # instead -- an accepted gap, see optreport_refactor.md.
         best_model = model_class(**best_params, random_state=random_state)
         best_model.fit(X_outer_train, y_outer_train, verbose=0)
 
@@ -156,10 +178,15 @@ def nested_cv_optimization(
         oof_proba = np.zeros(len(y_outer_train))
         for inner_train_idx, inner_val_idx in inner_splits:
             fold_model = model_class(**best_params, random_state=random_state)
+            fit_kwargs = {"verbose": 0}
+            if "early_stopping_rounds" in best_params:
+                fit_kwargs["eval_set"] = (
+                    X_outer_train[inner_val_idx], y_outer_train[inner_val_idx]
+                )
             fold_model.fit(
                 X_outer_train[inner_train_idx],
                 y_outer_train[inner_train_idx],
-                verbose=0,
+                **fit_kwargs,
             )
             oof_proba[inner_val_idx] = fold_model.predict_proba(
                 X_outer_train[inner_val_idx]
@@ -285,7 +312,7 @@ def mean_confidence_interval(
     
     # calculate statistics for the metrics
 
-    metrics_ci_filename =  savedir / f'optimization_metrics_ci.csv'
+    metrics_ci_filename =  savedir / 'optimization_metrics_ci.csv'
     if not overwrite and metrics_ci_filename.is_file():
         print(f'{metrics_ci_filename.name} exists. Returning values from contents.')
         metrics_ci_df = pd.read_csv(metrics_ci_filename)      
@@ -295,29 +322,32 @@ def mean_confidence_interval(
     verbosity = config.experiment.verbosity
 
     opt_results_ci = {}
-    metrics = [item for item in list(opt_results[0].keys()) 
-               if item not in ['fold', 'best_params']] 
+    metrics = [item for item in list(opt_results[0].keys())
+               if item not in ['fold', 'best_params']]
     print(metrics)
     for metric in metrics:
-        scores = [fold[metric] for fold in opt_results]
-        
-        scores = np.array(scores)
-        n = len(scores)
-        mean = np.mean(scores)
-        std = np.std(scores, ddof=1)
+        scores = np.array([fold[metric] for fold in opt_results], dtype=float)
+
+        # Folds can be NaN for a given metric (e.g. precision/f1 with
+        # zero_division=np.nan on a degenerate fold), so mean/std/stderr all
+        # need to ignore them consistently -- otherwise ci_lower/ci_upper
+        # silently come out NaN even when "mean" and "std" above look fine.
+        n = np.count_nonzero(~np.isnan(scores))
+        mean = np.nanmean(scores)
+        std = np.nanstd(scores, ddof=1)
         stderr = std / np.sqrt(n)
 
         # z = 1.96 confidence 0.95
-        z = stats.norm.ppf((1 + confidence) / 2.)  
+        z = stats.norm.ppf((1 + confidence) / 2.)
         margin = z * stderr
 
         opt_results_ci[metric] =  {
-            "mean": np.nanmean(scores), # mean without nans
-            "std": np.nanstd(scores), # std without nans
+            "mean": mean, # mean without nans
+            "std": std, # std without nans
             "ci_lower": mean - margin,
             "ci_upper": mean + margin,
             # "n_folds": n
-        } 
+        }
 
         if verbosity > 0:
             print(f"{metric} {confidence*100}% CI: {opt_results_ci[metric]}")
@@ -468,7 +498,9 @@ def model_predict(X_new, model, threshold):
 def test_model(model, threshold, Xnew, ynew, uses_proba=True):
     if uses_proba:
         ypredproba = model.predict_proba(Xnew)[:, 1]
-        ypred = (ypredproba > threshold).astype(int)
+        # >= for consistency with model_predict()/nested_cv_optimization's
+        # thresholding elsewhere in this file (was inconsistently `>` here).
+        ypred = (ypredproba >= threshold).astype(int)
     else:
         ypred, ypredproba = model_predict(Xnew, model, threshold)
 

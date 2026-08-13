@@ -1,5 +1,5 @@
 """
-    Produce final models and explainability reports based on study from explainability.ipynb
+    Produce final models and explainability reports
 """
 import numpy as np
 import pandas as pd

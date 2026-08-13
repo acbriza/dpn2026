@@ -1,0 +1,319 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="1260" viewBox="0 0 1660 1260">
+
+<rect x="0" y="0" width="1660" height="1260" fill="#ffffff"/>
+
+<!-- ===================== HEADER ===================== -->
+<text x="40" y="50" font-family="Arial" font-size="27" font-weight="bold" fill="#0b0b0b">Nested cross-validation for hyperparameter optimisation of the DPN classifier</text>
+<text x="40" y="78" font-family="Arial" font-size="15" fill="#52514e">Repeated stratified outer loop &#183; Optuna TPE inner loop &#183; leakage-free decision-threshold selection</text>
+
+<!-- Colour key -->
+<rect x="1180" y="30" width="14" height="14" rx="3" fill="#2a78d6"/>
+<text x="1200" y="42" font-family="Arial" font-size="12" fill="#52514e">used to fit</text>
+<rect x="1285" y="30" width="14" height="14" rx="3" fill="#1baf7a"/>
+<text x="1305" y="42" font-family="Arial" font-size="12" fill="#52514e">inner validation (held out)</text>
+<rect x="1180" y="54" width="14" height="14" rx="3" fill="#eb6834"/>
+<text x="1200" y="66" font-family="Arial" font-size="12" fill="#52514e">outer test (held out)</text>
+<rect x="1350" y="54" width="14" height="14" rx="3" fill="#4a3aa7"/>
+<text x="1370" y="66" font-family="Arial" font-size="12" fill="#52514e">hyperparameter search</text>
+
+<!-- ===================== PANEL A : COHORT ===================== -->
+<rect x="40" y="98" width="1580" height="104" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="70" cy="128" r="15" fill="#0b0b0b"/>
+<text x="70" y="134" font-family="Arial" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">A</text>
+<text x="97" y="134" font-family="Arial" font-size="17" font-weight="bold" fill="#0b0b0b">Study cohort and predictors</text>
+<text x="97" y="158" font-family="Arial" font-size="12.5" fill="#52514e">187 patients &#215; 22 predictors: Sudoscan foot / hand mean ESC and % asymmetry, MNSI, NS, CAS,</text>
+<text x="97" y="176" font-family="Arial" font-size="12.5" fill="#52514e">plus clinical and demographic variables (sex, age, DM duration, HbA1c, insulin, HPN, PAOD, CKD, ...). NCS-derived columns excluded.</text>
+
+<text x="1000" y="126" font-family="Arial" font-size="12" fill="#52514e">Class balance &#8212; preserved by stratification in every split</text>
+<rect x="1000" y="134" width="416" height="34" rx="4" fill="#52514e"/>
+<rect x="1418" y="134" width="182" height="34" rx="4" fill="#c3c2b7"/>
+<text x="1016" y="156" font-family="Arial" font-size="12.5" fill="#ffffff">DPN-positive   n = 130  (69.5 %)</text>
+<text x="1430" y="156" font-family="Arial" font-size="11.5" fill="#0b0b0b">DPN-negative  n = 57  (30.5 %)</text>
+<text x="1000" y="188" font-family="Arial" font-size="11" fill="#898781">Target column: Confirmed_Binary_DPN</text>
+
+<!-- ===================== PANEL B : OUTER LOOP ===================== -->
+<rect x="40" y="218" width="970" height="238" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="70" cy="248" r="15" fill="#0b0b0b"/>
+<text x="70" y="254" font-family="Arial" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">B</text>
+<text x="97" y="254" font-family="Arial" font-size="17" font-weight="bold" fill="#0b0b0b">Outer loop &#8212; RepeatedStratifiedKFold</text>
+<text x="97" y="276" font-family="Arial" font-size="12.5" fill="#52514e">k = 4 folds &#215; 10 repeats = 40 outer iterations &#183; random_state = 42</text>
+
+<!-- legend column -->
+<rect x="62" y="300" width="14" height="14" rx="3" fill="#2a78d6"/>
+<text x="84" y="312" font-family="Arial" font-size="13" font-weight="bold" fill="#0b0b0b">Outer TRAIN</text>
+<text x="84" y="330" font-family="Arial" font-size="12" fill="#52514e">n = 140&#8211;141   (DPN+ 97&#8211;98 &#183; DPN&#8722; 42&#8211;43)</text>
+<rect x="62" y="352" width="14" height="14" rx="3" fill="#eb6834"/>
+<text x="84" y="364" font-family="Arial" font-size="13" font-weight="bold" fill="#0b0b0b">Outer TEST &#8212; held out</text>
+<text x="84" y="382" font-family="Arial" font-size="12" fill="#52514e">n = 46&#8211;47   (DPN+ 32&#8211;33 &#183; DPN&#8722; 14&#8211;15)</text>
+<text x="62" y="410" font-family="Arial" font-size="11.5" fill="#898781">Touched once only, after tuning and</text>
+<text x="62" y="426" font-family="Arial" font-size="11.5" fill="#898781">threshold selection are complete.</text>
+
+<!-- fold diagram : one repeat = 4 iterations -->
+<text x="400" y="300" font-family="Arial" font-size="11.5" fill="#898781">One repeat = 4 outer iterations, each block &#8776; 46&#8211;47 patients</text>
+<text x="392" y="322" font-family="Arial" font-size="11" fill="#898781" text-anchor="end">iter 1</text>
+<rect x="400" y="310" width="112" height="26" rx="4" fill="#eb6834"/>
+<rect x="516" y="310" width="112" height="26" rx="4" fill="#2a78d6"/>
+<rect x="632" y="310" width="112" height="26" rx="4" fill="#2a78d6"/>
+<rect x="748" y="310" width="112" height="26" rx="4" fill="#2a78d6"/>
+<text x="456" y="327" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">test</text>
+<text x="572" y="327" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="688" y="327" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="804" y="327" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+
+<text x="392" y="354" font-family="Arial" font-size="11" fill="#898781" text-anchor="end">iter 2</text>
+<rect x="400" y="342" width="112" height="26" rx="4" fill="#2a78d6"/>
+<rect x="516" y="342" width="112" height="26" rx="4" fill="#eb6834"/>
+<rect x="632" y="342" width="112" height="26" rx="4" fill="#2a78d6"/>
+<rect x="748" y="342" width="112" height="26" rx="4" fill="#2a78d6"/>
+<text x="456" y="359" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="572" y="359" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">test</text>
+<text x="688" y="359" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="804" y="359" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+
+<text x="392" y="386" font-family="Arial" font-size="11" fill="#898781" text-anchor="end">iter 3</text>
+<rect x="400" y="374" width="112" height="26" rx="4" fill="#2a78d6"/>
+<rect x="516" y="374" width="112" height="26" rx="4" fill="#2a78d6"/>
+<rect x="632" y="374" width="112" height="26" rx="4" fill="#eb6834"/>
+<rect x="748" y="374" width="112" height="26" rx="4" fill="#2a78d6"/>
+<text x="456" y="391" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="572" y="391" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="688" y="391" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">test</text>
+<text x="804" y="391" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+
+<text x="392" y="418" font-family="Arial" font-size="11" fill="#898781" text-anchor="end">iter 4</text>
+<rect x="400" y="406" width="112" height="26" rx="4" fill="#2a78d6"/>
+<rect x="516" y="406" width="112" height="26" rx="4" fill="#2a78d6"/>
+<rect x="632" y="406" width="112" height="26" rx="4" fill="#2a78d6"/>
+<rect x="748" y="406" width="112" height="26" rx="4" fill="#eb6834"/>
+<text x="456" y="423" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="572" y="423" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="688" y="423" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="804" y="423" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">test</text>
+
+<text x="400" y="446" font-family="Arial" font-size="11.5" fill="#898781">Within one repeat the four test folds tile the whole cohort: every patient is tested exactly once.</text>
+
+<!-- repeats annotation -->
+<rect x="876" y="310" width="114" height="122" rx="6" fill="#ffffff" stroke="#898781" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="933" y="352" font-family="Arial" font-size="21" font-weight="bold" fill="#0b0b0b" text-anchor="middle">&#215; 10</text>
+<text x="933" y="374" font-family="Arial" font-size="13" fill="#52514e" text-anchor="middle">repeats</text>
+<text x="933" y="400" font-family="Arial" font-size="11.5" fill="#898781" text-anchor="middle">40 outer</text>
+<text x="933" y="416" font-family="Arial" font-size="11.5" fill="#898781" text-anchor="middle">iterations</text>
+
+<!-- arrow B to C -->
+<line x1="525" y1="460" x2="525" y2="478" stroke="#898781" stroke-width="2"/>
+<polygon points="518,478 532,478 525,487" fill="#898781"/>
+
+<!-- ===================== PANEL C : INNER LOOP ===================== -->
+<rect x="40" y="488" width="970" height="264" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="70" cy="518" r="15" fill="#0b0b0b"/>
+<text x="70" y="524" font-family="Arial" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">C</text>
+<text x="97" y="524" font-family="Arial" font-size="17" font-weight="bold" fill="#0b0b0b">Inner loop &#8212; hyperparameter search, repeated inside every outer iteration</text>
+<text x="97" y="546" font-family="Arial" font-size="12.5" fill="#52514e">StratifiedKFold k = 3 on the outer-training set only. The splits are materialised once and reused by every trial.</text>
+
+<text x="62" y="570" font-family="Arial" font-size="12" font-weight="bold" fill="#2a78d6">Outer-training set of one outer iteration   n = 140&#8211;141</text>
+<rect x="62" y="578" width="344" height="16" rx="4" fill="#2a78d6"/>
+<line x1="234" y1="596" x2="234" y2="606" stroke="#898781" stroke-width="2"/>
+<polygon points="227,606 241,606 234,614" fill="#898781"/>
+
+<text x="54" y="633" font-family="Arial" font-size="11" fill="#898781" text-anchor="end">1</text>
+<rect x="62" y="620" width="112" height="26" rx="4" fill="#1baf7a"/>
+<rect x="178" y="620" width="112" height="26" rx="4" fill="#2a78d6"/>
+<rect x="294" y="620" width="112" height="26" rx="4" fill="#2a78d6"/>
+<text x="118" y="637" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">val</text>
+<text x="234" y="637" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="350" y="637" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+
+<text x="54" y="665" font-family="Arial" font-size="11" fill="#898781" text-anchor="end">2</text>
+<rect x="62" y="652" width="112" height="26" rx="4" fill="#2a78d6"/>
+<rect x="178" y="652" width="112" height="26" rx="4" fill="#1baf7a"/>
+<rect x="294" y="652" width="112" height="26" rx="4" fill="#2a78d6"/>
+<text x="118" y="669" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="234" y="669" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">val</text>
+<text x="350" y="669" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+
+<text x="54" y="697" font-family="Arial" font-size="11" fill="#898781" text-anchor="end">3</text>
+<rect x="62" y="684" width="112" height="26" rx="4" fill="#2a78d6"/>
+<rect x="178" y="684" width="112" height="26" rx="4" fill="#2a78d6"/>
+<rect x="294" y="684" width="112" height="26" rx="4" fill="#1baf7a"/>
+<text x="118" y="701" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="234" y="701" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="350" y="701" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">val</text>
+
+<rect x="62" y="720" width="13" height="13" rx="3" fill="#2a78d6"/>
+<text x="81" y="731" font-family="Arial" font-size="12" fill="#52514e">Inner train  n = 93&#8211;94</text>
+<rect x="62" y="740" width="13" height="13" rx="3" fill="#1baf7a"/>
+<text x="81" y="751" font-family="Arial" font-size="12" fill="#52514e">Inner validation  n = 46&#8211;47   (DPN+ 32&#8211;33 &#183; DPN&#8722; 14&#8211;15)</text>
+
+<!-- arrow into optuna box -->
+<line x1="412" y1="665" x2="428" y2="665" stroke="#898781" stroke-width="2"/>
+<polygon points="428,658 428,672 437,665" fill="#898781"/>
+
+<!-- optuna box -->
+<rect x="440" y="566" width="550" height="170" rx="8" fill="#ffffff" stroke="#4a3aa7" stroke-width="1.5"/>
+<text x="458" y="594" font-family="Arial" font-size="13.5" font-weight="bold" fill="#4a3aa7">Optuna TPE sampler &#8212; 100 trials per outer iteration</text>
+<text x="458" y="620" font-family="Arial" font-size="12.5" fill="#0b0b0b">Objective: maximise the mean AUPRC (average precision)</text>
+<text x="458" y="638" font-family="Arial" font-size="12.5" fill="#0b0b0b">across the 3 inner validation folds.</text>
+<text x="458" y="664" font-family="Arial" font-size="12" fill="#52514e">&#8226;  Sampler seed = 42 + outer-iteration index</text>
+<text x="458" y="686" font-family="Arial" font-size="12" fill="#52514e">&#8226;  early_stopping_rounds = 50, monitored on the inner validation fold</text>
+<text x="458" y="708" font-family="Arial" font-size="12" fill="#52514e">&#8226;  The winning trial carries both tuned and fixed parameters forward</text>
+<text x="458" y="728" font-family="Arial" font-size="11.5" fill="#898781">300 model fits per outer iteration &#8212; 100 trials &#215; 3 inner folds.</text>
+
+<!-- arrow C to D -->
+<line x1="525" y1="756" x2="525" y2="774" stroke="#898781" stroke-width="2"/>
+<polygon points="518,774 532,774 525,783" fill="#898781"/>
+
+<!-- ===================== PANEL D : REFIT + THRESHOLD ===================== -->
+<rect x="40" y="784" width="970" height="180" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="70" cy="814" r="15" fill="#0b0b0b"/>
+<text x="70" y="820" font-family="Arial" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">D</text>
+<text x="97" y="820" font-family="Arial" font-size="17" font-weight="bold" fill="#0b0b0b">Refit and decision-threshold selection</text>
+<text x="97" y="842" font-family="Arial" font-size="12.5" fill="#52514e">The threshold is chosen on out-of-fold predictions of the outer-training set &#8212; never on the outer test fold.</text>
+
+<rect x="62" y="864" width="290" height="82" rx="6" fill="#ffffff" stroke="#2a78d6" stroke-width="1.5"/>
+<text x="76" y="888" font-family="Arial" font-size="13" font-weight="bold" fill="#2a78d6">1  &#183;  Refit</text>
+<text x="76" y="910" font-family="Arial" font-size="12" fill="#52514e">Best parameters refit on the full</text>
+<text x="76" y="926" font-family="Arial" font-size="12" fill="#52514e">outer-training set, n = 140&#8211;141</text>
+<text x="76" y="942" font-family="Arial" font-size="12" fill="#52514e">(all 3 inner folds pooled).</text>
+
+<rect x="372" y="864" width="290" height="82" rx="6" fill="#ffffff" stroke="#1baf7a" stroke-width="1.5"/>
+<text x="386" y="888" font-family="Arial" font-size="13" font-weight="bold" fill="#1baf7a">2  &#183;  Out-of-fold probabilities</text>
+<text x="386" y="910" font-family="Arial" font-size="12" fill="#52514e">3 further refits over the same inner</text>
+<text x="386" y="926" font-family="Arial" font-size="12" fill="#52514e">splits give one held-out probability</text>
+<text x="386" y="942" font-family="Arial" font-size="12" fill="#52514e">for every outer-training patient.</text>
+
+<rect x="682" y="864" width="308" height="82" rx="6" fill="#ffffff" stroke="#4a3aa7" stroke-width="1.5"/>
+<text x="696" y="888" font-family="Arial" font-size="13" font-weight="bold" fill="#4a3aa7">3  &#183;  Threshold</text>
+<text x="696" y="910" font-family="Arial" font-size="12" fill="#52514e">Precision-recall curve on those OOF</text>
+<text x="696" y="926" font-family="Arial" font-size="12" fill="#52514e">probabilities; the threshold maximising</text>
+<text x="696" y="942" font-family="Arial" font-size="12" fill="#52514e">the F-score with &#946; = 1 is retained.</text>
+
+<line x1="352" y1="905" x2="366" y2="905" stroke="#898781" stroke-width="2"/>
+<polygon points="366,899 366,911 374,905" fill="#898781"/>
+<line x1="662" y1="905" x2="676" y2="905" stroke="#898781" stroke-width="2"/>
+<polygon points="676,899 676,911 684,905" fill="#898781"/>
+
+<!-- arrow D to E -->
+<line x1="525" y1="968" x2="525" y2="986" stroke="#898781" stroke-width="2"/>
+<polygon points="518,986 532,986 525,995" fill="#898781"/>
+
+<!-- ===================== PANEL E : OUTER EVALUATION ===================== -->
+<rect x="40" y="996" width="970" height="204" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="70" cy="1026" r="15" fill="#0b0b0b"/>
+<text x="70" y="1032" font-family="Arial" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">E</text>
+<text x="97" y="1032" font-family="Arial" font-size="17" font-weight="bold" fill="#0b0b0b">Outer-test evaluation and pooling</text>
+<text x="97" y="1054" font-family="Arial" font-size="12.5" fill="#52514e">The refit model and its threshold are applied once to the untouched outer test fold (n = 46&#8211;47; DPN+ 32&#8211;33 &#183; DPN&#8722; 14&#8211;15).</text>
+
+<rect x="62" y="1076" width="4" height="102" rx="2" fill="#eb6834"/>
+<text x="80" y="1092" font-family="Arial" font-size="13" font-weight="bold" fill="#0b0b0b">Recorded per outer iteration</text>
+<text x="80" y="1114" font-family="Arial" font-size="12" fill="#52514e">2 &#215; 2 confusion matrix (TN, FP, FN, TP)</text>
+<text x="80" y="1134" font-family="Arial" font-size="12" fill="#52514e">Threshold-dependent: accuracy, precision, sensitivity,</text>
+<text x="80" y="1152" font-family="Arial" font-size="12" fill="#52514e">specificity, F1, F1.25, F1.5, F1.75, F2, Youden J</text>
+<text x="80" y="1172" font-family="Arial" font-size="12" fill="#52514e">Threshold-free: ROC-AUC, AUPRC &#183; plus the threshold itself</text>
+
+<rect x="560" y="1076" width="4" height="102" rx="2" fill="#2a78d6"/>
+<text x="578" y="1092" font-family="Arial" font-size="13" font-weight="bold" fill="#0b0b0b">Pooled across the 40 outer iterations</text>
+<text x="578" y="1114" font-family="Arial" font-size="12" fill="#52514e">Mean &#177; 95 % confidence interval</text>
+<text x="578" y="1134" font-family="Arial" font-size="12" fill="#52514e">(normal approximation, z = 1.96)</text>
+<text x="578" y="1152" font-family="Arial" font-size="12" fill="#52514e">NaN-aware: degenerate folds dropped per metric</text>
+<text x="578" y="1172" font-family="Arial" font-size="12" fill="#52514e">First repeat (iterations 1&#8211;4) persisted with its models</text>
+
+<!-- ===================== PANEL F : SEARCHED HYPERPARAMETERS ===================== -->
+<rect x="1040" y="218" width="580" height="238" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="1070" cy="248" r="15" fill="#4a3aa7"/>
+<text x="1070" y="254" font-family="Arial" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">F</text>
+<text x="1097" y="254" font-family="Arial" font-size="17" font-weight="bold" fill="#0b0b0b">Searched hyperparameters</text>
+<text x="1097" y="276" font-family="Arial" font-size="12.5" fill="#52514e">Sampled by Optuna TPE inside every outer iteration</text>
+
+<text x="1060" y="304" font-family="Arial" font-size="11.5" font-weight="bold" fill="#898781">PARAMETER</text>
+<text x="1300" y="304" font-family="Arial" font-size="11.5" font-weight="bold" fill="#898781">SEARCH RANGE</text>
+<text x="1450" y="304" font-family="Arial" font-size="11.5" font-weight="bold" fill="#898781">SAMPLING</text>
+<rect x="1060" y="312" width="540" height="1" fill="#c3c2b7"/>
+
+<text x="1060" y="332" font-family="Arial" font-size="12.5" fill="#0b0b0b">depth</text>
+<text x="1300" y="332" font-family="Arial" font-size="12.5" fill="#52514e">4 &#8211; 10</text>
+<text x="1450" y="332" font-family="Arial" font-size="12.5" fill="#52514e">integer, uniform</text>
+
+<text x="1060" y="358" font-family="Arial" font-size="12.5" fill="#0b0b0b">learning_rate</text>
+<text x="1300" y="358" font-family="Arial" font-size="12.5" fill="#52514e">0.003 &#8211; 0.3</text>
+<text x="1450" y="358" font-family="Arial" font-size="12.5" fill="#52514e">float, log-uniform</text>
+
+<text x="1060" y="384" font-family="Arial" font-size="12.5" fill="#0b0b0b">l2_leaf_reg</text>
+<text x="1300" y="384" font-family="Arial" font-size="12.5" fill="#52514e">1.0 &#8211; 10.0</text>
+<text x="1450" y="384" font-family="Arial" font-size="12.5" fill="#52514e">float, uniform</text>
+
+<text x="1060" y="410" font-family="Arial" font-size="12.5" fill="#0b0b0b">scale_pos_weight</text>
+<text x="1300" y="410" font-family="Arial" font-size="12.5" fill="#52514e">0.3 &#8211; 1.0</text>
+<text x="1450" y="410" font-family="Arial" font-size="12.5" fill="#52514e">float, uniform</text>
+
+<rect x="1060" y="424" width="540" height="1" fill="#e1e0d9"/>
+<text x="1060" y="442" font-family="Arial" font-size="11.5" fill="#898781">scale_pos_weight below 1 down-weights the majority DPN-positive class.</text>
+
+<!-- ===================== PANEL G : FIXED SETTINGS ===================== -->
+<rect x="1040" y="488" width="580" height="264" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="1070" cy="518" r="15" fill="#0b0b0b"/>
+<text x="1070" y="524" font-family="Arial" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">G</text>
+<text x="1097" y="524" font-family="Arial" font-size="17" font-weight="bold" fill="#0b0b0b">Held constant &#8212; not searched</text>
+<text x="1097" y="546" font-family="Arial" font-size="12.5" fill="#52514e">Identical in every trial, fold and repeat</text>
+
+<text x="1060" y="574" font-family="Arial" font-size="12.5" fill="#0b0b0b">Estimator</text>
+<text x="1330" y="574" font-family="Arial" font-size="12.5" fill="#52514e">CatBoostClassifier</text>
+<rect x="1060" y="582" width="540" height="1" fill="#e1e0d9"/>
+
+<text x="1060" y="602" font-family="Arial" font-size="12.5" fill="#0b0b0b">loss_function</text>
+<text x="1330" y="602" font-family="Arial" font-size="12.5" fill="#52514e">Logloss</text>
+<rect x="1060" y="610" width="540" height="1" fill="#e1e0d9"/>
+
+<text x="1060" y="630" font-family="Arial" font-size="12.5" fill="#0b0b0b">eval_metric</text>
+<text x="1330" y="630" font-family="Arial" font-size="12.5" fill="#52514e">AUC</text>
+<rect x="1060" y="638" width="540" height="1" fill="#e1e0d9"/>
+
+<text x="1060" y="658" font-family="Arial" font-size="12.5" fill="#0b0b0b">iterations (boosting rounds)</text>
+<text x="1330" y="658" font-family="Arial" font-size="12.5" fill="#52514e">500</text>
+<rect x="1060" y="666" width="540" height="1" fill="#e1e0d9"/>
+
+<text x="1060" y="686" font-family="Arial" font-size="12.5" fill="#0b0b0b">early_stopping_rounds</text>
+<text x="1330" y="686" font-family="Arial" font-size="12.5" fill="#52514e">50</text>
+<rect x="1060" y="694" width="540" height="1" fill="#e1e0d9"/>
+
+<text x="1060" y="714" font-family="Arial" font-size="12.5" fill="#0b0b0b">random_state (model)</text>
+<text x="1330" y="714" font-family="Arial" font-size="12.5" fill="#52514e">42</text>
+<rect x="1060" y="722" width="540" height="1" fill="#e1e0d9"/>
+
+<text x="1060" y="742" font-family="Arial" font-size="11.5" fill="#898781">CV seeds: 42 for the outer loop, 42 + outer-iteration index for the inner loop.</text>
+
+<!-- ===================== PANEL H : OPTIMISATION CRITERIA ===================== -->
+<rect x="1040" y="784" width="580" height="184" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="1070" cy="814" r="15" fill="#0b0b0b"/>
+<text x="1070" y="820" font-family="Arial" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">H</text>
+<text x="1097" y="820" font-family="Arial" font-size="17" font-weight="bold" fill="#0b0b0b">What each stage optimises</text>
+
+<rect x="1060" y="842" width="4" height="34" rx="2" fill="#4a3aa7"/>
+<text x="1078" y="856" font-family="Arial" font-size="13" font-weight="bold" fill="#0b0b0b">Inner-loop objective (panel C)</text>
+<text x="1078" y="874" font-family="Arial" font-size="12" fill="#52514e">AUPRC &#8212; average precision, meaned over the 3 inner folds</text>
+
+<rect x="1060" y="886" width="4" height="34" rx="2" fill="#1baf7a"/>
+<text x="1078" y="900" font-family="Arial" font-size="13" font-weight="bold" fill="#0b0b0b">Threshold criterion (panel D)</text>
+<text x="1078" y="918" font-family="Arial" font-size="12" fill="#52514e">F-score with &#946; = 1 (F1), maximised on the inner OOF PR curve</text>
+
+<rect x="1060" y="930" width="4" height="34" rx="2" fill="#eb6834"/>
+<text x="1078" y="944" font-family="Arial" font-size="13" font-weight="bold" fill="#0b0b0b">Outer loop (panel E)</text>
+<text x="1078" y="962" font-family="Arial" font-size="12" fill="#52514e">Reporting only &#8212; no fitting or selection happens here</text>
+
+<!-- ===================== PANEL I : ACCOUNTING ===================== -->
+<rect x="1040" y="1000" width="580" height="200" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="1070" cy="1030" r="15" fill="#0b0b0b"/>
+<text x="1070" y="1036" font-family="Arial" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">I</text>
+<text x="1097" y="1036" font-family="Arial" font-size="17" font-weight="bold" fill="#0b0b0b">Computational accounting</text>
+
+<text x="1060" y="1066" font-family="Arial" font-size="12.5" fill="#52514e">40 outer iterations &#215; (100 trials &#215; 3 inner fits + 1 refit + 3 OOF refits)</text>
+<text x="1060" y="1096" font-family="Arial" font-size="19" font-weight="bold" fill="#2a78d6">= 12,160 CatBoost fits</text>
+<rect x="1060" y="1116" width="540" height="1" fill="#e1e0d9"/>
+<text x="1060" y="1140" font-family="Arial" font-size="12" fill="#52514e">Coverage check: within each repeat the four test folds tile the</text>
+<text x="1060" y="1158" font-family="Arial" font-size="12" fill="#52514e">entire cohort (187 unique indices), asserted at runtime.</text>
+<text x="1060" y="1182" font-family="Arial" font-size="12" fill="#52514e">Models, splits and metrics of the first repeat are saved for reuse.</text>
+
+<!-- ===================== FOOTER ===================== -->
+<rect x="40" y="1218" width="1580" height="1" fill="#e1e0d9"/>
+<text x="40" y="1240" font-family="Arial" font-size="11.5" fill="#898781">Implementation: nested_cv_optimization(), module/utils2/optimization.py &#183; configuration: module/experiments/bin_opt_final_202608.yml &#183; scikit-learn RepeatedStratifiedKFold / StratifiedKFold, Optuna TPESampler, CatBoost.</text>
+
+</svg>

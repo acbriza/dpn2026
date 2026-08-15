@@ -1,10 +1,10 @@
 """
     Produce final models and explainability reports
 """
-import numpy as np
 import pandas as pd
 import matplotlib
-import matplotlib.pyplot as plt
+# must precede the first pyplot import -- here and, more importantly, the one inside
+# utils2.explainability, which is imported further down
 matplotlib.use('Agg')
 
 from pathlib import Path
@@ -14,10 +14,7 @@ import joblib
 from catboost import CatBoostClassifier
 
 
-import sys 
-sys.path.append('..')  
-import warnings
-warnings.filterwarnings('ignore')
+import sys
 
 from dataload import DPN_data
 import ymlconfig
@@ -34,8 +31,6 @@ def main():
     else:
         overwrite_reports = sys.argv[2]=='overwrite'
     
-    config_path = Path(r'experiments')
-
     # sample config_filename = bin_opt_final.yml
     config_filename = sys.argv[1]
 
@@ -52,21 +47,39 @@ def main():
     outputdir = config_path /  config.experiment.classification_type /  config.experiment.stage / config.model.code / config.experiment.tag 
     outputdir.mkdir(parents=True, exist_ok=True)
 
+    # Reports are produced as one set from one config, so they are protected as a set.
+    # Scoped to '{model.code}_*' so it sees the report files but not retrained_models.joblib
+    # or the copied config. Returning here skips the data load, the model refit, the SHAP
+    # loop and the four bootstrap passes -- a run either regenerates everything or costs
+    # nothing.
+    existing_reports = sorted(outputdir.glob(f'{config.model.code}_*'))
+    if existing_reports and not overwrite_reports:
+        print(f'{len(existing_reports)} report files already exist in {outputdir}.')
+        print('Pass "overwrite" on the command line to regenerate them. Nothing to do.')
+        return
+
     # #### Copy config file to output directory
     source = config_path / config_filename
     destination = outputdir / config_filename
     shutil.copy(source, destination)
 
     # ## Data Loading
-    D = DPN_data(config.data.dataset_path[3:])
+    # dataset_path in the yml is written relative to module/ ('../dataset/...'), so
+    # resolve it against script_dir rather than slicing off the '../' and relying on
+    # the caller's working directory.
+    dataset_path = (script_dir / config.data.dataset_path).resolve()
+    D = DPN_data(str(dataset_path))
     D.load(classification=config.experiment.classification_type)
     dfdpn = D.df
     data_cols = dfdpn.drop(D.non_data_cols, axis=1, errors="ignore").columns
     no_ncs_datacols = [c for c in data_cols if c not in D.ncs_cols]
     X = dfdpn[no_ncs_datacols]
-    y = dfdpn['Confirmed_Binary_DPN']
+    # D.load() sets the target column from config.experiment.classification_type
+    # ('Confirmed_Binary_DPN' for binary, 'DPN_Status' for multiclass). Hardcoding the
+    # binary name here silently ignored the config for any other classification_type.
+    # Matches how optreport.py and selreport.py resolve the target.
+    y = dfdpn[D.get_target_column()]
     print(f'X: {X.shape}, y:{y.shape}')
-    dfXy = pd.concat([X, y], axis=1)    
 
 
     # ======================================
@@ -90,12 +103,32 @@ def main():
     # ### Load trained model splits from Explainability Stage
     first_repeat_trained_models = joblib.load(config_path / config.optimization.first_repeat_trained_models_filename)
     assert first_repeat_trained_models['rundate'] == config.optimization.rundate, f"{first_repeat_trained_models['rundate']} != {config.optimization.rundate}"
-    assert first_repeat_trained_models['tag'] == config.optimization.tag
+    assert first_repeat_trained_models['tag'] == config.optimization.tag, \
+        f"{first_repeat_trained_models['tag']} != {config.optimization.tag}"
     print('rundate:', first_repeat_trained_models['rundate'])
     print('tag:', first_repeat_trained_models['tag'])
     print('split results summary:')
     # print(first_repeat_trained_models['summary'])
-    split_results = first_repeat_trained_models['results']    
+    split_results = first_repeat_trained_models['results']
+
+    # The importance heat map below labels each model's get_feature_importance()
+    # output with X.columns. That is only correct if the persisted splits were built
+    # from the same feature set in the same order as the X assembled above -- a
+    # coupling nothing enforces, since the splits come from a separate stage.
+    persisted_cols = list(next(iter(split_results.values()))['X_train'].columns)
+    assert list(X.columns) == persisted_cols, (
+        f"feature mismatch between dataset and persisted splits:\n"
+        f"  dataset : {list(X.columns)}\n"
+        f"  splits  : {persisted_cols}"
+    )
+
+    # Both this script and explainability.py index splits positionally, via
+    # range(len(split_results)), and pair them against the trained_models list.
+    # The joblib stores a dict, so normalise once here instead of depending on its
+    # keys happening to be 0..n-1 in order. This also matches the "list of dict"
+    # contract declared in the explainability.py docstrings.
+    if isinstance(split_results, dict):
+        split_results = [split_results[k] for k in sorted(split_results)]
 
     retrained_models_fullpath = outputdir / 'retrained_models.joblib'
     if retrained_models_fullpath.is_file():
@@ -103,7 +136,7 @@ def main():
     else:
         # ## Loop through model splits
         trained_models = []
-        for midx in split_results.keys():
+        for midx in range(len(split_results)):
 
             # ## Extract saved variables from split
             best_params = split_results[midx]['metrics']['best_params']
@@ -112,24 +145,28 @@ def main():
             print('scale_pos_weight:', best_params["scale_pos_weight"])        
             print('threshold:', threshold)    
 
-            # ## Extract Test Sets
-            X_test = split_results[midx]['X_test']
-            y_test = split_results[midx]['y_test']
-            dfXy_test = pd.concat([X_test, y_test], axis=1)
-
             X_train = split_results[midx]['X_train']
             y_train = split_results[midx]['y_train']
 
-            # convert categorical columns in X_train - needed in CatBoost for use in DiCE
-            X_train[D.categorical_cols] = X_train[D.categorical_cols].astype(str)
-            X_test[D.categorical_cols] = X_test[D.categorical_cols].astype(str)
+            # NOTE: the categorical columns were previously cast to str here "for use in
+            # DiCE". Removed: DiCE is not used in this script, cat_features is not set on
+            # the fit below, and CatBoost parses the strings back to floats -- verified
+            # bit-identical predictions across all 4 splits with and without the cast.
 
-
-            # refit model so we can set cat_features (needed in DiCE)
+            # refit model to attach feature names (the optimization stage fit on
+            # X_train.values, so the stored models only carry positional names)
             print(f'Retrainining model {midx}...')
-            model =  CatBoostClassifier(**best_params, 
-                                    # cat_features=D.categorical_cols, 
-                                    verbose=0,
+            # best_params already carries 'verbose': 0 from the optimization stage's
+            # param_space, so passing verbose=0 as a separate keyword is a duplicate.
+            # Merging keeps verbose=0 guaranteed even if param_space stops setting it.
+            # random_state is set on the base estimator during optimization, not in
+            # param_space, so it is absent from best_params and the refit would silently
+            # use CatBoost's default seed (0). Restoring it reproduces the stored models
+            # exactly; without it predictions drift by up to 0.086.
+            model =  CatBoostClassifier(**{**best_params,
+                                           'verbose': 0,
+                                           'random_seed': config.experiment.random_seed},
+                                    # cat_features=D.categorical_cols,
                                     ).fit(X_train, y_train)
             trained_models.append(model)
         joblib.dump(trained_models, retrained_models_fullpath)
@@ -144,9 +181,9 @@ def main():
         
     # Feature Importances (Heat Maps for all splits)
     all_importances = {}
+    feature_names = X.columns
     for s in range(len(split_results)):
         model = trained_models[s]
-        feature_names = X.columns
         importances = model.get_feature_importance()
         all_importances[f'Model {s}'] = pd.Series(importances, index=feature_names)
 
@@ -179,7 +216,7 @@ def main():
         X_test = split_results[s]['X_test']
         y_test = split_results[s]['y_test']
         model = trained_models[s]
-        model_threshold = split_results[s]['metrics']['threshold']
+        # model_threshold = split_results[s]['metrics']['threshold']
         # thresholds, nb = exp.plot_decision_curve_analysis(model, model_threshold, s, X_test, y_test, config, savedir=outputdir)
 
         # exp.plot_calibration_curve(model, s, X_test, y_test, config, savedir=outputdir, n_bins=5, strategy="quantile")
@@ -213,19 +250,19 @@ def main():
     )
 
     # Four separate figures, each reusing the same pooled_df
-    pooled_df, auroc_stats = exp.plot_pooled_auroc(
+    pooled_df, _auroc_stats = exp.plot_pooled_auroc(
         split_results, trained_models, config,
         pooled_df=pooled_df, savedir=outputdir
     )
-    pooled_df, auprc_stats = exp.plot_pooled_auprc(
+    pooled_df, _auprc_stats = exp.plot_pooled_auprc(
         split_results, trained_models, config,
         pooled_df=pooled_df, savedir=outputdir
     )
-    pooled_df, cal_stats = exp.plot_pooled_calibration_curve(
+    pooled_df, _cal_stats = exp.plot_pooled_calibration_curve(
         split_results, trained_models, config,
         pooled_df=pooled_df, savedir=outputdir
     )
-    pooled_df, dca_stats = exp.plot_pooled_decision_curve_analysis(
+    pooled_df, _dca_stats = exp.plot_pooled_decision_curve_analysis(
         split_results, trained_models, config,
         pooled_df=pooled_df, savedir=outputdir
     )

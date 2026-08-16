@@ -1106,7 +1106,7 @@ if __name__ == "__main__":
     script_dir = current_file.parent # Get the directory containing the file
 
     config_path = Path(script_dir /'experiments')    
-    config_filename =  "bin_cf_final.yml"
+    config_filename =  "bin_cf_final_202608.yml"
     config_dict = ymlconfig.load_config(config_path / config_filename)
     config = ymlconfig.dict_to_namespace(config_dict)
     print(config_dict)

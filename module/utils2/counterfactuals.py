@@ -1,27 +1,59 @@
+"""Counterfactual generation and reporting for the DPN study, driven by cfreports.py.
+
+The pipeline, per model split and per instance of interest:
+
+    get_instances_of_interest   pick the misclassified and borderline patients
+    get_local_permitted_range   bound each actionable feature around that patient
+    generate_diverse_cfs        run DiCE over several seeds and pool the results
+    plot_local_cf_heatmap2      one-page report: metadata, values, direction of change
+    get_most_changed_feature    how often each feature had to move
+    get_local_cf_distances      sparsity and L1/L2 cost per counterfactual
+
+get_global_importance covers the whole test set instead of one patient.
+
+Two conventions run through the module. Patients are identified by their code in the
+source spreadsheet (DPN_data.index_to_patient_code), not by the cleaned dataframe row,
+since cleaning drops rows and resets the index; every folder, csv and figure uses that
+code. And counterfactual frames coming back from DiCE are normalised before use: the
+categorical features arrive as strings and are converted to numbers, and any
+counterfactual that moved a feature outside features_to_vary is dropped.
+"""
+import math
+import os
+import random
+from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-import random
-import math
-import seaborn as sns
-from pathlib import Path
-
-import os
-from datetime import datetime
-import time
+from matplotlib.colors import LinearSegmentedColormap
+from joblib import Parallel, delayed
 
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.metrics import confusion_matrix
 from catboost import CatBoostClassifier
-from sklearn.metrics import roc_curve, confusion_matrix, roc_auc_score
 
 from IPython.display import display
 
 from utils2 import explainability as exp, timeout
 
 backend = matplotlib.get_backend()
+
+
+def _finish_figure(fig, backend=backend):
+    """Close the figure under a non-interactive backend, show it otherwise.
+
+    cfreports.py selects Agg before importing this module, so a batch run closes each
+    figure rather than leaking it; a notebook session still displays them inline.
+    """
+    if backend in ["Agg"]:
+        plt.close(fig)
+    else:
+        plt.show()
 
 
 # Feature list from data loader
@@ -80,6 +112,12 @@ class CatBoostWrapper(BaseEstimator, ClassifierMixin):
         return (proba_1 >= self.threshold).astype(int)
     
 def test_wrapped_model(model, wrapped_model, X_test, y_test, threshold, verbosity):
+    """Compare the wrapped model's custom threshold against CatBoost's default 0.5.
+
+    Prints both confusion matrices and the rows whose predicted label differs between the
+    two thresholds, so the effect of the tuned threshold on this split is visible. Reports
+    only; nothing is returned and no file is written. Silent unless verbosity > 0.
+    """
     # Evaluation at default threshold (0.5)
     y_pred = model.predict(X_test)
     y_pred_proba = model.predict_proba(X_test)
@@ -112,6 +150,17 @@ def test_wrapped_model(model, wrapped_model, X_test, y_test, threshold, verbosit
 # ----------------------
 
 def get_global_permitted_range(dfXy, continuous_cols, config, split_index, verbosity=0, savedir=None):
+    """Bound each continuous feature to [min - sd, max + sd] over the dataset.
+
+    The margin of one standard deviation lets a counterfactual move a little beyond the
+    observed range while staying plausible; a feature whose minimum is 0 keeps 0 as its
+    floor rather than going negative. Categorical features are left out, as a numeric
+    range means nothing for them.
+
+    Note the bounds come from the whole of dfXy, train and test together. They constrain
+    plausibility rather than fitting, but they are not derived from the training split
+    alone -- see cfreports_refactor.md.
+    """
     global_permitted_range = {}
     for col in continuous_cols: # no need to set range for categorical columns
         stdev = dfXy[col].std()
@@ -134,7 +183,6 @@ def get_global_permitted_range(dfXy, continuous_cols, config, split_index, verbo
     return global_permitted_range
 
 
-from joblib import Parallel, delayed
 
 def _chunk_global_importance(
     dice_exp,
@@ -249,7 +297,7 @@ def parallel_global_feature_importance(
 
 def get_global_importance(dice_exp, DPN_data, X_test, config, split_index, 
                           features_to_vary, threshold, global_permitted_range, 
-                          highlight_features=[], filename_suffix="", savedir=None, n_cpus=-1):
+                          highlight_features=None, filename_suffix="", savedir=None, n_cpus=-1):
     """
     Parameters:
     dice_exp: DiCE explainer object
@@ -350,7 +398,7 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
         # column labels, and the file used to be written with a bare "Unnamed: 0,0" header
         df_imp.T.to_csv(fullpath_values, header=['importance'], index_label='feature')
         fig.savefig(fullpath_plot)
-    plt.close(fig) if backend in ["Agg"] else plt.show()
+    _finish_figure(fig)
 
 # LOCAL COUNTERFACTUALS 
 # ----------------------
@@ -373,6 +421,17 @@ def get_local_permitted_range(dfXy, instance, features_to_vary,
                               categorical_cols, continuous_cols,
                               monotonic_cols, config, split_index, patient_code=None,
                               savedir=None):
+    """Bound each varied feature around this patient's own values.
+
+    Width is one standard deviation of the feature either side of the patient's value,
+    rather than of the dataset's range, so a counterfactual proposes a change of a size
+    seen in the cohort. Features listed in monotonic_cols may only increase: their lower
+    bound is the patient's current value (used for progressive features, which cannot
+    regress). Categorical features are skipped, as with the global range.
+
+    Standard deviations are taken over the whole of dfXy, train and test together; see
+    get_global_permitted_range.
+    """
     local_permitted_range = {}
     for col in features_to_vary:
 
@@ -539,10 +598,16 @@ def drop_cfs_outside_features_to_vary(df_dcf, instance, features_to_vary,
 
 
 def generate_diverse_cfs(dice_exp, instance, config, split_index,
-                         threshold, features_to_vary, permitted_range={},
+                         threshold, features_to_vary, permitted_range=None,
                          recompute=False, patient_code=None,
                          savedir=None):
-    """Generate diverse counterfactuals across multiple seeds."""
+    """Generate diverse counterfactuals across multiple seeds.
+
+    Pools the counterfactuals from config.dice.local_cf.nrepeats runs, each seeded
+    differently, into one frame whose first row is the query instance. The result is
+    cached as local_cf.csv and reused unless recompute is set.
+    """
+    permitted_range = {} if permitted_range is None else permitted_range
 
     cf_filename = savedir / instance_artifact_filename(
         config, split_index, patient_code, 'local_cf.csv')
@@ -608,19 +673,27 @@ def generate_diverse_cfs(dice_exp, instance, config, split_index,
         combined_dfs.to_csv(cf_filename, index=False)
     return combined_dfs
 
-# define Time-constrained versions of generate_diverse_cfs
+# Wall-clock budget per instance for generate_diverse_cfs, in seconds. cfreports.py takes
+# the --gen-timeout choices from these keys, so the CLI and the presets cannot drift apart.
+TIMEOUT_PRESETS = {
+    'fast':     30 * 60,      # 30 minutes
+    'normal':   60 * 60,      # 1 hour
+    'long':      3 * 60 * 60,  # 3 hours
+    'extended':  6 * 60 * 60,  # 6 hours
+}
 
-# timeout after 30 minutes
-generate_diverse_cfs_fast  = timeout.timeout(30*60)(generate_diverse_cfs)
 
-# timeout after 1 hour
-generate_diverse_cfs_normal  = timeout.timeout(60*60)(generate_diverse_cfs)
+def timed_generate_diverse_cfs(preset):
+    """Return generate_diverse_cfs wrapped in the named timeout preset.
 
-# timeout after 3 hours
-generate_diverse_cfs_long = timeout.timeout(3*60*60)(generate_diverse_cfs)
-    
-# timeout after 6 hours
-generate_diverse_cfs_extended = timeout.timeout(6*60*60)(generate_diverse_cfs)
+    An unknown or missing preset returns the undecorated function, which runs without a
+    time limit. Note the wrapper runs the work in a child process, so a run that exceeds
+    its budget is terminated and the caller writes error.txt for that patient.
+    """
+    seconds = TIMEOUT_PRESETS.get(preset)
+    if seconds is None:
+        return generate_diverse_cfs
+    return timeout.timeout(seconds)(generate_diverse_cfs)
 
 def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
                           query_idx, pred, actual,
@@ -690,14 +763,14 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
 
         if progressive_cols and highlight_invalid:
             progressive_categorical_cols = list(set(progressive_cols) & set(categorical_cols))
-            hightlight_cells = []
+            highlight_cells = []
             yticklabels = ax.get_yticklabels()
             for row_idx in range(diff.shape[0]):
                 highlight_row = False
                 for col in progressive_categorical_cols:
                     col_idx = diff.columns.get_loc(col)
                     if diff.iat[row_idx, col_idx] == -1:
-                        hightlight_cells.append((row_idx, col_idx))
+                        highlight_cells.append((row_idx, col_idx))
                         highlight_row = True
                 if highlight_row:
                     yticklabels[row_idx].set_bbox(dict(
@@ -715,7 +788,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
                 col = int(x - 0.5)
                 row = int(y - 0.5)
 
-                if (row, col) in hightlight_cells:
+                if (row, col) in highlight_cells:
                     text.set_weight("bold")      
                     text.set_backgroundcolor("yellow")
 
@@ -776,10 +849,9 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
             filename += '.png'
             plt.savefig(savedir / filename)
             print(f'Counterfactual heatmaps saved to {filename} in {Path(*savedir.parts[-7:])}')
-        plt.close(fig) if backend in ["Agg"] else plt.show()
+        _finish_figure(fig)
     return
 
-from matplotlib.colors import LinearSegmentedColormap
 
 def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
                           query_idx, pred, actual, pred_proba, margin,
@@ -804,7 +876,6 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
 
     # 1. Load data and calculate changes
     instance = df_dcf.iloc[0:1][actionable_features]
-    print(instance.columns)
     cfs = df_dcf.iloc[1:][actionable_features]
     changes = cfs.values.astype(float) - instance.values.astype(float)
     changes_formatted = np.char.mod('%.4g', changes)
@@ -955,7 +1026,7 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
         filename = f'{config.model.code}_split{split_index}_local_cf_patient{pstr}.png'
         plt.savefig(savedir / filename)
         print(f'Counterfactual heatmaps saved to {filename} in {Path(*savedir.parts[-7:])}')
-    plt.close(fig) if backend in ["Agg"] else plt.show()
+    _finish_figure(fig)
     return
 
 def get_most_changed_feature(df_cf, instance, config, split_index, savedir,
@@ -1162,7 +1233,29 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
                               recompute=False,
                               replot=True,
                               savedir=None):
-    
+    """Produce the full set of counterfactual reports for one patient.
+
+    Generates the counterfactuals (or reuses the cached ones), then writes, into
+    <savedir>/<subdir>/<patient code>/:
+
+        <...>_instance_permitted_range.csv   the bounds each feature was given
+        <...>_local_cf.csv                   the counterfactuals themselves
+        <...>_local_cf_patient<code>.png     the one-page report
+        <...>_local_cf_most_changed.csv      how often each feature had to move
+        <...>_local_cf_distances.csv         sparsity and L1/L2 per counterfactual
+        <...>_local_cf_distance_diffs.csv    the same, as differences from the patient
+        <...>_local_cf_unactionable.csv      only if DiCE broke features_to_vary
+
+    When progressive features are configured, the unfiltered set goes to 'unfiltered/'
+    and a second pass, with counterfactuals that regress a progressive feature removed,
+    goes to 'filtered_progressive/'. Otherwise everything goes to 'nofiltering/'.
+
+    qidx is the cleaned dataframe row; patient_code is the patient's ID in the source
+    spreadsheet and is what names the folder and the files. generation_timeout selects a
+    TIMEOUT_PRESETS budget; on exhaustion the patient gets an error.txt instead of a
+    report and the caller moves on. replot=False refreshes the csvs without redrawing the
+    figures.
+    """
     progressive_cols = [] if config.dice.cf_features.progressive=='none' else config.dice.cf_features.progressive.split(',')
     # pick the directory before creating it: creating 'nofiltering' first and then
     # reassigning left an empty 'nofiltering' tree behind on every progressive run
@@ -1197,16 +1290,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
     print('Start:', start_time.strftime("%m-%d %H:%M:%S"))
     generation_error = False
     try:
-        if generation_timeout == 'fast':
-            gen_diverse_cfs_fn = generate_diverse_cfs_fast
-        elif generation_timeout == 'normal':
-            gen_diverse_cfs_fn = generate_diverse_cfs_normal
-        elif generation_timeout == 'long':
-            gen_diverse_cfs_fn = generate_diverse_cfs_long
-        elif generation_timeout == 'extended':
-            gen_diverse_cfs_fn = generate_diverse_cfs_extended
-        else:
-            gen_diverse_cfs_fn = generate_diverse_cfs
+        gen_diverse_cfs_fn = timed_generate_diverse_cfs(generation_timeout)
 
         df_dcf = gen_diverse_cfs_fn(
             dice_exp,

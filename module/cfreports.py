@@ -25,6 +25,14 @@ from utils2 import explainability as exp
 
 import argparse
 
+def format_duration(seconds):
+    """Render a timeout budget for the help text, e.g. 1800 -> '30 mins', 3600 -> '1 hour'."""
+    if seconds < 3600:
+        return f'{seconds // 60} mins'
+    hours = seconds // 3600
+    return f'{hours} hour' if hours == 1 else f'{hours} hours'
+
+
 def parse_comma_separated_ints(value):
     """Parse a comma-separated list of integers, e.g. '53,67'"""
     try:
@@ -85,10 +93,15 @@ parser.add_argument(
 )
 parser.add_argument(
     '--gen-timeout',
-    choices=['fast', 'normal', 'long', 'extended'],
+    # taken from the presets themselves, so the choices and the durations quoted in the
+    # help text cannot drift away from what utils2.counterfactuals actually applies
+    choices=list(cf.TIMEOUT_PRESETS),
     default='normal',
     dest='gen_timeout',
-    help='Generation timeout preset: fast (30mins), normal (1 hour; default), long (3houra), extended (6hours)'
+    help='Wall-clock budget for generating one patient\'s counterfactuals: '
+         + ', '.join(f'{name} ({format_duration(seconds)})'
+                     for name, seconds in cf.TIMEOUT_PRESETS.items())
+         + '. Default: normal.'
 )
 parser.add_argument(
     '--recompute', 

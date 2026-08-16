@@ -5,7 +5,6 @@ import joblib
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
-from catboost import CatBoostClassifier
 
 from pathlib import Path
 import shutil
@@ -139,7 +138,11 @@ def main():
     shutil.copy(source, destination)
 
     # ## Data Loading
-    D = DPN_data(config.data.dataset_path[3:])
+    # dataset_path in the yml is written relative to module/ ('../dataset/...'), so
+    # resolve it against script_dir rather than slicing off the '../' and relying on
+    # the caller's working directory. Matches optreport.py, selreport.py and expreport.py.
+    dataset_path = (script_dir / config.data.dataset_path).resolve()
+    D = DPN_data(str(dataset_path))
     D.load(classification=config.experiment.classification_type)
     dfdpn = D.df
     data_cols = dfdpn.drop(D.non_data_cols, axis=1, errors="ignore").columns
@@ -214,19 +217,20 @@ def main():
         y_test = split_results[midx]['y_test']
         dfXy_test = pd.concat([X_test, y_test], axis=1)
 
-        X_train = split_results[midx]['X_train']
-        y_train = split_results[midx]['y_train']
-
-        # convert categorical columns in X_train - needed in CatBoost for use in DiCE
-        X_train[D.categorical_cols] = X_train[D.categorical_cols].astype(str)
-        X_test[D.categorical_cols] = X_test[D.categorical_cols].astype(str)
-
-
-        # refit model so we can set cat_features (needed in DiCE)
-        model=  CatBoostClassifier(**best_params, 
-                                cat_features=D.categorical_cols, 
-                                verbose=0,
-                                ).fit(X_train, y_train)
+        # Use the model the optimization stage trained and selected, rather than refitting.
+        # The refit that stood here existed to set cat_features, because DiCE hands the
+        # model 'category' dtype columns that a CatBoost model trained without
+        # cat_features rejects. CatBoostWrapper now casts those columns back instead, so
+        # the refit is no longer needed to satisfy DiCE.
+        # It was worth removing: measured against the stored model on the test set of
+        # every split, refitting with cat_features moved predicted probabilities by up to
+        # 0.113 and flipped up to 3 labels at the tuned threshold, which changes which
+        # patients get_instances_of_interest selects. The counterfactual study would then
+        # describe a different model from the one whose threshold and metrics are reported.
+        # (The refit also passed verbose twice -- CatBoost rejects that outright -- and
+        # dropped random_seed, which is set on the estimator during optimization rather
+        # than stored in best_params.)
+        model = split_results[midx]['model']
 
         # ### Wrap model so we can use a custom threshold
         wrapped_model = cf.CatBoostWrapper(model, threshold)
@@ -281,8 +285,13 @@ def main():
 
                 print(f"Generating counterfactual analysis for record {qidx}")
                 try:
-                    cf.generate_local_cf_reports(dfXy, dexp, ioi_df, qidx, Xfull, 
-                                            features_to_vary=features_to_vary, 
+                    # qidx is a row index into the cleaned dataframe, which is not the
+                    # patient's code in the source spreadsheet: _clean_raw_values drops
+                    # rows with NaN numeric values and resets the index. Resolve the code
+                    # here, where D is in scope, and label the reports with it.
+                    cf.generate_local_cf_reports(dfXy, dexp, ioi_df, qidx, Xfull,
+                                            patient_code=D.index_to_patient_code(qidx),
+                                            features_to_vary=features_to_vary,
                                             config=config,
                                             split_index=midx,
                                             threshold=threshold,

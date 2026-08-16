@@ -1,4 +1,5 @@
 import multiprocessing
+import queue
 import functools
 
 def timeout(seconds):
@@ -22,14 +23,19 @@ def timeout(seconds):
 
             p = multiprocessing.Process(target=target)
             p.start()
-            p.join(timeout=seconds)
 
-            if p.is_alive():
+            # Wait on the queue, not on the process. Joining first deadlocks when the
+            # result is larger than the OS pipe buffer: the child blocks writing it,
+            # so it stays alive and the wait is reported as a timeout even though the
+            # work finished.
+            try:
+                status, value = result_queue.get(timeout=seconds)
+            except queue.Empty:
                 p.terminate()
                 p.join()
                 raise TimeoutError(f"Timed out after {seconds}s: {func.__name__}.")
 
-            status, value = result_queue.get()
+            p.join()   # the child has handed over its result, so this returns promptly
             if status == "error":
                 raise value
             return value

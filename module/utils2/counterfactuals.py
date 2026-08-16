@@ -51,10 +51,28 @@ class CatBoostWrapper(BaseEstimator, ClassifierMixin):
     def fit(self, X, y):
         """No-op: the model is already trained."""
         return self
- 
+
+    @staticmethod
+    def _decategorize(X: pd.DataFrame) -> pd.DataFrame:
+        """Cast pandas 'category' columns back to the dtype of their categories.
+
+        DiCE converts every feature named in dice_ml.Data(categorical_features=...) to
+        'category' dtype before querying the model. A CatBoost model trained without
+        cat_features rejects those columns outright ("has dtype 'category' but is not in
+        cat_features list"), so restore the plain numeric dtype it was trained on. This
+        is a no-op for a frame with no categorical columns.
+        """
+        cat_cols = [c for c in X.columns if isinstance(X[c].dtype, pd.CategoricalDtype)]
+        if not cat_cols:
+            return X
+        X = X.copy()
+        for c in cat_cols:
+            X[c] = X[c].astype(X[c].cat.categories.dtype)
+        return X
+
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
         """Return raw [P(0), P(1)] probabilities from CatBoost."""
-        return self.catboost_model.predict_proba(X)
+        return self.catboost_model.predict_proba(self._decategorize(X))
  
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """Apply custom threshold to class-1 probability."""
@@ -76,9 +94,9 @@ def test_wrapped_model(model, wrapped_model, X_test, y_test, threshold, verbosit
         # get dissimilar predictions
         mask = y_pred_custom != y_pred
 
-        print(f"Confusion Matrix at default threshold (0.5): /n{cm_default}")
+        print(f"Confusion Matrix at default threshold (0.5): \n{cm_default}")
         # print(classification_report(y_test, y_pred, target_names=["Confirmed", "non-Confirmed"]))
-        print(f"Confusion Matrix at custom threshold ({threshold:.2f}): /n({cm_custom}):")
+        print(f"Confusion Matrix at custom threshold ({threshold:.2f}): \n({cm_custom}):")
         # print(classification_report(y_test, y_pred_custom, target_names=["Confirmed", "non-Confirmed"]))
 
         print('Rows with different predictions at thresholds: ')
@@ -103,10 +121,12 @@ def get_global_permitted_range(dfXy, continuous_cols, config, split_index, verbo
         maxval = maxval + stdev
         global_permitted_range[col] = [minval, maxval]
 
-    # create a dataframe for visualization
+    # create a dataframe for visualization and for saving
+    # (built unconditionally: it used to be built only under verbosity>0, which made
+    #  the savedir branch below raise UnboundLocalError for a silent caller)
+    global_permitted_range_df = pd.DataFrame(global_permitted_range).transpose()
+    global_permitted_range_df.columns = ['min', 'max']
     if verbosity>0:
-        global_permitted_range_df = pd.DataFrame(global_permitted_range).transpose()
-        global_permitted_range_df.columns = ['min', 'max']
         display(global_permitted_range_df)
     if savedir:
         filename = f'{config.model.code}_split{split_index}_global_permitted_range.csv'
@@ -146,11 +166,15 @@ def _aggregate_importance(
     """Weighted average of per-chunk importance scores."""
     total     = sum(chunk_sizes)
     weights   = [s / total for s in chunk_sizes]
-    features  = list(chunk_scores[0].keys())
+    # union of the keys, not chunk_scores[0]'s: DiCE omits a feature from a chunk's
+    # summary_importance when no counterfactual in that chunk changed it, and indexing
+    # the other chunks by the first chunk's keys raises KeyError. A feature missing from
+    # a chunk contributed no importance there, so it counts as 0.
+    features  = sorted({feat for scores in chunk_scores for feat in scores})
 
     aggregated = {
         feat: round(
-            sum(scores[feat] * w for scores, w in zip(chunk_scores, weights)),
+            sum(scores.get(feat, 0.0) * w for scores, w in zip(chunk_scores, weights)),
             4
         )
         for feat in features
@@ -175,22 +199,38 @@ def parallel_global_feature_importance(
     """
     Parallelised version of dice_exp.global_feature_importance().
 
-    Splits X_test into `n_jobs` chunks, evaluates each chunk concurrently,
-    then returns a weighted-average importance DataFrame plus raw chunk results.
+    Splits X_test into chunks, evaluates each chunk concurrently, then returns a
+    weighted-average importance DataFrame plus raw chunk results. Because DiCE's
+    summary_importance is a mean over the query instances, weighting each chunk by its
+    size reproduces the whole-set importance up to the genetic search's stochasticity.
+
+    n_jobs: number of cores; <= 0 means 80% of the available cores, leaving headroom
+        rather than taking the machine. The chunk count is capped separately (below).
 
     Returns
     -------
     importance_df   : pd.DataFrame  — features ranked by aggregated importance
     chunk_results   : list[dict]    — raw per-chunk summary_importance dicts
     """
+    # Resolve the core count. np.array_split() rejects a negative section count, so -1
+    # has to be turned into a real number before chunking.
+    if n_jobs <= 0:
+        n_jobs = max(1, int(os.cpu_count() * 0.8))
+
+    # DiCE refuses a global_feature_importance() call with fewer than 10 query
+    # instances, so a chunk below that size fails the whole run. Cap the chunk count
+    # accordingly: a 38-instance test split supports 3 chunks no matter the core count.
+    max_chunks = max(1, len(X_test) // 10)
+    n_chunks   = max(1, min(n_jobs, max_chunks))
+
     # Build non-empty chunks
-    chunks      = [c for c in np.array_split(X_test, n_jobs) if len(c) > 0]
+    chunks      = [c for c in np.array_split(X_test, n_chunks) if len(c) > 0]
     chunk_sizes = [len(c) for c in chunks]
 
     print(f"Running global CF importance across {len(chunks)} chunks "
-          f"({chunk_sizes} instances each) on {n_jobs} cores…")
+          f"({chunk_sizes} instances each) on {n_chunks} of {n_jobs} available cores…")
 
-    chunk_results = Parallel(n_jobs=n_jobs, backend="loky", verbose=1)(
+    chunk_results = Parallel(n_jobs=n_chunks, backend="loky", verbose=1)(
         delayed(_chunk_global_importance)(
             dice_exp,
             chunk,
@@ -213,9 +253,11 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
     """
     Parameters:
     dice_exp: DiCE explainer object
-    X_test: test set 
-    total_CFs: Number of counterfactuals to generate
-    n_cpus: Number of cpu cores to use. set to -1 to use all
+    X_test: test set
+    n_cpus: Number of cpu cores to use. 1 runs serially over the whole test set; -1 (or
+        any value <= 0) uses 80% of the available cores. The number of chunks is capped
+        at len(X_test) // 10, since DiCE rejects a global importance call with fewer
+        than 10 query instances, so a small test split stays on few chunks regardless.
     """
     if savedir:
         filename = f'{config.model.code}_split{split_index}_global_importance'
@@ -232,8 +274,9 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
         posthoc_sparsity_algorithm = None
     else:
         posthoc_sparsity_algorithm = config.dice.global_cf.posthoc_sparsity_algorithm
-    if n_cpus < 2 :
+    if n_cpus == 1:
         # no parallelization
+        # (this used to be `n_cpus < 2`, which sent the documented -1 down here too)
         cobj = dice_exp.global_feature_importance(
             X_test, 
             total_CFs=config.dice.global_cf.total_CFs, 
@@ -244,7 +287,7 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
             verbose=0)
         df_imp = pd.DataFrame([cobj.summary_importance])
     else:
-        # apply parallelization - note: untested, unused 
+        # apply parallelization
         df_imp, _raw_chunks = parallel_global_feature_importance(
             dice_exp,
             X_test,
@@ -255,6 +298,9 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
             posthoc_sparsity_algorithm=posthoc_sparsity_algorithm,
             n_jobs=n_cpus,
         )
+        # that function returns one row per feature; transpose to the single-row,
+        # one-column-per-feature layout the serial branch produces and the code below reads
+        df_imp = df_imp.T
     s = df_imp.iloc[0]
     s_trimmed = s[s>0]
 
@@ -300,7 +346,9 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
     ax.set_xlabel("Value")
     plt.tight_layout()
     if savedir:
-        df_imp.T.to_csv(fullpath_values)
+        # name the columns explicitly: the serial and parallel branches carry different
+        # column labels, and the file used to be written with a bare "Unnamed: 0,0" header
+        df_imp.T.to_csv(fullpath_values, header=['importance'], index_label='feature')
         fig.savefig(fullpath_plot)
     plt.close(fig) if backend in ["Agg"] else plt.show()
 
@@ -395,7 +443,25 @@ def get_instances_of_interest(model, X_test, y_test, config, split_index, thresh
         ioi_df.to_csv(savedir / filename)
     return ioi_df, display_cols
 
-def generate_diverse_cfs(dice_exp, instance, config, split_index, 
+def _to_numeric_where_possible(df):
+    """Convert object columns holding numeric text back to numbers, leaving others alone.
+
+    A column is only converted when every value parses, so a genuinely non-numeric
+    column (or one with unparseable entries) is returned untouched rather than filled
+    with NaN. Existing NaNs are preserved and do not block the conversion.
+    """
+    df = df.copy()
+    for col in df.columns:
+        if df[col].dtype != object:
+            continue
+        converted = pd.to_numeric(df[col], errors='coerce')
+        # only accept the conversion if it invented no new NaNs
+        if converted.isna().sum() == df[col].isna().sum():
+            df[col] = converted
+    return df
+
+
+def generate_diverse_cfs(dice_exp, instance, config, split_index,
                          threshold, features_to_vary, permitted_range={}, 
                          recompute=False, 
                          savedir=None):
@@ -436,9 +502,19 @@ def generate_diverse_cfs(dice_exp, instance, config, split_index,
                 all_cfs.append(df_cf)
         except Exception as e:
             print(f"[DiCE] No CFs found — {e}")
-    combined_dfs = pd.concat(all_cfs).drop_duplicates().reset_index(drop=True)         
+    # DiCE returns the categorical features as strings, while the query instance holds
+    # them as numbers. Mixed, '1' != 1 marks every categorical as changed in the
+    # most-changed counts -- even SEX and SUBJ, which are not in features_to_vary and
+    # cannot have changed -- and the distance subtraction raises TypeError on str - float.
+    # Reading the saved csv back converts them, which is why a resumed run produced the
+    # distance files and a fresh one did not. Convert here so both paths agree, and
+    # before drop_duplicates, so a string row and its numeric twin deduplicate.
+    combined_dfs = _to_numeric_where_possible(pd.concat(all_cfs))
+    combined_dfs = combined_dfs.drop_duplicates().reset_index(drop=True)
     if savedir:
-        combined_dfs.to_csv(cf_filename)
+        # index=False so the reload above sees only feature columns: the row numbers used
+        # to come back as an unnamed column and act as a phantom feature in every diff.
+        combined_dfs.to_csv(cf_filename, index=False)
     return combined_dfs
 
 # define Time-constrained versions of generate_diverse_cfs
@@ -460,9 +536,17 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
                           config,
                           split_index,
                           categorical_cols,
+                          patient_code,
                           highlight_invalid=False,
                           savedir=None,
-                          ):   
+                          ):
+    """Heat map of every feature's change from the query instance, in batches of
+    config.reporting.cf_heatmap.save_every counterfactuals per figure.
+
+    patient_code: the patient's code in the source spreadsheet (see
+        DPN_data.index_to_patient_code); query_idx is the cleaned dataframe row, which
+        is not the same number once rows have been dropped during cleaning.
+    """
     z = config.reporting.nzfill
     save_every = config.reporting.cf_heatmap.save_every
     verbosity = config.experiment.verbosity
@@ -493,12 +577,15 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
         
         # adjust plot height to number of counterfactuals
         idx_end = min(idx_end, idx_start+diff.shape[0])
-        num_cfs = idx_end - idx_start 
-        cf_height_ratio = num_cfs/save_every                
+        num_cfs = idx_end - idx_start
+        cf_height_ratio = num_cfs/save_every
+        # per-batch height: assigning back to figsize_y made every short batch halve the
+        # height of all later batches too
+        batch_figsize_y = figsize_y
         if cf_height_ratio < 0.4:
-            figsize_y = math.ceil(figsize_y*0.5)
+            batch_figsize_y = math.ceil(figsize_y*0.5)
 
-        fig = plt.figure(figsize=(figsize_x, figsize_y))
+        fig = plt.figure(figsize=(figsize_x, batch_figsize_y))
         ax = sns.heatmap(
             diff,
             mask=mask,            # hide zero differences
@@ -548,8 +635,10 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
         ax.set_xticklabels(diff.columns, rotation=45, ha='right', fontsize=8)
 
         # plt.title("Differences from Instance", fontsize=12)
-        qstr = str(query_idx).zfill(z)
-        plt.title(f"Counterfactuals for Patient {qstr}: predicted {pred}, actual {actual}", fontsize=12, pad=20)
+        # label with the patient's code, not the dataframe row: they diverge by the number
+        # of rows dropped during cleaning above this one
+        pstr = str(patient_code).zfill(z)
+        plt.title(f"Counterfactuals for Patient {pstr}: predicted {pred}, actual {actual}", fontsize=12, pad=20)
         plt.xlabel("Features")
         plt.ylabel("Counterfactuals")
 
@@ -592,7 +681,7 @@ def plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
             filename = f'{config.model.code}_split{split_index}_local_cf'
             idx_start_str = str(idx_start).zfill(3)
             idx_end_str = str(idx_end-1).zfill(3)
-            filename += f'_qidx{qstr}_{idx_start_str}-{idx_end_str}'
+            filename += f'_patient{pstr}_{idx_start_str}-{idx_end_str}'
             filename += '.png'
             plt.savefig(savedir / filename)
             print(f'Counterfactual heatmaps saved to {filename} in {Path(*savedir.parts[-7:])}')
@@ -606,8 +695,16 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
                           config,
                           split_index,
                           threshold,
+                          patient_code,
                           savedir=None,
-                          ):   
+                          ):
+    """One-page report per instance: prediction metadata, the instance's actionable
+    feature values, and a heat map of how each counterfactual changes them.
+
+    patient_code: the patient's code in the source spreadsheet (see
+        DPN_data.index_to_patient_code); query_idx is the cleaned dataframe row, which
+        is not the same number once rows have been dropped during cleaning.
+    """
     z = config.reporting.nzfill
     actionable_features = config.dice.cf_features.actionable
     actionable_features = actionable_features.split(',')
@@ -638,7 +735,10 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
     # INSTANCE VALUES ===========
     # Set background for the heatmap axis
     ax_meta_table.set_facecolor('#F7F7F7')
-    xf = lambda x: f"{Xfull.iloc[query_idx][x]:.4g}"  # full data values 
+    # query_idx is used as an index label everywhere else (ioi_df.loc[qidx]), so look it
+    # up as a label here too. Equivalent today -- both loader paths leave a contiguous
+    # 0..n-1 index -- but it keeps one meaning for query_idx across the pipeline.
+    xf = lambda x: f"{Xfull.loc[query_idx][x]:.4g}"  # full data values
     label = lambda x: 'Confirmed' if int(x)==1 else 'Unconfirmed'
     xfsex = lambda x: 'Female' if int(xf(x))==0 else 'Male' 
     fg = lambda x : f"{x:.4g}" # general formatting
@@ -652,7 +752,7 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
     r1 = [['Outcome', outcome()]]           + [[f, xf(f)] for f in ["SUBJ",   "FEET_MEAN_ESC", "SSA_L",  "SSA_R"]]
     r2 = [['Actual',   label(actual)]]      + [[f, xf(f)] for f in ["DM_DUR", "FEET_PCT_ASYM", "SSC_L",  "SSC_R"]]
     r3 = [['Predicted', label(pred)]]       + [[f, xf(f)] for f in ["GBS",    "HAND_MEAN_ESC", "SPSA_L", "SPSA_R"]]
-    r4 = [['Probability', fg(pred_proba)]]  + [[f, xf(f)] for f in ["MNSI",   "HAND_PCT_ASYM", "SPSC_L", "SPSC_L"]]
+    r4 = [['Probability', fg(pred_proba)]]  + [[f, xf(f)] for f in ["MNSI",   "HAND_PCT_ASYM", "SPSC_L", "SPSC_R"]]
     r5 = [['Margin', fg(margin)]]           + [[f, xf(f)] for f in ["DEC_VS", "NS",             "MCV_L", "MCV_R"]]
     r6 = [['Threshold', fg(threshold)]]     + [[f, xf(f)] for f in ["DEC_PPS","CAS",            "DL_L",  "DL_R"]]    
     r7 = [['Model Split', fg(split_index)]] + [["DEC_LTS", xf("DEC_LTS")]] +  [[""]*2] + [[f, xf(f)] for f in ["CMAPANK_L", "CMAPANK_R"]]  
@@ -754,30 +854,45 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
     ax_heatmap.axvline(0, color='gray', linewidth=1.5)
     ax_heatmap.axvline(len(actionable_features), color='gray', linewidth=1.5)
 
-    # query_idx is zero-based. add 1 to match raw data ID
-    fig.suptitle(f'Counterfactuals for Patient {query_idx+1}', fontsize=14, y=0.9) 
+    # query_idx is the cleaned dataframe row; patient_code is the ID in the raw data.
+    pstr = str(patient_code).zfill(z)
+    fig.suptitle(f'Counterfactuals for Patient {pstr}', fontsize=14, y=0.9)
     ax_heatmap.tick_params(left=False) 
 
     plt.tight_layout()
     if savedir:
-        filename = f'{config.model.code}_split{split_index}_local_cf_{query_idx+1}.png'
+        filename = f'{config.model.code}_split{split_index}_local_cf_patient{pstr}.png'
         plt.savefig(savedir / filename)
         print(f'Counterfactual heatmaps saved to {filename} in {Path(*savedir.parts[-7:])}')
     plt.close(fig) if backend in ["Agg"] else plt.show()
     return
 
 def get_most_changed_feature(df_cf, instance, config, split_index, savedir):
-    # Boolean mask: True if feature changed compared to the original instance
-    changed_mask = df_cf.ne(instance.iloc[0])
+    """Count, per feature, how many counterfactuals differ from the query instance.
 
-    # Count how many counterfactuals changed each feature
-    change_counts_df = changed_mask.sum()
-    change_counts_df = change_counts_df.sort_values(ascending=False)
-    change_counts_df.reset_index()
+    Returns a DataFrame of ['feature', 'change count'], most-changed first.
+    """
+    # The outcome column is present in the DiCE counterfactuals but not in the query
+    # instance (X drops it), so comparing it yields NaN and marks it changed in every
+    # row. Restrict the comparison to the features both frames share.
+    compared_cols = [c for c in df_cf.columns if c in instance.columns]
+
+    # Boolean mask: True if feature changed compared to the original instance
+    changed_mask = df_cf[compared_cols].ne(instance.iloc[0][compared_cols])
+
+    # Count how many counterfactuals changed each feature.
+    # Summing the mask gives a Series indexed by feature, so reset_index() is needed to
+    # turn it into the two-column frame the header below describes: a Series has no
+    # .columns to set, and pandas accepts the assignment silently without applying it.
+    # Both calls were previously unassigned, so the header never took effect.
+    change_counts_df = changed_mask.sum().sort_values(ascending=False)
+    change_counts_df = change_counts_df.reset_index()
     change_counts_df.columns = ['feature', 'change count']
-    if savedir:       
+    if savedir:
         filename = f"{config.model.code}_split{split_index}_local_cf_most_changed"
-        change_counts_df.to_csv(savedir / f'{filename}.csv')    
+        # index=False: the feature names are already a column, so writing the RangeIndex
+        # too would push the header out to ",feature,change count"
+        change_counts_df.to_csv(savedir / f'{filename}.csv', index=False)
     return change_counts_df
 
 
@@ -787,14 +902,28 @@ def get_local_cf_distances(
     """
     Compute distances, sparsity, and feasibility per counterfactual.
     feature_costs: optional dict of feature->cost weights
+    sort_by: 'L1_dist' or 'L2_dist' to order the counterfactuals by that distance.
+        Row labels are kept, so a sorted row can still be traced back to its
+        position in the counterfactual set and in the heatmaps.
+
+    Returns (diffs, cf_df); the caller's cf_df is left unmodified.
     """
     if cf_df.empty:
         return pd.DataFrame(), pd.DataFrame()
 
+    # Work on a copy. The analysis columns used to be written into the caller's frame,
+    # so sparsity/L1_dist/L2_dist leaked into the progressive filtering and re-plotting
+    # that run after this function.
+    cf_df = cf_df.copy()
+
+    # Diff only over the columns the instance also has. The outcome column rides along in
+    # the DiCE output but is absent from the instance, so subtracting it gives NaN, which
+    # then counts as an altered column in sparsity below.
     x0 = instance_df.iloc[0]
-    diffs = cf_df.sub(x0)
+    feature_cols = [c for c in cf_df.columns if c in instance_df.columns]
+    diffs = cf_df[feature_cols].sub(x0[feature_cols])
     sparsity = (diffs != 0).sum(axis=1)   # number of columns altered
-    l1 = np.abs(diffs).sum(axis=1)        
+    l1 = np.abs(diffs).sum(axis=1)
     l2 = np.sqrt((diffs**2).sum(axis=1))
 
     cf_df["sparsity"] = sparsity
@@ -804,15 +933,15 @@ def get_local_cf_distances(
     if feature_costs:
         cf_df["cost"] = sum(np.abs(diffs[f]) * feature_costs.get(f, 1) for f in diffs.columns)
 
-    if sort_by == 'L1_dist':        
-        cf_df.sort_values("L1_dist").reset_index(drop=True)
-    elif sort_by == 'L2_dist':        
-        cf_df.sort_values("L2_dist").reset_index(drop=True)
-    
+    if sort_by in ('L1_dist', 'L2_dist'):
+        # sort_values returns a new frame; the result used to be discarded, so sort_by
+        # had no effect and both csvs stayed in generation order.
+        cf_df = cf_df.sort_values(sort_by)
+        diffs = diffs.loc[cf_df.index]   # keep the diffs aligned with the sorted rows
+
     # generate a dataframe with the diffs and the analysis
-    diffs = cf_df.drop(columns=['sparsity', 'L1_dist', 'L2_dist']).sub(x0)     
     diffs = pd.concat([diffs, cf_df[['sparsity', 'L1_dist', 'L2_dist']]], axis=1)
-    
+
     if savedir:
         filename = f'{config.model.code}_split{split_index}_local_cf_distance_diffs'
         diffs.to_csv(savedir / f'{filename}.csv')    
@@ -849,9 +978,10 @@ def filter_invalid_progressive_cfs(df_dcf, query_instance, config, split_index, 
         print(f'All counterfactuals are valid. None was filtered.')
     filtered_df = df_dcf.copy()[~mask]
     filtered_df = filtered_df.reset_index(drop=True)
-    if savedir:       
+    if savedir:
         filename = f'{config.model.code}_split{split_index}_local_cf.csv'
-        filtered_df.to_csv(savedir / filename)    
+        # index=False to match generate_diverse_cfs: this file is read back on resume
+        filtered_df.to_csv(savedir / filename, index=False)
     return filtered_df
 
 
@@ -880,9 +1010,9 @@ def check_sufficiency(dice_exp, instance, check_features, permitted_range,
             print(f'Error calculating sufficiency for {f}')
             results[f] = "error"
             pass
-        print(f'{f}: {results[f]}')        
-        results_df = pd.DataFrame(results, index=['sufficiency']).T.reset_index(names="feature")
-    return 
+        print(f'{f}: {results[f]}')
+    results_df = pd.DataFrame(results, index=['sufficiency']).T.reset_index(names="feature")
+    return results_df
 
 def check_necessity(dice_exp, instance, all_features, permitted_range, desired_class="opposite", 
                     maxiterations=500, total_CFs=3, nrepeats=5, verbose=False):
@@ -916,12 +1046,13 @@ def check_necessity(dice_exp, instance, all_features, permitted_range, desired_c
         if not found_cf:
             results[f] = "necessary"
 
-        results_df = pd.DataFrame(results, index=['necessity']).T.reset_index(names="feature")
-    return results_df 
+    results_df = pd.DataFrame(results, index=['necessity']).T.reset_index(names="feature")
+    return results_df
 
 
 def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
-                              features_to_vary,                              
+                              patient_code,
+                              features_to_vary,
                               config,
                               split_index,
                               threshold,
@@ -933,20 +1064,23 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
                               replot=True,
                               savedir=None):
     
-    unfiltered_cfs_savedir = savedir / 'nofiltering' / str(qidx).zfill(3) 
-    unfiltered_cfs_savedir.mkdir(parents=True, exist_ok=True) 
     progressive_cols = [] if config.dice.cf_features.progressive=='none' else config.dice.cf_features.progressive.split(',')
+    # pick the directory before creating it: creating 'nofiltering' first and then
+    # reassigning left an empty 'nofiltering' tree behind on every progressive run
+    subdir = 'unfiltered' if progressive_cols else 'nofiltering'
+    unfiltered_cfs_savedir = savedir / subdir / str(qidx).zfill(3)
+    unfiltered_cfs_savedir.mkdir(parents=True, exist_ok=True)
     if progressive_cols:
-        unfiltered_cfs_savedir = savedir / 'unfiltered' / str(qidx).zfill(3) 
-        unfiltered_cfs_savedir.mkdir(parents=True, exist_ok=True) 
-        filtered_cfs_savedir = savedir / 'filtered_progressive' / str(qidx).zfill(3) 
-        filtered_cfs_savedir.mkdir(parents=True, exist_ok=True) 
+        filtered_cfs_savedir = savedir / 'filtered_progressive' / str(qidx).zfill(3)
+        filtered_cfs_savedir.mkdir(parents=True, exist_ok=True)
         
     print(f'Creating reports for Instance {qidx}...')
     print(f'Outputs will be saved to {Path(*savedir.parts[-7:])}.')
 
     X = dfXy.drop(['Confirmed_Binary_DPN'], axis=1)
-    query_instance = X[qidx:qidx+1]
+    # qidx is an index label (it comes from ioi_df.index), so select it as one.
+    # The list key keeps the result a one-row DataFrame, as the slice did.
+    query_instance = X.loc[[qidx]]
 
     print('Calculating instance permitted range...')
     instance_permitted_range = get_local_permitted_range(
@@ -1001,18 +1135,23 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
             return
         
     
-    print('plotting heatmaps...')
-    plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull, 
-                        query_idx=qidx, 
-                        pred=ioi_df.loc[qidx].pred, 
-                        actual=ioi_df.loc[qidx].actual, 
-                        pred_proba=ioi_df.loc[qidx].pred_proba,
-                        margin=ioi_df.loc[qidx].margin,
-                        config=config,
-                        split_index=split_index,
-                        threshold=threshold,
-                        savedir=unfiltered_cfs_savedir)    
-    
+    # replot=False reuses the counterfactuals without redrawing the figures; the csv
+    # artifacts below are still refreshed
+    if replot:
+        print('plotting heatmaps...')
+        plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
+                            query_idx=qidx,
+                            pred=ioi_df.loc[qidx].pred,
+                            actual=ioi_df.loc[qidx].actual,
+                            pred_proba=ioi_df.loc[qidx].pred_proba,
+                            margin=ioi_df.loc[qidx].margin,
+                            config=config,
+                            split_index=split_index,
+                            threshold=threshold,
+                            patient_code=patient_code,
+                            savedir=unfiltered_cfs_savedir)
+
+
     print('Getting changed features...')
     get_most_changed_feature(df_dcf, query_instance, config, split_index, savedir=unfiltered_cfs_savedir)
 
@@ -1024,16 +1163,19 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
         print('removing invalid progressive counterfactuals...')
         df_dcf = filter_invalid_progressive_cfs(df_dcf, query_instance, config, split_index, categorical_cols, savedir=filtered_cfs_savedir)
 
-        plot_local_cf_heatmap(dfXy, df_dcf, query_instance, 
-                            query_idx=qidx, 
-                            pred=ioi_df.loc[qidx].pred, 
-                            actual=ioi_df.loc[qidx].actual,
-                            config=config, 
-                            split_index=split_index,
-                            categorical_cols=categorical_cols,
-                            highlight_invalid=False, 
-                            savedir=filtered_cfs_savedir)  
-        
+        if replot:
+            plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
+                                query_idx=qidx,
+                                pred=ioi_df.loc[qidx].pred,
+                                actual=ioi_df.loc[qidx].actual,
+                                config=config,
+                                split_index=split_index,
+                                categorical_cols=categorical_cols,
+                                patient_code=patient_code,
+                                highlight_invalid=False,
+                                savedir=filtered_cfs_savedir)
+
+
         print('Getting changed features...')
         get_most_changed_feature(df_dcf, query_instance, config, split_index, savedir=filtered_cfs_savedir)
 

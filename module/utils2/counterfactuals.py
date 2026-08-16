@@ -461,6 +461,45 @@ def _to_numeric_where_possible(df):
     return df
 
 
+def drop_cfs_outside_features_to_vary(df_dcf, instance, features_to_vary,
+                                      config=None, split_index=None, savedir=None):
+    """Remove counterfactuals that changed a feature DiCE was told to hold fixed.
+
+    features_to_vary is passed to every generate_counterfactuals() call, and DiCE's
+    genetic search does pin the remaining features to the query instance. With this
+    model and dataset a small number of counterfactuals still come back with one of
+    them altered (1-2 in ~19 for instance 38, reproducible with DiCE's own defaults).
+    Such a counterfactual is not actionable advice -- nothing can change a patient's
+    SUBJ -- so drop it here, before any report is produced, which keeps the csvs and
+    the figures describing the same set of counterfactuals.
+
+    The first row is the query instance itself and is always kept. Dropped rows are
+    written alongside the report for inspection rather than discarded silently.
+    """
+    # only features the instance also carries: the outcome column rides along in the
+    # DiCE output and is not a feature
+    protected = [c for c in df_dcf.columns
+                 if c in instance.columns and c not in features_to_vary]
+    if not protected or len(df_dcf) <= 1:
+        return df_dcf
+
+    x0 = instance.iloc[0][protected]
+    cfs = df_dcf.iloc[1:]
+    violates = cfs[protected].ne(x0).any(axis=1)
+    if not violates.any():
+        print('All counterfactuals respect features_to_vary. None was filtered.')
+        return df_dcf
+
+    offending = cfs.loc[violates, protected].ne(x0).any()
+    offending = sorted(offending[offending].index)
+    print(f'Removed {int(violates.sum())} counterfactuals that changed features outside '
+          f'features_to_vary: {offending}')
+    if savedir and config is not None:
+        filename = f'{config.model.code}_split{split_index}_local_cf_unactionable.csv'
+        cfs.loc[violates].to_csv(savedir / filename, index=False)
+    return pd.concat([df_dcf.iloc[:1], cfs.loc[~violates]]).reset_index(drop=True)
+
+
 def generate_diverse_cfs(dice_exp, instance, config, split_index,
                          threshold, features_to_vary, permitted_range={}, 
                          recompute=False, 
@@ -469,9 +508,14 @@ def generate_diverse_cfs(dice_exp, instance, config, split_index,
 
     cf_filename = savedir / f'{config.model.code}_split{split_index}_local_cf.csv'
     if not recompute and cf_filename.is_file():
-        print(f'{cf_filename.name} exists. Returning values from contents.')
         combined_dfs = pd.read_csv(cf_filename)
-        return combined_dfs
+        # A run that found nothing still writes this file, holding the query instance and
+        # no counterfactuals. Resuming from it produced empty reports that looked like
+        # real ones, so treat it as a miss and generate again.
+        if len(combined_dfs) > 1:
+            print(f'{cf_filename.name} exists. Returning values from contents.')
+            return combined_dfs
+        print(f'{cf_filename.name} exists but holds no counterfactuals. Regenerating.')
     error_filename = savedir / 'error.txt'
     if not recompute and error_filename.is_file():
         # raise exception which will propagate to caller and won't process cf results
@@ -511,6 +555,13 @@ def generate_diverse_cfs(dice_exp, instance, config, split_index,
     # before drop_duplicates, so a string row and its numeric twin deduplicate.
     combined_dfs = _to_numeric_where_possible(pd.concat(all_cfs))
     combined_dfs = combined_dfs.drop_duplicates().reset_index(drop=True)
+
+    # Filter before saving, so the csv and every figure and analysis derived from it
+    # describe the same set of counterfactuals.
+    combined_dfs = drop_cfs_outside_features_to_vary(
+        combined_dfs, instance, features_to_vary,
+        config=config, split_index=split_index, savedir=savedir)
+
     if savedir:
         # index=False so the reload above sees only feature columns: the row numbers used
         # to come back as an unnamed column and act as a phantom feature in every diff.

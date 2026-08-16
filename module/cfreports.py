@@ -40,14 +40,17 @@ parser = argparse.ArgumentParser(
     python cfreports.py bin_cf_final.yml
         --> redo all reports
 
-    python cfreports.py bin_cf_final.yml skip_instances --model-idx 2 --instances 53,67
-        --> do not overwrite reports of model 2, redo all instances but SKIP 53 & 67
+    python cfreports.py bin_cf_final.yml skip_instances --model-idx 2 --patient_codes 53,67
+        --> do not overwrite reports of model 2, redo all patients but SKIP 53 & 67
 
-    python cfreports.py bin_cf_final.yml redo_instances --model-idx 2 --instances 53,67
-        --> do not overwrite reports of model 2, redo ONLY instances 53 & 67
+    python cfreports.py bin_cf_final.yml redo_instances --model-idx 2 --patient_codes 53,67
+        --> do not overwrite reports of model 2, redo ONLY patients 53 & 67
 
     python cfreports.py bin_cf_final.yml global_only --model-idx 2
         --> generate Global Importances for Model 2 only
+
+    patient codes are the IDs in the source spreadsheet, the same numbers used for the
+    output folders and file names -- not row numbers of the cleaned dataframe
     """,
     formatter_class=argparse.RawDescriptionHelpFormatter
 )
@@ -71,11 +74,14 @@ parser.add_argument(
     help='Index of the model to target (required when mode is set)'
 )
 parser.add_argument(
-    '--instances',
+    # two spellings of the same flag, not a typo: the underscore form is the documented
+    # one, the hyphen form matches --model-idx / --gen-timeout / --no-replot
+    '--patient_codes', '--patient-codes',
     type=parse_comma_separated_ints,
     default=[],
-    dest='target_instance_indices',
-    help='Comma-separated instance indices to skip or redo, e.g. 53,67'
+    dest='target_patient_codes',
+    help='Comma-separated patient codes to skip or redo, e.g. 53,67. These are the IDs '
+         'in the source spreadsheet, as used for the output folders and file names.'
 )
 parser.add_argument(
     '--gen-timeout',
@@ -106,13 +112,13 @@ def main():
     if args.mode and args.target_model_idx is None:
         parser.error(f"--model-idx is required when mode is '{args.mode}'")
 
-    # Validate: --instances only makes sense for skip/redo modes
-    if args.target_instance_indices and args.mode not in ('skip_instances', 'redo_instances'):
-        parser.error("--instances can only be used with 'skip_instances' or 'redo_instances' mode")
+    # Validate: --patient_codes only makes sense for skip/redo modes
+    if args.target_patient_codes and args.mode not in ('skip_instances', 'redo_instances'):
+        parser.error("--patient_codes can only be used with 'skip_instances' or 'redo_instances' mode")
 
     config_filename         = args.config
     target_model_idx        = args.target_model_idx
-    target_instance_indices = args.target_instance_indices
+    target_patient_codes    = args.target_patient_codes
     skip_instances          = args.mode == 'skip_instances' or args.mode is None
     redo_instances          = args.mode == 'redo_instances'
     global_only             = args.mode == 'global_only'
@@ -144,6 +150,19 @@ def main():
     dataset_path = (script_dir / config.data.dataset_path).resolve()
     D = DPN_data(str(dataset_path))
     D.load(classification=config.experiment.classification_type)
+
+    # The rest of the pipeline indexes by cleaned dataframe row, so translate the patient
+    # codes given on the command line once, here, where the mapping is available. Codes
+    # come from the source spreadsheet and are not row+1: cleaning drops rows.
+    row_of_patient_code = {int(code): row for row, code in enumerate(D.patient_codes)}
+    unknown_codes = [c for c in target_patient_codes if c not in row_of_patient_code]
+    if unknown_codes:
+        parser.error(f"unknown patient code(s): {unknown_codes}. "
+                     f"Valid codes run from {int(D.patient_codes.min())} to {int(D.patient_codes.max())}, "
+                     f"excluding rows dropped during cleaning.")
+    target_instance_indices = [row_of_patient_code[c] for c in target_patient_codes]
+    if target_patient_codes:
+        print(f'patient codes {target_patient_codes} -> dataframe rows {target_instance_indices}')
     dfdpn = D.df
     data_cols = dfdpn.drop(D.non_data_cols, axis=1, errors="ignore").columns
     Xfull = dfdpn[data_cols]
@@ -253,8 +272,9 @@ def main():
         print(f"Getting Instances of Interest for model {midx} with delta={config.dice.threshold_delta}...")
         ioi_df, display_cols = cf.get_instances_of_interest(
             wrapped_model, X_test, y_test, config, midx,
-            threshold=threshold, 
+            threshold=threshold,
             delta=config.dice.threshold_delta,
+            patient_codes=D.patient_codes,
             savedir=split_output_dir)
         qindices = ioi_df.index.to_list()
 
@@ -271,26 +291,28 @@ def main():
         else:
             # #### Produce reports for each Instance of Interest
             for qidx in qindices:
-                if skip_instances: 
-                    # skip target instances (because of error, or reports already exist)
+                # qidx is a row index into the cleaned dataframe, which is not the
+                # patient's code in the source spreadsheet: _clean_raw_values drops
+                # rows with NaN numeric values and resets the index. Resolve the code
+                # here, where D is in scope, and label the reports and messages with it.
+                patient_code = D.index_to_patient_code(qidx)
+
+                if skip_instances:
+                    # skip target patients (because of error, or reports already exist)
                     if qidx in target_instance_indices:
-                        print(f"Skipping instance {qidx}...")        
+                        print(f"Skipping patient {patient_code}...")
                         continue
 
                 elif redo_instances:
                     if qidx not in target_instance_indices:
-                        # redo only target instances; skip the rest
-                        print(f"Skipping and not redoing instance {qidx}...")
+                        # redo only target patients; skip the rest
+                        print(f"Skipping and not redoing patient {patient_code}...")
                         continue
 
-                print(f"Generating counterfactual analysis for record {qidx}")
+                print(f"Generating counterfactual analysis for patient {patient_code}")
                 try:
-                    # qidx is a row index into the cleaned dataframe, which is not the
-                    # patient's code in the source spreadsheet: _clean_raw_values drops
-                    # rows with NaN numeric values and resets the index. Resolve the code
-                    # here, where D is in scope, and label the reports with it.
                     cf.generate_local_cf_reports(dfXy, dexp, ioi_df, qidx, Xfull,
-                                            patient_code=D.index_to_patient_code(qidx),
+                                            patient_code=patient_code,
                                             features_to_vary=features_to_vary,
                                             config=config,
                                             split_index=midx,

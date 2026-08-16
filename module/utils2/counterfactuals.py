@@ -355,9 +355,24 @@ def get_global_importance(dice_exp, DPN_data, X_test, config, split_index,
 # LOCAL COUNTERFACTUALS 
 # ----------------------
 
-def get_local_permitted_range(dfXy, instance, features_to_vary, 
-                              categorical_cols, continuous_cols, 
-                              monotonic_cols, config, split_index, savedir=None):
+def instance_artifact_filename(config, split_index, patient_code, suffix):
+    """Build the name of a per-instance artifact, identified by the patient's code.
+
+    The code is the patient's ID in the source spreadsheet (DPN_data.index_to_patient_code),
+    not the cleaned dataframe row, so every csv and figure for a patient carries the same
+    identifier as the folder holding them. patient_code=None keeps the older, unlabelled
+    form for callers that do not have it.
+    """
+    name = f'{config.model.code}_split{split_index}'
+    if patient_code is not None:
+        name += f'_patient{str(patient_code).zfill(config.reporting.nzfill)}'
+    return f'{name}_{suffix}'
+
+
+def get_local_permitted_range(dfXy, instance, features_to_vary,
+                              categorical_cols, continuous_cols,
+                              monotonic_cols, config, split_index, patient_code=None,
+                              savedir=None):
     local_permitted_range = {}
     for col in features_to_vary:
 
@@ -399,8 +414,9 @@ def get_local_permitted_range(dfXy, instance, features_to_vary,
         print("Local permitted range:") 
         display(df_vis) 
     if savedir:
-        filename = f'{config.model.code}_split{split_index}_instance_permitted_range.csv'
-        df_vis.to_csv(savedir / filename)        
+        filename = instance_artifact_filename(
+            config, split_index, patient_code, 'instance_permitted_range.csv')
+        df_vis.to_csv(savedir / filename)
     return local_permitted_range
 
 def generate_sample_local_cf_with_permitted_range(dfXy, dice_exp, instance, permitted_range, config, CFs=5):
@@ -416,8 +432,15 @@ def generate_sample_local_cf_with_permitted_range(dfXy, dice_exp, instance, perm
     return e1  
 
 
-def get_instances_of_interest(model, X_test, y_test, config, split_index, threshold=0.5, delta=0.1, savedir=None):
-    """Return instances of interest (ioi - misclassified and borderline instances) around the decision threshold."""
+def get_instances_of_interest(model, X_test, y_test, config, split_index, threshold=0.5, delta=0.1,
+                              patient_codes=None, savedir=None):
+    """Return instances of interest (ioi - misclassified and borderline instances) around the decision threshold.
+
+    patient_codes: optional array mapping a cleaned dataframe row to the patient's code in
+        the source spreadsheet (DPN_data.patient_codes). When given, the saved csv is keyed
+        by that code so it agrees with the per-patient folders and figures. The returned
+        frame stays indexed by dataframe row, which is what the callers look up.
+    """
     y_pred = model.predict(X_test)
     y_proba = model.predict_proba(X_test)[:, 1]
 
@@ -434,13 +457,26 @@ def get_instances_of_interest(model, X_test, y_test, config, split_index, thresh
     ioi_df["actual"] = y_test.iloc[ioi_idx].values
     ioi_df["misclassified"] = ioi_df["pred"] != ioi_df["actual"]
     
-    print(f"Found {len(ioi_df)} misclassified and borderline cases (|p - {threshold:.4f}| ≤ {delta}): indices {ioi_df.index.to_list()}")
+    rows = ioi_df.index.to_list()
+    print(f"Found {len(ioi_df)} misclassified and borderline cases "
+          f"(|p - {threshold:.4f}| ≤ {delta}): dataframe rows {rows}")
+    if patient_codes is not None:
+        print(f"  patient codes: {[int(patient_codes[i]) for i in rows]}")
     display_cols = X_test.columns[:4].to_list() + ['margin', 'misclassified', 'pred_proba','pred','actual']
     if config.experiment.verbosity > 0:
         display(ioi_df[display_cols])
     if savedir:
         filename = f'{config.model.code}_split{split_index}_instances_of_interest.csv'
-        ioi_df.to_csv(savedir / filename)
+        out = ioi_df
+        if patient_codes is not None:
+            # key the file by patient code, matching the per-patient folders. The
+            # dataframe row is kept as a column: it is what --instances takes and what
+            # the rest of the pipeline indexes by.
+            out = ioi_df.copy()
+            out.insert(0, 'qidx', out.index)
+            out.index = [int(patient_codes[i]) for i in ioi_df.index]
+            out.index.name = 'patient_code'
+        out.to_csv(savedir / filename)
     return ioi_df, display_cols
 
 def _to_numeric_where_possible(df):
@@ -462,7 +498,8 @@ def _to_numeric_where_possible(df):
 
 
 def drop_cfs_outside_features_to_vary(df_dcf, instance, features_to_vary,
-                                      config=None, split_index=None, savedir=None):
+                                      config=None, split_index=None, patient_code=None,
+                                      savedir=None):
     """Remove counterfactuals that changed a feature DiCE was told to hold fixed.
 
     features_to_vary is passed to every generate_counterfactuals() call, and DiCE's
@@ -495,18 +532,20 @@ def drop_cfs_outside_features_to_vary(df_dcf, instance, features_to_vary,
     print(f'Removed {int(violates.sum())} counterfactuals that changed features outside '
           f'features_to_vary: {offending}')
     if savedir and config is not None:
-        filename = f'{config.model.code}_split{split_index}_local_cf_unactionable.csv'
+        filename = instance_artifact_filename(
+            config, split_index, patient_code, 'local_cf_unactionable.csv')
         cfs.loc[violates].to_csv(savedir / filename, index=False)
     return pd.concat([df_dcf.iloc[:1], cfs.loc[~violates]]).reset_index(drop=True)
 
 
 def generate_diverse_cfs(dice_exp, instance, config, split_index,
-                         threshold, features_to_vary, permitted_range={}, 
-                         recompute=False, 
+                         threshold, features_to_vary, permitted_range={},
+                         recompute=False, patient_code=None,
                          savedir=None):
     """Generate diverse counterfactuals across multiple seeds."""
 
-    cf_filename = savedir / f'{config.model.code}_split{split_index}_local_cf.csv'
+    cf_filename = savedir / instance_artifact_filename(
+        config, split_index, patient_code, 'local_cf.csv')
     if not recompute and cf_filename.is_file():
         combined_dfs = pd.read_csv(cf_filename)
         # A run that found nothing still writes this file, holding the query instance and
@@ -560,7 +599,8 @@ def generate_diverse_cfs(dice_exp, instance, config, split_index,
     # describe the same set of counterfactuals.
     combined_dfs = drop_cfs_outside_features_to_vary(
         combined_dfs, instance, features_to_vary,
-        config=config, split_index=split_index, savedir=savedir)
+        config=config, split_index=split_index, patient_code=patient_code,
+        savedir=savedir)
 
     if savedir:
         # index=False so the reload above sees only feature columns: the row numbers used
@@ -918,7 +958,8 @@ def plot_local_cf_heatmap2(dfXy, df_dcf, query_instance, Xfull,
     plt.close(fig) if backend in ["Agg"] else plt.show()
     return
 
-def get_most_changed_feature(df_cf, instance, config, split_index, savedir):
+def get_most_changed_feature(df_cf, instance, config, split_index, savedir,
+                             patient_code=None):
     """Count, per feature, how many counterfactuals differ from the query instance.
 
     Returns a DataFrame of ['feature', 'change count'], most-changed first.
@@ -940,16 +981,17 @@ def get_most_changed_feature(df_cf, instance, config, split_index, savedir):
     change_counts_df = change_counts_df.reset_index()
     change_counts_df.columns = ['feature', 'change count']
     if savedir:
-        filename = f"{config.model.code}_split{split_index}_local_cf_most_changed"
+        filename = instance_artifact_filename(
+            config, split_index, patient_code, 'local_cf_most_changed.csv')
         # index=False: the feature names are already a column, so writing the RangeIndex
         # too would push the header out to ",feature,change count"
-        change_counts_df.to_csv(savedir / f'{filename}.csv', index=False)
+        change_counts_df.to_csv(savedir / filename, index=False)
     return change_counts_df
 
 
 def get_local_cf_distances(
-        instance_df, cf_df, config, split_index, 
-        feature_costs=None, sort_by=None, savedir=None):
+        instance_df, cf_df, config, split_index,
+        feature_costs=None, sort_by=None, patient_code=None, savedir=None):
     """
     Compute distances, sparsity, and feasibility per counterfactual.
     feature_costs: optional dict of feature->cost weights
@@ -994,14 +1036,19 @@ def get_local_cf_distances(
     diffs = pd.concat([diffs, cf_df[['sparsity', 'L1_dist', 'L2_dist']]], axis=1)
 
     if savedir:
-        filename = f'{config.model.code}_split{split_index}_local_cf_distance_diffs'
-        diffs.to_csv(savedir / f'{filename}.csv')    
+        # index_label: the row labels identify the counterfactual within this patient's
+        # set, which is otherwise an unnamed column in the file
+        filename = instance_artifact_filename(
+            config, split_index, patient_code, 'local_cf_distance_diffs.csv')
+        diffs.to_csv(savedir / filename, index_label='cf_row')
 
-        filename = f'{config.model.code}_split{split_index}_local_cf_distances'
-        cf_df.to_csv(savedir / f'{filename}.csv')    
+        filename = instance_artifact_filename(
+            config, split_index, patient_code, 'local_cf_distances.csv')
+        cf_df.to_csv(savedir / filename, index_label='cf_row')
     return diffs,  cf_df
 
-def filter_invalid_progressive_cfs(df_dcf, query_instance, config, split_index, categorical_cols, savedir):
+def filter_invalid_progressive_cfs(df_dcf, query_instance, config, split_index, categorical_cols, savedir,
+                                   patient_code=None):
     """
     For progressive features,  if a counterfactual sets to 0 what was originally 1, 
     it is an invalid counterfactual.
@@ -1030,7 +1077,8 @@ def filter_invalid_progressive_cfs(df_dcf, query_instance, config, split_index, 
     filtered_df = df_dcf.copy()[~mask]
     filtered_df = filtered_df.reset_index(drop=True)
     if savedir:
-        filename = f'{config.model.code}_split{split_index}_local_cf.csv'
+        filename = instance_artifact_filename(
+            config, split_index, patient_code, 'local_cf.csv')
         # index=False to match generate_diverse_cfs: this file is read back on resume
         filtered_df.to_csv(savedir / filename, index=False)
     return filtered_df
@@ -1119,13 +1167,17 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
     # pick the directory before creating it: creating 'nofiltering' first and then
     # reassigning left an empty 'nofiltering' tree behind on every progressive run
     subdir = 'unfiltered' if progressive_cols else 'nofiltering'
-    unfiltered_cfs_savedir = savedir / subdir / str(qidx).zfill(3)
+    # folders are named for the patient's code in the source spreadsheet, matching the
+    # figures and csvs inside them. qidx, the cleaned dataframe row, is not that number:
+    # cleaning drops rows and resets the index.
+    pstr = str(patient_code).zfill(config.reporting.nzfill)
+    unfiltered_cfs_savedir = savedir / subdir / pstr
     unfiltered_cfs_savedir.mkdir(parents=True, exist_ok=True)
     if progressive_cols:
-        filtered_cfs_savedir = savedir / 'filtered_progressive' / str(qidx).zfill(3)
+        filtered_cfs_savedir = savedir / 'filtered_progressive' / pstr
         filtered_cfs_savedir.mkdir(parents=True, exist_ok=True)
-        
-    print(f'Creating reports for Instance {qidx}...')
+
+    print(f'Creating reports for Patient {pstr} (dataframe row {qidx})...')
     print(f'Outputs will be saved to {Path(*savedir.parts[-7:])}.')
 
     X = dfXy.drop(['Confirmed_Binary_DPN'], axis=1)
@@ -1135,10 +1187,11 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
 
     print('Calculating instance permitted range...')
     instance_permitted_range = get_local_permitted_range(
-        dfXy, query_instance, features_to_vary, categorical_cols, continuous_cols, 
-        progressive_cols, config, split_index, savedir=unfiltered_cfs_savedir)
+        dfXy, query_instance, features_to_vary, categorical_cols, continuous_cols,
+        progressive_cols, config, split_index, patient_code=patient_code,
+        savedir=unfiltered_cfs_savedir)
 
-    print(f'\nGenerating Counterfactuals for Instance {qidx} of model {split_index}...')
+    print(f'\nGenerating Counterfactuals for Patient {pstr} of model {split_index}...')
 
     start_time = datetime.now()    
     print('Start:', start_time.strftime("%m-%d %H:%M:%S"))
@@ -1164,6 +1217,7 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
             features_to_vary=features_to_vary,
             permitted_range=instance_permitted_range,
             recompute=recompute,
+            patient_code=patient_code,
             savedir=unfiltered_cfs_savedir
             )
     except Exception as e:
@@ -1175,7 +1229,8 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
     print(f'Elapsed: {elapsed.total_seconds()/60:.2f} mins.')
     if generation_error:
         with open(unfiltered_cfs_savedir / 'error.txt', 'w') as f:
-            f.write(f'Error generating Counterfactuals for Instance {qidx} of model {split_index}\n')
+            f.write(f'Error generating Counterfactuals for Patient {pstr} '
+                    f'(dataframe row {qidx}) of model {split_index}\n')
             f.write(f'Start: {start_time.strftime("%m-%d %H:%M:%S")}\n')
             f.write(f'End: {end_time.strftime("%m-%d %H:%M:%S")}\n')
             seconds = elapsed.total_seconds()
@@ -1204,15 +1259,18 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
 
 
     print('Getting changed features...')
-    get_most_changed_feature(df_dcf, query_instance, config, split_index, savedir=unfiltered_cfs_savedir)
+    get_most_changed_feature(df_dcf, query_instance, config, split_index,
+                             savedir=unfiltered_cfs_savedir, patient_code=patient_code)
 
     print('Computing Sparsity and L1, L2 Distances...')
     _diffs, _cf_ana = get_local_cf_distances(
-        query_instance, df_dcf, config, split_index, sort_by="L2_dist", savedir=unfiltered_cfs_savedir)
+        query_instance, df_dcf, config, split_index, sort_by="L2_dist",
+        patient_code=patient_code, savedir=unfiltered_cfs_savedir)
 
     if progressive_cols and remove_invalid_progressive_cfs:
         print('removing invalid progressive counterfactuals...')
-        df_dcf = filter_invalid_progressive_cfs(df_dcf, query_instance, config, split_index, categorical_cols, savedir=filtered_cfs_savedir)
+        df_dcf = filter_invalid_progressive_cfs(df_dcf, query_instance, config, split_index, categorical_cols,
+                                                savedir=filtered_cfs_savedir, patient_code=patient_code)
 
         if replot:
             plot_local_cf_heatmap(dfXy, df_dcf, query_instance,
@@ -1228,8 +1286,10 @@ def generate_local_cf_reports(dfXy, dice_exp, ioi_df, qidx, Xfull,
 
 
         print('Getting changed features...')
-        get_most_changed_feature(df_dcf, query_instance, config, split_index, savedir=filtered_cfs_savedir)
+        get_most_changed_feature(df_dcf, query_instance, config, split_index,
+                                 savedir=filtered_cfs_savedir, patient_code=patient_code)
 
         print('Computing Distances...')
         _diffs, _cf_ana = get_local_cf_distances(
-            query_instance, df_dcf, config, split_index, sort_by="L2_dist", savedir=filtered_cfs_savedir)
+            query_instance, df_dcf, config, split_index, sort_by="L2_dist",
+            patient_code=patient_code, savedir=filtered_cfs_savedir)

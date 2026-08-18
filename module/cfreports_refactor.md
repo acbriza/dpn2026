@@ -162,9 +162,22 @@ structural difference in turn:
 
 It also reproduces with DiCE's own default parameters on the real explainer, which rules out
 the config's `proximity_weight` / `diversity_weight` / `categorical_penalty` / `algorithm`
-settings. The remaining suspects are the CatBoost model behind `CatBoostWrapper` and the real
-data/schema; a RandomForest-on-real-data comparison was started but had not finished within
-this session. Worth reporting upstream once isolated.
+settings. Nor is it specific to CatBoost. Holding the data, the schema, the test-set frame
+and `CatBoostWrapper` constant and swapping only the model:
+
+| model | qidx 38 | qidx 71 | qidx 115 |
+|---|---|---|---|
+| CatBoost (the study's model) | leaks `SUBJ`, 1-2 of ~19 CFs | — | — |
+| LogisticRegression | timed out at 5 min | 20 CFs, clean | leaks `NS` 19/20, `DM_DUR` 6, `FEET_PCT_ASYM` 2 |
+| DecisionTree (depth 5) | 20 CFs, clean | timed out at 5 min | 20 CFs, clean |
+
+So the constraint is broken by DiCE's genetic search on this dataset and schema, not by the
+model, the calling code or the configuration. Two points matter for the study beyond the
+guard itself. It is **not confined to categorical features** -- LogisticRegression moved
+three continuous ones, `NS` in 19 of 20 counterfactuals for that patient, where CatBoost had
+moved the categorical `SUBJ`. And incidence varies by model and by patient, so its absence
+from any one report is not evidence that a run was clean; only the guard establishes that.
+Worth reporting upstream, with instance 115 under LogisticRegression as the reproducer.
 
 ### Documentation & cleanup
 

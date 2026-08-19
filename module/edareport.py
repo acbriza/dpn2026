@@ -84,16 +84,6 @@ UNITS = {
 # loader, so SEX == 1 is male.
 BINARY_LEVEL = {"SEX": "male"}
 
-# What a recorded zero means for the continuous modelling features that have any.
-# Used in the Figure 1 caption so a zero is never described as missing data.
-ZERO_MEANING = {
-    "DM_DUR":        "diabetes diagnosed within the year of assessment",
-    "FEET_PCT_ASYM": "perfect left-right symmetry",
-    "HAND_PCT_ASYM": "perfect left-right symmetry",
-    "MNSI":          "no positive screening items",
-    "CAS":           "the lowest attainable score",
-}
-
 # Nerve conduction variables where a recorded zero encodes an absent response
 # ('NR' / 'NO F WAVE' in the source spreadsheet) rather than a measurement of
 # zero. Flagged in the descriptive tables so a zero is never read as a value.
@@ -653,44 +643,110 @@ modelling set and, separately, within the excluded nerve conduction set.
 # Figure 1 -- cohort overview
 # ---------------------------------------------------------------------------
 
-def _flow_panel(ax, ctx):
-    """STROBE-style participant flow, drawn as boxes and arrows."""
-    ax.set_xlim(0, 11.5)
-    ax.set_ylim(0, 10)
+def _text_width(ax, renderer, text, fontsize):
+    """Width of `text`, in ax data coordinates, as it would actually render."""
+    artist = ax.text(0, 0, text, ha="center", va="center", fontsize=fontsize)
+    bbox = artist.get_window_extent(renderer=renderer)
+    (x0, _), (x1, _) = ax.transData.inverted().transform([(bbox.x0, bbox.y0), (bbox.x1, bbox.y1)])
+    artist.remove()
+    return abs(x1 - x0)
+
+
+def figure1a_participant_flow(ctx, outputdir, formats):
+    """STROBE-style participant flow, drawn as boxes and arrows.
+
+    The axes fill the whole figure (no margins), so one data unit is exactly
+    one inch; box and canvas sizes can then be grown together, in lockstep,
+    to fit measured label text without invalidating earlier measurements.
+    """
+    set_publication_style()
+    xlim, ylim = 11.5, 10
+    fig = plt.figure(figsize=(3.4, 5.1))
+    ax = fig.add_axes([0, 0, 1, 1])
+    ax.set_xlim(0, xlim)
+    ax.set_ylim(0, ylim)
     ax.axis("off")
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    inches_per_unit = fig.get_figwidth() / xlim
+
+    box_height = 1.7
+    left = 1.4
+    fontsize = 7
     boxes = [
         (8.6, f"Screened for eligibility\nn = {ctx['n_screened']}"),
         (5.9, f"Enrolled\nn = {ctx['n_enrolled']}"),
         (3.2, f"Analysed\nn = {ctx['n_analysed']}"),
     ]
-    for y, text in boxes:
-        ax.add_patch(Rectangle((1.4, y - 0.85), 4.4, 1.7, facecolor="#F2F2F2",
-                               edgecolor="0.35", linewidth=0.7))
-        ax.text(3.6, y, text, ha="center", va="center", fontsize=7)
-    for y_from, y_to in [(8.6, 5.9), (5.9, 3.2)]:
-        ax.add_patch(FancyArrowPatch((3.6, y_from - 0.85), (3.6, y_to + 0.85),
-                                     arrowstyle="-|>", mutation_scale=8,
-                                     linewidth=0.7, color="0.35"))
+    padding = 0.7
+    box_width = max(4.4, padding + max(_text_width(ax, renderer, text, fontsize)
+                                       for _, text in boxes))
+    centre = left + box_width / 2
+    right = left + box_width
+
     excl = [
         (7.25, f"Excluded n = {ctx['n_screened'] - ctx['n_enrolled']}\n"
                + textwrap.fill(ctx["screening_exclusion_reason"], 22)),
         (4.55, f"Excluded n = {ctx['n_enrolled'] - ctx['n_analysed']}\nincomplete measurements\n"
                f"(patient codes {ctx['dropped_codes_text']})"),
     ]
+    excl_gap = 0.4
+    excl_width = max(_text_width(ax, renderer, text, 5.0) for _, text in excl)
+    needed = right + excl_gap + 0.2 + excl_width + 0.3
+    if needed > xlim:
+        fig.set_figwidth(fig.get_figwidth() + (needed - xlim) * inches_per_unit)
+        xlim = needed
+        ax.set_xlim(0, xlim)
+
+    for y, text in boxes:
+        ax.add_patch(Rectangle((left, y - box_height / 2), box_width, box_height,
+                               facecolor="#F2F2F2", edgecolor="0.35", linewidth=0.7))
+        ax.text(centre, y, text, ha="center", va="center", fontsize=fontsize)
+    for y_from, y_to in [(8.6, 5.9), (5.9, 3.2)]:
+        ax.add_patch(FancyArrowPatch((centre, y_from - box_height / 2), (centre, y_to + box_height / 2),
+                                     arrowstyle="-|>", mutation_scale=8,
+                                     linewidth=0.7, color="0.35"))
     for y, text in excl:
-        ax.add_patch(FancyArrowPatch((3.6, y), (6.0, y), arrowstyle="-|>",
+        ax.add_patch(FancyArrowPatch((centre, y), (right + excl_gap, y), arrowstyle="-|>",
                                      mutation_scale=8, linewidth=0.7, color="0.35"))
-        ax.text(6.15, y, text, ha="left", va="center", fontsize=5.0, color="0.25")
-    ax.text(3.6, 1.4,
+        ax.text(right + excl_gap + 0.2, y, text, ha="left", va="center", fontsize=5.0, color="0.25")
+    ax.text(centre, 1.4,
             f"Confirmed n = {ctx['n_confirmed']}  |  Unconfirmed n = {ctx['n_unconfirmed']}",
             ha="center", va="center", fontsize=6.5, fontweight="bold")
-    ax.add_patch(FancyArrowPatch((3.6, 2.35), (3.6, 1.95), arrowstyle="-|>",
+    ax.add_patch(FancyArrowPatch((centre, 2.35), (centre, 1.95), arrowstyle="-|>",
                                  mutation_scale=8, linewidth=0.7, color="0.35"))
-    ax.set_title("a  Participant flow", loc="left")
+
+    # svg.fonttype "none" keeps panel labels as real, editable <text> elements
+    # in the SVG rather than flattening them to glyph outlines.
+    all_formats = list(dict.fromkeys([*formats, "svg"]))
+    with plt.rc_context({"svg.fonttype": "none"}):
+        paths = save_figure(fig, outputdir, "fig1a_participant_flow", all_formats)
+
+    caption_txt = f"""
+Fig. 1a Participant flow. Of {ctx['n_screened']} patients screened, {ctx['n_enrolled']} were
+enrolled after applying the exclusion criteria, and {ctx['n_analysed']} were analysed after
+{ctx['n_enrolled'] - ctx['n_analysed']} records (patient codes {ctx['dropped_codes_text']}) were
+removed for incomplete measurements.
+"""
+    write_caption(outputdir, "fig1a_participant_flow", caption_txt)
+    return {"paths": paths}
 
 
-def _composition_panel(ax, ctx):
-    """Outcome balance, with the prevalence and events-per-variable annotation."""
+CLASSIFICATION_COMPOSITION_CAPTION = """
+Fig. 1b Classification composition. {n_confirmed} patients
+({prevalence:.1f}%) met the 2009 Toronto consensus criteria for confirmed diabetic
+peripheral neuropathy and {n_unconfirmed} did not; the latter group combines the
+negative, possible and probable categories. The cohort therefore provides {epv:.1f}
+minority-class events per candidate predictor across the {n_modelled_features} features
+available to the models, a low ratio that motivates the repeated cross-validation strategy used
+throughout and that should temper the interpretation of any single fitted coefficient.
+"""
+
+
+def figure1bh_classification_composition(ctx, outputdir, formats):
+    """Outcome balance, horizontal bars, with the prevalence/EPV annotation."""
+    set_publication_style()
+    fig, ax = plt.subplots(figsize=(3.6, 2.3))
     counts = [ctx["n_unconfirmed"], ctx["n_confirmed"]]
     bars = ax.barh([0, 1], counts, height=0.42,
                    color=[OUTCOME_COLOURS[0], OUTCOME_COLOURS[1]], alpha=0.85)
@@ -708,63 +764,44 @@ def _composition_panel(ax, ctx):
             f"{ctx['n_modelled_features']} predictors\n"
             f"{ctx['epv']:.1f} events per variable",
             transform=ax.transAxes, ha="right", va="bottom", fontsize=6, color="0.25")
-    ax.set_title("b  Outcome composition", loc="left")
+    paths = save_figure(fig, outputdir, "fig1bh_classification_composition", formats)
+
+    caption_txt = CLASSIFICATION_COMPOSITION_CAPTION.format(
+        n_confirmed=ctx["n_confirmed"], prevalence=100 * ctx["prevalence"],
+        n_unconfirmed=ctx["n_unconfirmed"], epv=ctx["epv"],
+        n_modelled_features=ctx["n_modelled_features"])
+    write_caption(outputdir, "fig1bh_classification_composition", caption_txt)
+    return {"paths": paths}
 
 
-def _zero_panel(ax, df, stats):
-    """Structural zeros among the continuous modelling features."""
-    cont = stats[(stats.modelled) & (stats.kind == "continuous")].feature.tolist()
-    pct = pd.Series({c: 100 * (df[c] == 0).mean() for c in cont}).sort_values()
-    colours = [GROUP_COLOURS[stats.loc[stats.feature == c, "group"].iloc[0]] for c in pct.index]
-    ax.barh(range(len(pct)), pct.values, color=colours, alpha=0.85, height=0.6)
-    ax.set_yticks(range(len(pct)))
-    ax.set_yticklabels(pct.index, fontsize=6.5)
-    ax.set_xlabel("Recorded zeros (%)")
-    ax.set_xlim(0, max(pct.max() * 1.35, 1))
-    for i, v in enumerate(pct.values):
-        if v > 0:
-            ax.text(v + 0.25, i, f"{v:.1f}", va="center", fontsize=6)
-    ax.text(0.98, 0.10, "no missing values remain\nafter record exclusion",
-            transform=ax.transAxes, ha="right", va="bottom", fontsize=6, color="0.25")
-    ax.set_title("c  Structural zeros", loc="left")
-
-
-def figure1_cohort_overview(df, stats, outputdir, ctx, formats):
+def figure1bv_classification_composition(ctx, outputdir, formats):
+    """Outcome balance, vertical bars, sized to sit side by side with Figure 1a."""
     set_publication_style()
-    width = ctx["figure_width_mm"] / MM_PER_INCH
-    fig = plt.figure(figsize=(width, 3.3))
-    gs = gridspec.GridSpec(1, 3, width_ratios=[1.35, 1.0, 1.0], wspace=0.75, figure=fig)
-    _flow_panel(fig.add_subplot(gs[0]), ctx)
-    _composition_panel(fig.add_subplot(gs[1]), ctx)
-    _zero_panel(fig.add_subplot(gs[2]), df, stats)
-    paths = save_figure(fig, outputdir, "fig1_cohort_overview", formats)
+    fig, ax = plt.subplots(figsize=(2.6, 6.2))
+    counts = [ctx["n_unconfirmed"], ctx["n_confirmed"]]
+    bars = ax.bar([0, 1], counts, width=0.55,
+                  color=[OUTCOME_COLOURS[0], OUTCOME_COLOURS[1]], alpha=0.85)
+    for bar, count in zip(bars, counts):
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + max(counts) * 0.02,
+                f"{count}\n({100 * count / ctx['n_analysed']:.1f}%)",
+                ha="center", va="bottom", fontsize=7)
+    ax.set_xticks([0, 1])
+    ax.set_xticklabels([OUTCOME_LABELS[0], OUTCOME_LABELS[1]])
+    ax.set_ylabel("Patients")
+    ax.set_ylim(0, max(counts) * 1.42)
+    ax.set_xlim(-0.85, 1.85)
+    ax.text(0.5, 0.98,
+            f"prevalence {100 * ctx['prevalence']:.1f}%\n"
+            f"{ctx['n_modelled_features']} predictors\n"
+            f"{ctx['epv']:.1f} events per variable",
+            transform=ax.transAxes, ha="center", va="top", fontsize=6, color="0.25")
+    paths = save_figure(fig, outputdir, "fig1bv_classification_composition", formats)
 
-    zero_features = {c: 100 * (df[c] == 0).mean()
-                     for c in stats[(stats.modelled) & (stats.kind == "continuous")].feature}
-    top_zero = [(c, pct) for c, pct in
-                sorted(zero_features.items(), key=lambda kv: -kv[1]) if pct > 0][:3]
-    zero_text = "; ".join(
-        f"{c} in {pct:.1f}% of patients, where a zero denotes "
-        f"{ZERO_MEANING.get(c, 'a genuine measured value')}"
-        for c, pct in top_zero)
-    caption_txt = f"""
-Fig. 1 Composition of the analysed cohort.
-a Participant flow. Of {ctx['n_screened']} patients screened, {ctx['n_enrolled']} were enrolled
-after applying the exclusion criteria, and {ctx['n_analysed']} were analysed after
-{ctx['n_enrolled'] - ctx['n_analysed']} records (patient codes {ctx['dropped_codes_text']}) were
-removed for incomplete measurements. b Outcome composition. {ctx['n_confirmed']} patients
-({100 * ctx['prevalence']:.1f}%) met the 2009 Toronto consensus criteria for confirmed diabetic
-peripheral neuropathy and {ctx['n_unconfirmed']} did not; the latter group combines the
-negative, possible and probable categories. The cohort therefore provides {ctx['epv']:.1f}
-minority-class events per candidate predictor across the {ctx['n_modelled_features']} features
-available to the models, a low ratio that motivates the repeated cross-validation strategy used
-throughout and that should temper the interpretation of any single fitted coefficient.
-c Structural zeros among the continuous modelling features. No missing values remain after the
-record exclusions in panel a, and no imputation was performed. Several features nonetheless
-record exact zeros: {zero_text}. Every such value is a genuine observation rather than a missing
-entry and is retained unchanged in all analyses.
-"""
-    write_caption(outputdir, "fig1_cohort_overview", caption_txt)
+    caption_txt = CLASSIFICATION_COMPOSITION_CAPTION.format(
+        n_confirmed=ctx["n_confirmed"], prevalence=100 * ctx["prevalence"],
+        n_unconfirmed=ctx["n_unconfirmed"], epv=ctx["epv"],
+        n_modelled_features=ctx["n_modelled_features"])
+    write_caption(outputdir, "fig1bv_classification_composition", caption_txt)
     return {"paths": paths}
 
 
@@ -796,8 +833,8 @@ def figure2_univariable_discrimination(stats, outputdir, ctx, formats):
     # Annotations sit in headroom above the top row so they never overlap a marker.
     ax.text(ctx["model_auc"], len(modelled) + 1.5,
             f" {ctx['model_name']} model\n {ctx['model_auc']:.3f}",
-            fontsize=6.5, va="top", ha="left", color="0.15")
-    ax.text(0.5, len(modelled) + 1.5, "no\ndiscrimination ", fontsize=6.5,
+            fontsize=6.5, va="top", ha="left", color="0.35")
+    ax.text(0.5, len(modelled) + 1.5, "no \ndiscrimination ", fontsize=6.5,
             va="top", ha="right", color="0.35")
 
     ax.set_yticks(ypos)
@@ -806,16 +843,13 @@ def figure2_univariable_discrimination(stats, outputdir, ctx, formats):
     # bottom row for the legend, so neither can cover an interval.
     ax.set_ylim(-2.6, len(modelled) + 1.7)
     ax.set_xlim(0.15, 1.0)
-    ax.set_xlabel("Univariable AUC (probability that a Confirmed patient ranks higher)")
 
     handles = [Line2D([], [], marker="o", linestyle="", markerfacecolor=c,
                       markeredgecolor=c, markersize=5, label=g)
                for g, c in GROUP_COLOURS.items() if g in set(modelled.group)]
     handles += [
-        Line2D([], [], marker="D", linestyle="", markerfacecolor="0.4",
+        Line2D([], [], marker="D", linestyle="", markerfacecolor="none",
                markeredgecolor="0.4", markersize=5, label="counterfactual-actionable"),
-        Line2D([], [], marker="o", linestyle="", markerfacecolor="white",
-               markeredgecolor="0.4", markersize=5, label="q $\\geq$ 0.05"),
     ]
     ax.legend(handles=handles, loc="lower left", fontsize=6.2, ncol=1,
               handletextpad=0.4, borderaxespad=0.4)
@@ -834,9 +868,11 @@ single feature is used alone to separate Confirmed from Unconfirmed patients, wi
 percentile bootstrap 95% confidence interval based on {ctx['bootstrap_n']} resamples; features
 are ordered by discrimination strength. A value of 0.5, marked by the dashed line, indicates no
 discrimination, while values below 0.5 indicate features whose values are lower among Confirmed
-patients ({', '.join(inverted.feature)}). Marker colour denotes the clinical domain, filled
-markers denote features reaching a Benjamini-Hochberg false discovery rate below 0.05, and
-diamonds denote the {len(act)} features the counterfactual engine is permitted to vary. The
+patients ({', '.join(inverted.feature)}). Marker colour denotes the clinical domain and diamonds
+denote the {len(act)} features the counterfactual engine is permitted to vary; circles denote the
+remaining candidate predictors. Regardless of shape, a filled marker denotes a feature reaching a
+Benjamini-Hochberg false discovery rate below 0.05, while an open marker denotes one that does
+not. The
 dotted line marks the discrimination achieved by the tuned {ctx['model_name']} model
 ({ctx['model_auc']:.3f}), placing the multivariable result on the same scale as its inputs: the
 strongest individual feature, {best.feature}, already reaches {best.auc:.3f}, so the modelling
@@ -1249,7 +1285,9 @@ def write_numbers(outputdir, ctx, stats, extras):
 def collect_captions(outputdir):
     """Gather every standalone caption into one file for pasting into the manuscript."""
     order = ["table1_cohort_characteristics", "table2_feature_eligibility",
-             "fig1_cohort_overview", "fig2_univariable_discrimination",
+             "fig1a_participant_flow", "fig1bh_classification_composition",
+             "fig1bv_classification_composition",
+             "fig2_univariable_discrimination",
              "s1_continuous_rainclouds", "s2_categorical_features", "s3_redundancy",
              "s4_data_provenance", "s5_actionable_features", "s6_ncs_descriptives"]
     blocks = []
@@ -1341,7 +1379,9 @@ def main():
     print("[Main text]")
     t1 = table1_cohort_characteristics(df, stats, target, outputdir, ctx)
     t2 = table2_feature_eligibility(stats, outputdir, ctx)
-    f1 = figure1_cohort_overview(df, stats, outputdir, ctx, formats)
+    f1a = figure1a_participant_flow(ctx, outputdir, formats)
+    f1bh = figure1bh_classification_composition(ctx, outputdir, formats)
+    f1bv = figure1bv_classification_composition(ctx, outputdir, formats)
     f2 = figure2_univariable_discrimination(stats, outputdir, ctx, formats)
 
     print("[Additional file 1]")
@@ -1372,7 +1412,9 @@ def main():
     (outputdir / "eda_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
 
     print(f"  EDA complete. Outputs in: {outputdir}/")
-    for label, result in [("Table 1", t1), ("Table 2", t2), ("Figure 1", f1), ("Figure 2", f2),
+    for label, result in [("Table 1", t1), ("Table 2", t2),
+                          ("Figure 1a", f1a), ("Figure 1bh", f1bh), ("Figure 1bv", f1bv),
+                          ("Figure 2", f2),
                           ("Figure S1", s1), ("Figure S2", s2), ("Figure S3", s3),
                           ("Table S1", s4), ("Figure S4", s5), ("Table S2", s6)]:
         names = result.get("paths") or [result.get("tex")]

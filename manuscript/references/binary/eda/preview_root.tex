@@ -1,0 +1,21 @@
+% Preview-only root document -- not part of the manuscript build.
+% Compiles the loose table/macro fragments in this folder so they can be
+% previewed in VS Code (LaTeX Workshop). See overleaf/main.tex for the
+% real manuscript that \input's these files.
+\documentclass[10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage[font=footnotesize]{caption}
+\usepackage{amsmath}
+
+\begin{document}
+
+\input{numbers}
+\input{table1_cohort_characteristics}
+\input{table2_feature_eligibility}
+\input{s4_data_provenance}
+\input{s6_ncs_descriptives}
+
+\end{document}

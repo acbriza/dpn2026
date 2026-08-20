@@ -1,0 +1,12 @@
+Additional file 1: Table S1 Data provenance and completeness.
+The table records every alteration applied between the source spreadsheet and the analysed
+dataset, generated directly from the audit trail written by the data loader so that it cannot
+drift from the data actually analysed. A total of 392 cells were recoded. Diabetes
+duration values recorded as open-ended categories were converted to numeric values, and nerve
+conduction entries recorded as NR or NO F WAVE, denoting an absent response, were stored as
+zero; the latter are retained as zeros in all analyses and are counted per variable in Table 2.
+Binary features recorded as Y/M and N/F were mapped deterministically to 1 and 0.
+3 of the 190 enrolled records were excluded because one or more
+numeric measurements were absent, leaving 187 patients with complete data on all
+recorded variables; no imputation was performed and no missing values remain in the analysed
+dataset.

@@ -1,0 +1,15 @@
+Additional file 1: Figure S4 The counterfactual-actionable features.
+Distribution by outcome group of the 6 features that the counterfactual engine is
+permitted to vary, comprising the modifiable treatment and comorbidity variables; continuous
+features are shown as density, box and raw-observation displays and binary features as
+prevalence with Wilson 95% confidence intervals. Each panel is annotated with the univariable
+area under the receiver operating characteristic curve and the Benjamini-Hochberg q-value from
+Table 1. The distributions overlap almost completely: discrimination ranges from
+0.514 to 0.585, and only
+INSULIN (q = 0.046)
+reaches a false discovery rate below 0.05. Because these are
+the only features a counterfactual may change, the explanations generated for a given patient
+must displace variables that individually carry little marginal information, which accounts for
+the magnitude of the changes those explanations propose. This also yields a coherence check on
+the counterfactual results: the actionable feature with genuine univariable signal would be
+expected to appear among the most frequently altered features in the generated counterfactuals.

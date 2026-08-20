@@ -1,0 +1,46 @@
+% !TEX root = ./preview_root.tex
+\begin{table}[!ht]
+\centering
+\footnotesize
+\caption{\textbf{Characteristics of the analysed cohort, by diabetic peripheral neuropathy status.} Values are shown for all 187 analysed patients and separately for the 57 Unconfirmed and 130 Confirmed patients, for each of the 22 candidate predictors available to the models.}
+\label{tab:cohort}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Characteristic} & \textbf{Overall} (n=187) & \textbf{Unconfirmed} (n=57) & \textbf{Confirmed} (n=130) & \textbf{Effect size (95\% CI)} & \textbf{p} & \textbf{q} \\
+\midrule
+\addlinespace
+\multicolumn{7}{l}{\textit{Profile}} \\
+SEX, male  & 62 (33.2) & 15 (26.3) & 47 (36.2) & OR 1.59 (0.80--3.16) & 0.188 & 0.230 \\
+AGE, years  & 59 [50--66] & 52 [39--63] & 61 [53--67] & AUC 0.66 (0.57--0.74) & $<$0.001 & 0.001 \\
+SUBJ, yes  & 160 (85.6) & 41 (71.9) & 119 (91.5) & OR 4.22 (1.81--9.84) & $<$0.001 & 0.001 \\
+DM\_DUR, years  & 5 [2--10] & 2 [1--6] & 7 [3--12] & AUC 0.68 (0.59--0.76) & $<$0.001 & $<$0.001 \\
+INSULIN, yes $\diamond$ & 78 (41.7) & 17 (29.8) & 61 (46.9) & OR 2.08 (1.07--4.04) & 0.029 & 0.046 \\
+HBA1C, \% $\diamond$ & 7.5 [6.4--9.8] & 7.2 [6.4--8.8] & 7.6 [6.4--10.3] & AUC 0.55 (0.46--0.63) & 0.327 & 0.379 \\
+\addlinespace
+\multicolumn{7}{l}{\textit{Comorbidity}} \\
+HPN, yes $\diamond$ & 112 (59.9) & 33 (57.9) & 79 (60.8) & OR 1.13 (0.60--2.12) & 0.712 & 0.712 \\
+PAOD, yes $\diamond$ & 8 (4.3) & 1 (1.8) & 7 (5.4) & OR 3.19 (0.38--26.52) & 0.438 & 0.482 \\
+DSLPDMIA, yes $\diamond$ & 97 (51.9) & 24 (42.1) & 73 (56.2) & OR 1.76 (0.94--3.31) & 0.077 & 0.106 \\
+CKD, yes $\diamond$ & 37 (19.8) & 7 (12.3) & 30 (23.1) & OR 2.14 (0.88--5.22) & 0.088 & 0.114 \\
+GBS, yes  & 2 (1.1) & 1 (1.8) & 1 (0.8) & OR 0.43 (0.03--7.06) & 0.518 & 0.543 \\
+\addlinespace
+\multicolumn{7}{l}{\textit{Neurological examination}} \\
+DEC\_VS, yes  & 96 (51.3) & 11 (19.3) & 85 (65.4) & OR 7.90 (3.73--16.73) & $<$0.001 & $<$0.001 \\
+DEC\_PPS, yes  & 92 (49.2) & 15 (26.3) & 77 (59.2) & OR 4.07 (2.05--8.07) & $<$0.001 & $<$0.001 \\
+DEC\_LTS, yes  & 90 (48.1) & 17 (29.8) & 73 (56.2) & OR 3.01 (1.55--5.86) & $<$0.001 & 0.002 \\
+DEC\_AR, yes  & 94 (50.3) & 9 (15.8) & 85 (65.4) & OR 10.07 (4.53--22.38) & $<$0.001 & $<$0.001 \\
+\addlinespace
+\multicolumn{7}{l}{\textit{MNSI}} \\
+MNSI, score  & 5 [3--7] & 4 [2--6] & 6 [4--8] & AUC 0.67 (0.58--0.76) & $<$0.001 & $<$0.001 \\
+\addlinespace
+\multicolumn{7}{l}{\textit{Sudoscan}} \\
+FEET\_MEAN\_ESC, uS  & 53 [38--65] & 60 [48--71] & 48 [32--59] & AUC 0.32 (0.25--0.40) & $<$0.001 & $<$0.001 \\
+FEET\_PCT\_ASYM, \%  & 5 [2--11] & 3 [1--6] & 6 [3--12] & AUC 0.65 (0.56--0.73) & $<$0.001 & 0.002 \\
+HAND\_MEAN\_ESC, uS  & 58 [44--72] & 63 [51--75] & 56 [41--70] & AUC 0.39 (0.30--0.47) & 0.013 & 0.022 \\
+HAND\_PCT\_ASYM, \%  & 9 [4--14] & 6 [4--11] & 10 [4--17] & AUC 0.59 (0.50--0.67) & 0.061 & 0.089 \\
+NS, score  & 53 [46--64] & 61 [52--77] & 51 [44--58] & AUC 0.28 (0.20--0.36) & $<$0.001 & $<$0.001 \\
+CAS, \%  & 30 [25--35] & 28 [18--33] & 31 [27--35] & AUC 0.64 (0.54--0.72) & 0.003 & 0.006 \\
+\bottomrule
+\end{tabular}
+\begin{flushleft}\footnotesize Continuous variables are median [interquartile range] and were compared with the Mann--Whitney U test; binary variables are n (\%) of the stated level and were compared with the chi-square test, or Fisher's exact test where any expected cell count was below 5. Effect size is the directional area under the receiver operating characteristic curve (AUC) for continuous variables and the odds ratio (OR) for binary variables; an AUC above 0.5 indicates higher values in the Confirmed group and an AUC below 0.5 indicates lower values. AUC confidence intervals are stratified percentile bootstrap intervals (2000 resamples). q denotes the Benjamini--Hochberg false discovery rate across the 22 candidate predictors. $\diamond$ marks the features the counterfactual engine is permitted to vary.\end{flushleft}
+\end{table}

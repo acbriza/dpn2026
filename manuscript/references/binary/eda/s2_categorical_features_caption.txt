@@ -1,0 +1,13 @@
+Additional file 1: Figure S2 Binary candidate predictors and their association with confirmed
+diabetic peripheral neuropathy. a Prevalence of each of the 12 binary features in the
+Unconfirmed and Confirmed groups, with Wilson 95% confidence intervals, which remain valid for
+the rare comorbidities where normal-approximation intervals do not. b Odds ratios for the same
+features on a logarithmic scale, with Wald confidence intervals and a Haldane-Anscombe
+correction applied where a cell count was zero; the dashed line marks the null value of 1.
+Filled markers denote a Benjamini-Hochberg q-value below 0.05 and diamonds denote the features
+available to the counterfactual engine. The neurological examination signs
+(DEC_LTS, DEC_PPS, DEC_VS, DEC_AR) show the strongest and most
+consistent associations, whereas the comorbidities cluster tightly around the null with wide
+intervals reflecting their low prevalence, most extremely for GBS and PAOD. This pattern
+explains why the comorbidity ablation had little effect on model performance despite
+comorbidities forming the majority of the modifiable feature set.

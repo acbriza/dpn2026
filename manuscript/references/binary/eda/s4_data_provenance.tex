@@ -1,0 +1,44 @@
+% !TEX root = ./preview_root.tex
+\begin{table}[!ht]
+\centering
+\footnotesize
+\caption{\textbf{Data provenance and completeness.} Every alteration applied between the source spreadsheet and the analysed dataset.}
+\label{tab:provenance}
+\begin{tabular}{llc}
+\toprule
+\textbf{Item} & \textbf{Change applied} & \textbf{Cells / records} \\
+\midrule
+\addlinespace
+\multicolumn{3}{l}{\textit{Value recoding}} \\
+SPSA\_L & \textit{NR} $\rightarrow$ 0 & 53 \\
+SPSA\_R & \textit{NR} $\rightarrow$ 0 & 53 \\
+SPSC\_L & \textit{NR} $\rightarrow$ 0 & 53 \\
+SPSC\_R & \textit{NR} $\rightarrow$ 0 & 53 \\
+SSA\_L & \textit{NR} $\rightarrow$ 0 & 35 \\
+SSA\_R & \textit{NR} $\rightarrow$ 0 & 35 \\
+SSC\_L & \textit{NR} $\rightarrow$ 0 & 35 \\
+SSC\_R & \textit{NR} $\rightarrow$ 0 & 35 \\
+DM\_DUR & \textit{<1} $\rightarrow$ 1 & 11 \\
+FWAVE\_R & \textit{NR} $\rightarrow$ 0 & 7 \\
+FWAVE\_L & \textit{NR} $\rightarrow$ 0 & 3 \\
+CMAPANK\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
+CMAPANK\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
+CMAPKNE\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
+CMAPKNE\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
+DL\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
+DL\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
+MCV\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
+MCV\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
+DM\_DUR & \textit{>10} $\rightarrow$ 11 & 1 \\
+FWAVE\_L & \textit{NO F WAVE} $\rightarrow$ 0 & 1 \\
+FWAVE\_R & \textit{NO F WAVE} $\rightarrow$ 0 & 1 \\
+\textit{all binary features} & \textit{Y}/\textit{M} $\rightarrow$ 1, \textit{N}/\textit{F} $\rightarrow$ 0 & deterministic \\
+\addlinespace
+\multicolumn{3}{l}{\textit{Excluded records}} \\
+Patient 36 & missing: NS, CAS & 1 \\
+Patient 46 & missing: DM\_DUR, HBA1C & 1 \\
+Patient 173 & missing: NS & 1 \\
+\bottomrule
+\end{tabular}
+\begin{flushleft}\footnotesize Generated from the audit trail written by the data loader, so the table cannot drift from the data actually analysed.\end{flushleft}
+\end{table}

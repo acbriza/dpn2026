@@ -1,0 +1,18 @@
+Table 2 Feature eligibility and target-leakage audit.
+The table states the role of each of the 40 recorded features and reports the
+discrimination it achieves on its own, expressed as the directional area under the receiver
+operating characteristic curve with a stratified bootstrap confidence interval. Under the 2009
+Toronto consensus criteria, a classification of confirmed diabetic peripheral neuropathy
+requires an abnormal nerve conduction study, so the 18 nerve conduction variables form
+part of the definition of the outcome rather than being independent of it. Their univariable
+discrimination, ranging from 0.63 to 0.93 in absolute terms, is the expected
+signature of this circularity and is reported here as the evidence for excluding them from
+model development, not as a measure of predictive value; by comparison the strongest permitted
+predictor, DEC_AR, reaches 0.748. The remaining
+22 features constitute the modelling set, of which
+6 are additionally designated as actionable and may be varied
+during counterfactual generation. The final column reports patients whose nerve response was
+absent, recorded as NR or NO F WAVE in the source data and stored as zero; these values are
+retained unchanged in all analyses and are counted here so that a stored zero is not read as a
+measured value. q-values are Benjamini-Hochberg false discovery rates computed within the
+modelling set and, separately, within the excluded nerve conduction set.

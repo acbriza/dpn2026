@@ -1,0 +1,12 @@
+Additional file 1: Figure S3 Redundancy among the candidate predictors.
+a Spearman correlation matrix of the 22 modelling features, ordered by hierarchical
+clustering on correlation distance so that mutually redundant features appear adjacent; tick
+label colours denote the clinical domain. b The most strongly correlated pair,
+AGE and NS (rho = -0.88). The Sudoscan neuropathy score is age-adjusted by
+construction, so the two variables carry overlapping but not identical information. c Variance
+inflation factors, with the threshold of 5 used for the collinearity-pruned
+feature set marked by the dashed line. Exactly 2 features exceed that threshold
+(NS = 10.5, AGE = 7.2), and both belong to the pair shown
+in panel b. Removing them therefore discards two of the more informative predictors rather than
+redundant noise, which accounts for the collinearity-pruned feature set performing no better
+than the full set in the ablation experiments.

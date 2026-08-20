@@ -1,0 +1,12 @@
+Additional file 1: Figure S1 Distribution of the continuous candidate predictors by outcome
+group. Each panel shows, for one of the 10 continuous features in the modelling
+set, the kernel density of the values (right), a box plot of the median and interquartile range
+(centre) and the individual patient observations (left), separately for the
+57 Unconfirmed and 130 Confirmed patients. Panels are
+ordered by univariable discrimination and annotated with the area under the receiver operating
+characteristic curve and the Benjamini-Hochberg q-value reported in Table 1. Showing the raw
+observations alongside the summaries makes the degree of overlap between the groups visible:
+even for the best-separating features the two distributions overlap substantially, which is
+consistent with the moderate specificity of the fitted models and with the wide range of
+predicted probabilities near the decision threshold that motivated the selection of borderline
+cases for counterfactual analysis.

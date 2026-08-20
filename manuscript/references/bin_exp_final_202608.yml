@@ -1,0 +1,45 @@
+experiment:
+  summary: binary classification - Explainability Analysis (final after code review)
+  classification_type: binary
+  stage: explainability
+  tag: final_202608
+  verbosity: 1
+  random_seed: 42
+
+data:
+  dataset_path: ../dataset/EAMC_DPN_Dataset.xlsx
+
+model: 
+  code: catboost
+  name: CatBoost
+
+# model parameters
+param_space:
+  depth:
+    min: 4
+    max: 10
+  learning_rate:
+    min: 0.003
+    max: 0.3
+  l2_leaf_reg:
+    min: 1.0
+    max: 10.0
+  scale_pos_weight:
+    min: 0.3
+    max: 1.0
+  loss_function: Logloss
+  eval_metric: AUC
+  iterations: 500
+  early_stopping_rounds: 50
+
+# Bayesian Optimization
+optimization:
+  first_repeat_trained_models_filename: binary/hyperparameter_optimization/catboost/final_202608/catboost_first_repeat_trained_models.joblib
+  rundate: '2026-08-12'
+  tag: final_202608  
+  # k_splits_outer: 4
+  # k_splits_inner: 3
+  # n_iter: 5 
+  # optimization_metric: auprc #options implemented: roc-auc or auprc
+  # threshold_selection_metric: fscore # options implemented: fscore, roc-auc
+  # fscore_beta: 1

@@ -1,0 +1,176 @@
+% ---- table1_cohort_characteristics -------------------------------
+Table 1 Characteristics of the analysed cohort, by diabetic peripheral neuropathy status.
+Values are given for all 187 analysed patients and separately for the 57 patients
+classified as Unconfirmed and the 130 classified as Confirmed under the 2009 Toronto
+consensus criteria, for each of the 22 candidate predictors
+available to the machine learning models. Continuous variables are summarised as median
+[interquartile range] and compared using the Mann-Whitney U test; binary variables are
+summarised as n (%) of the stated level and compared using the chi-square test, or Fisher's
+exact test where any expected cell count fell below 5, as was the
+case for the rarest comorbidities. Effect size is expressed as the directional area under the
+receiver operating characteristic curve (AUC) for continuous variables, where a value above
+0.5 indicates higher values among Confirmed patients and a value below 0.5 indicates lower
+values, and as the odds ratio for binary variables; confidence intervals for the AUC are
+stratified percentile bootstrap intervals based on 2000 resamples. The final
+column reports Benjamini-Hochberg false discovery rate q-values computed across all
+22 candidate predictors, of which 14 reached q < 0.05. The
+strongest single predictor was DEC_AR (AUC 0.748). Diamonds identify
+the 6 features that the counterfactual engine is permitted to modify; of these, only
+INSULIN reached q < 0.05, indicating that the
+modifiable feature set carries limited univariable signal relative to the fixed predictors.
+
+% ---- table2_feature_eligibility ----------------------------------
+Table 2 Feature eligibility and target-leakage audit.
+The table states the role of each of the 40 recorded features and reports the
+discrimination it achieves on its own, expressed as the directional area under the receiver
+operating characteristic curve with a stratified bootstrap confidence interval. Under the 2009
+Toronto consensus criteria, a classification of confirmed diabetic peripheral neuropathy
+requires an abnormal nerve conduction study, so the 18 nerve conduction variables form
+part of the definition of the outcome rather than being independent of it. Their univariable
+discrimination, ranging from 0.63 to 0.93 in absolute terms, is the expected
+signature of this circularity and is reported here as the evidence for excluding them from
+model development, not as a measure of predictive value; by comparison the strongest permitted
+predictor, DEC_AR, reaches 0.748. The remaining
+22 features constitute the modelling set, of which
+6 are additionally designated as actionable and may be varied
+during counterfactual generation. The final column reports patients whose nerve response was
+absent, recorded as NR or NO F WAVE in the source data and stored as zero; these values are
+retained unchanged in all analyses and are counted here so that a stored zero is not read as a
+measured value. q-values are Benjamini-Hochberg false discovery rates computed within the
+modelling set and, separately, within the excluded nerve conduction set.
+
+% ---- fig1a_participant_flow --------------------------------------
+Fig. 1a Participant flow. Of 201 patients screened, 190 were
+enrolled after applying the exclusion criteria, and 187 were analysed after
+3 records (patient codes 36, 46, 173) were
+removed for incomplete measurements.
+
+% ---- fig1bh_classification_composition ---------------------------
+Fig. 1b Classification composition. 130 patients
+(69.5%) met the 2009 Toronto consensus criteria for confirmed diabetic
+peripheral neuropathy and 57 did not; the latter group combines the
+negative, possible and probable categories. The cohort therefore provides 2.6
+minority-class events per candidate predictor across the 22 features
+available to the models, a low ratio that motivates the repeated cross-validation strategy used
+throughout and that should temper the interpretation of any single fitted coefficient.
+
+% ---- fig1bv_classification_composition ---------------------------
+Fig. 1b Classification composition. 130 patients
+(69.5%) met the 2009 Toronto consensus criteria for confirmed diabetic
+peripheral neuropathy and 57 did not; the latter group combines the
+negative, possible and probable categories. The cohort therefore provides 2.6
+minority-class events per candidate predictor across the 22 features
+available to the models, a low ratio that motivates the repeated cross-validation strategy used
+throughout and that should temper the interpretation of any single fitted coefficient.
+
+% ---- fig2_univariable_discrimination -----------------------------
+Fig. 2 Univariable discrimination of each candidate predictor.
+Each row shows the area under the receiver operating characteristic curve obtained when a
+single feature is used alone to separate Confirmed from Unconfirmed patients, with a stratified
+percentile bootstrap 95% confidence interval based on 2000 resamples; features
+are ordered by discrimination strength. A value of 0.5, marked by the dashed line, indicates no
+discrimination, while values below 0.5 indicate features whose values are lower among Confirmed
+patients (GBS, HAND_MEAN_ESC, FEET_MEAN_ESC, NS). Marker colour denotes the clinical domain and diamonds
+denote the 6 features the counterfactual engine is permitted to vary; circles denote the
+remaining candidate predictors. Regardless of shape, a filled marker denotes a feature reaching a
+Benjamini-Hochberg false discovery rate below 0.05, while an open marker denotes one that does
+not. The
+dotted line marks the discrimination achieved by the tuned CatBoost model
+(0.799), placing the multivariable result on the same scale as its inputs: the
+strongest individual feature, DEC_AR, already reaches 0.748, so the modelling
+gain over a single bedside measurement is modest. The actionable features span
+0.514 to 0.585 and cluster at the no-discrimination line, with only
+INSULIN reaching q < 0.05. Counterfactual
+explanations in this study are therefore constrained to move the features carrying the least
+marginal signal, which is the expected origin of the large feature displacements those
+explanations require.
+
+% ---- s1_continuous_rainclouds ------------------------------------
+Additional file 1: Figure S1 Distribution of the continuous candidate predictors by outcome
+group. Each panel shows, for one of the 10 continuous features in the modelling
+set, the kernel density of the values (right), a box plot of the median and interquartile range
+(centre) and the individual patient observations (left), separately for the
+57 Unconfirmed and 130 Confirmed patients. Panels are
+ordered by univariable discrimination and annotated with the area under the receiver operating
+characteristic curve and the Benjamini-Hochberg q-value reported in Table 1. Showing the raw
+observations alongside the summaries makes the degree of overlap between the groups visible:
+even for the best-separating features the two distributions overlap substantially, which is
+consistent with the moderate specificity of the fitted models and with the wide range of
+predicted probabilities near the decision threshold that motivated the selection of borderline
+cases for counterfactual analysis.
+
+% ---- s2_categorical_features -------------------------------------
+Additional file 1: Figure S2 Binary candidate predictors and their association with confirmed
+diabetic peripheral neuropathy. a Prevalence of each of the 12 binary features in the
+Unconfirmed and Confirmed groups, with Wilson 95% confidence intervals, which remain valid for
+the rare comorbidities where normal-approximation intervals do not. b Odds ratios for the same
+features on a logarithmic scale, with Wald confidence intervals and a Haldane-Anscombe
+correction applied where a cell count was zero; the dashed line marks the null value of 1.
+Filled markers denote a Benjamini-Hochberg q-value below 0.05 and diamonds denote the features
+available to the counterfactual engine. The neurological examination signs
+(DEC_LTS, DEC_PPS, DEC_VS, DEC_AR) show the strongest and most
+consistent associations, whereas the comorbidities cluster tightly around the null with wide
+intervals reflecting their low prevalence, most extremely for GBS and PAOD. This pattern
+explains why the comorbidity ablation had little effect on model performance despite
+comorbidities forming the majority of the modifiable feature set.
+
+% ---- s3_redundancy -----------------------------------------------
+Additional file 1: Figure S3 Redundancy among the candidate predictors.
+a Spearman correlation matrix of the 22 modelling features, ordered by hierarchical
+clustering on correlation distance so that mutually redundant features appear adjacent; tick
+label colours denote the clinical domain. b The most strongly correlated pair,
+AGE and NS (rho = -0.88). The Sudoscan neuropathy score is age-adjusted by
+construction, so the two variables carry overlapping but not identical information. c Variance
+inflation factors, with the threshold of 5 used for the collinearity-pruned
+feature set marked by the dashed line. Exactly 2 features exceed that threshold
+(NS = 10.5, AGE = 7.2), and both belong to the pair shown
+in panel b. Removing them therefore discards two of the more informative predictors rather than
+redundant noise, which accounts for the collinearity-pruned feature set performing no better
+than the full set in the ablation experiments.
+
+% ---- s4_data_provenance ------------------------------------------
+Additional file 1: Table S1 Data provenance and completeness.
+The table records every alteration applied between the source spreadsheet and the analysed
+dataset, generated directly from the audit trail written by the data loader so that it cannot
+drift from the data actually analysed. A total of 392 cells were recoded. Diabetes
+duration values recorded as open-ended categories were converted to numeric values, and nerve
+conduction entries recorded as NR or NO F WAVE, denoting an absent response, were stored as
+zero; the latter are retained as zeros in all analyses and are counted per variable in Table 2.
+Binary features recorded as Y/M and N/F were mapped deterministically to 1 and 0.
+3 of the 190 enrolled records were excluded because one or more
+numeric measurements were absent, leaving 187 patients with complete data on all
+recorded variables; no imputation was performed and no missing values remain in the analysed
+dataset.
+
+% ---- s5_actionable_features --------------------------------------
+Additional file 1: Figure S4 The counterfactual-actionable features.
+Distribution by outcome group of the 6 features that the counterfactual engine is
+permitted to vary, comprising the modifiable treatment and comorbidity variables; continuous
+features are shown as density, box and raw-observation displays and binary features as
+prevalence with Wilson 95% confidence intervals. Each panel is annotated with the univariable
+area under the receiver operating characteristic curve and the Benjamini-Hochberg q-value from
+Table 1. The distributions overlap almost completely: discrimination ranges from
+0.514 to 0.585, and only
+INSULIN (q = 0.046)
+reaches a false discovery rate below 0.05. Because these are
+the only features a counterfactual may change, the explanations generated for a given patient
+must displace variables that individually carry little marginal information, which accounts for
+the magnitude of the changes those explanations propose. This also yields a coherence check on
+the counterfactual results: the actionable feature with genuine univariable signal would be
+expected to appear among the most frequently altered features in the generated counterfactuals.
+
+% ---- s6_ncs_descriptives -----------------------------------------
+Additional file 1: Table S2 Nerve conduction study variables.
+Descriptive summary of the 18 nerve conduction variables, which were recorded for every
+analysed patient but withheld from model development because an abnormal nerve conduction study
+forms part of the 2009 Toronto consensus definition of confirmed diabetic peripheral neuropathy.
+Values are median [interquartile range] overall and by outcome group, alongside the count of
+absent responses and the univariable area under the receiver operating characteristic curve.
+Absent responses are frequent and strongly patterned by outcome: SPSA_L was
+non-recordable in 52 of 130 Confirmed patients
+(40.0%) compared with
+1 of 57 Unconfirmed patients
+(1.8%). These variables are summarised here for
+completeness, since the dataset is newly collected and is being released alongside this work,
+and to document the discrimination that motivated their exclusion. q-values are
+Benjamini-Hochberg false discovery rates computed within this set of 18 variables.

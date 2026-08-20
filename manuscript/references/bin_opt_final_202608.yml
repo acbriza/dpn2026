@@ -1,0 +1,49 @@
+experiment:
+  summary: binary classification - hyperparameter optimization (after code review; based on bin_opt_final__nosudo__model_wt_auc__opt_auprc_f1.yml)
+  classification_type: binary
+  stage: hyperparameter_optimization
+  tag: final_202608
+  verbosity: 0
+  random_seed: 42
+
+data:
+  dataset_path: ../dataset/EAMC_DPN_Dataset.xlsx
+
+model: 
+  code: catboost
+  name: CatBoost
+
+# model parameters
+param_space:
+  depth:
+    min: 4
+    max: 10
+  learning_rate:
+    min: 0.003
+    max: 0.3
+  l2_leaf_reg:
+    min: 1.0
+    max: 10.0
+  scale_pos_weight:
+    min: 0.3
+    max: 1.0
+  loss_function: Logloss
+  eval_metric: AUC
+  iterations: 500
+  early_stopping_rounds: 50
+
+optimization:
+  k_splits_outer: 4
+  n_repeats_outer: 10
+  k_splits_inner: 3
+  optuna_n_trials: 100
+  optimization_metric: auprc #options implemented: roc-auc or auprc
+  threshold_selection_metric: fscore # options implemented: f2, roc-auc
+  fscore_beta: 1
+
+evaluation:
+  confidence: 0.95
+
+final_training:
+  k_splits_inner: 3
+  n_iter: 30

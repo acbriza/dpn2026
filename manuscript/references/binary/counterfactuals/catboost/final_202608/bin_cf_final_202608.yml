@@ -1,0 +1,60 @@
+experiment:
+  summary: binary classification - Counterfactual Analysis (Final- No NCS, Sudo, after code review)
+  classification_type: binary
+  stage: counterfactuals
+  tag: final_202608
+  verbosity: 0
+  random_seed: 42
+
+data:
+  dataset_path: ../dataset/EAMC_DPN_Dataset.xlsx
+
+model: 
+  code: catboost
+  name: CatBoost
+
+# ksplit trained models from explainability stage 
+optimization:
+  first_repeat_trained_models_filename: binary/hyperparameter_optimization/catboost/final_202608/catboost_first_repeat_trained_models.joblib
+  rundate: '2026-08-12'
+  tag: final_202608
+
+dice:
+  method: genetic
+  cf_features:
+    actionable: INSULIN,HBA1C,HPN,PAOD,DSLPDMIA,CKD
+    unactionable: SEX,AGE,SUBJ,DM_DUR,GBS,FEET_MEAN_ESC,FEET_PCT_ASYM,HAND_MEAN_ESC,HAND_PCT_ASYM,NS,CAS,DEC_VS,DEC_PPS,DEC_LTS,DEC_AR,MNSI
+    progressive: none
+    # for sanity check, ensure these features don't show in analysis
+    # unactionable: NCS and SUDOSCAN features 
+
+  # delta from threshold to be considered for CF generation
+  # value chosen as approximately max-min of thresholds of model splits
+  threshold_delta: 0.08  
+  global_cf:
+    total_CFs: 20
+    posthoc_sparsity_algorithm: binary
+  local_cf:
+    nrepeats: 3
+    total_CFs: 20 
+    posthoc_sparsity_algorithm: binary    # maximally sparse for clean reporting
+    posthoc_sparsity_param: 0.05          # finer pruning for research quality
+    proximity_weight: 0.5                 # balanced default
+    diversity_weight: 1.0                 # encourage varied CFs
+    categorical_penalty: 0.1
+    algorithm: DiverseCF                  # highest quality CFs
+
+  sufficiency:
+    maxiterations: 200 # 500 for final; 20 for dev
+  necessity:
+    maxiterations: 500
+    total_CFs: 2
+    nrepeats: 5
+    
+reporting:
+  nzfill: 3
+  cf_heatmap:
+    save_every: 15
+    figsize:
+      x: 15
+      y: 6.5  

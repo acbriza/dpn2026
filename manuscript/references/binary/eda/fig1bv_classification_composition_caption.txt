@@ -1,0 +1,7 @@
+Fig. 1b Classification composition. 130 patients
+(69.5%) met the 2009 Toronto consensus criteria for confirmed diabetic
+peripheral neuropathy and 57 did not; the latter group combines the
+negative, possible and probable categories. The cohort therefore provides 2.6
+minority-class events per candidate predictor across the 22 features
+available to the models, a low ratio that motivates the repeated cross-validation strategy used
+throughout and that should temper the interpretation of any single fitted coefficient.

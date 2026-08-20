@@ -1,0 +1,27 @@
+category,item,detail,n
+value recoding,SPSA_L,'NR' -> 0,53
+value recoding,SPSA_R,'NR' -> 0,53
+value recoding,SPSC_L,'NR' -> 0,53
+value recoding,SPSC_R,'NR' -> 0,53
+value recoding,SSA_L,'NR' -> 0,35
+value recoding,SSA_R,'NR' -> 0,35
+value recoding,SSC_L,'NR' -> 0,35
+value recoding,SSC_R,'NR' -> 0,35
+value recoding,DM_DUR,'<1' -> '1',11
+value recoding,FWAVE_R,'NR' -> 0,7
+value recoding,FWAVE_L,'NR' -> 0,3
+value recoding,CMAPANK_L,'NR' -> 0,2
+value recoding,CMAPANK_R,'NR' -> 0,2
+value recoding,CMAPKNE_L,'NR' -> 0,2
+value recoding,CMAPKNE_R,'NR' -> 0,2
+value recoding,DL_L,'NR' -> 0,2
+value recoding,DL_R,'NR' -> 0,2
+value recoding,MCV_L,'NR' -> 0,2
+value recoding,MCV_R,'NR' -> 0,2
+value recoding,DM_DUR,'>10' -> '11',1
+value recoding,FWAVE_L,'NO F WAVE' -> 0,1
+value recoding,FWAVE_R,'NO F WAVE' -> 0,1
+value recoding,all binary features,"Y/M -> 1, N/F -> 0",deterministic
+excluded record,patient 36,"missing: NS, CAS",1
+excluded record,patient 46,"missing: DM_DUR, HBA1C",1
+excluded record,patient 173,missing: NS,1

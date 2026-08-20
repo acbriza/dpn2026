@@ -1,0 +1,66 @@
+% !TEX root = ./preview_root.tex
+\begin{table}[!ht]
+\centering
+\footnotesize
+\caption{\textbf{Feature eligibility and target-leakage audit.} Role of each feature in the analysis together with its univariable discrimination, showing why nerve conduction variables are withheld from the models.}
+\label{tab:eligibility}
+\begin{tabular}{llccc}
+\toprule
+\textbf{Feature} & \textbf{Role} & \textbf{AUC (95\% CI)} & \textbf{q} & \textbf{Non-recordable, n (\%)} \\
+\midrule
+\addlinespace
+\multicolumn{5}{l}{\textit{Profile}} \\
+SEX & Predictor, fixed & 0.549 (0.477--0.623) & 0.230 & -- \\
+AGE & Predictor, fixed & 0.658 (0.568--0.745) & 0.001 & -- \\
+SUBJ & Predictor, fixed & 0.598 (0.536--0.662) & 0.001 & -- \\
+DM\_DUR & Predictor, fixed & 0.682 (0.589--0.764) & $<$0.001 & -- \\
+INSULIN & Predictor, actionable $\diamond$ & 0.585 (0.507--0.655) & 0.046 & -- \\
+HBA1C & Predictor, actionable $\diamond$ & 0.545 (0.459--0.629) & 0.379 & -- \\
+\addlinespace
+\multicolumn{5}{l}{\textit{Comorbidity}} \\
+HPN & Predictor, actionable $\diamond$ & 0.514 (0.435--0.587) & 0.712 & -- \\
+PAOD & Predictor, actionable $\diamond$ & 0.518 (0.492--0.542) & 0.482 & -- \\
+DSLPDMIA & Predictor, actionable $\diamond$ & 0.570 (0.495--0.647) & 0.106 & -- \\
+CKD & Predictor, actionable $\diamond$ & 0.554 (0.500--0.607) & 0.114 & -- \\
+GBS & Predictor, fixed & 0.495 (0.474--0.508) & 0.543 & -- \\
+\addlinespace
+\multicolumn{5}{l}{\textit{Neurological examination}} \\
+DEC\_VS & Predictor, fixed & 0.730 (0.666--0.793) & $<$0.001 & -- \\
+DEC\_PPS & Predictor, fixed & 0.665 (0.592--0.734) & $<$0.001 & -- \\
+DEC\_LTS & Predictor, fixed & 0.632 (0.562--0.702) & 0.002 & -- \\
+DEC\_AR & Predictor, fixed & 0.748 (0.685--0.808) & $<$0.001 & -- \\
+\addlinespace
+\multicolumn{5}{l}{\textit{MNSI}} \\
+MNSI & Predictor, fixed & 0.672 (0.585--0.756) & $<$0.001 & -- \\
+\addlinespace
+\multicolumn{5}{l}{\textit{Sudoscan}} \\
+FEET\_MEAN\_ESC & Predictor, fixed & 0.321 (0.245--0.405) & $<$0.001 & -- \\
+FEET\_PCT\_ASYM & Predictor, fixed & 0.652 (0.564--0.733) & 0.002 & -- \\
+HAND\_MEAN\_ESC & Predictor, fixed & 0.386 (0.299--0.473) & 0.022 & -- \\
+HAND\_PCT\_ASYM & Predictor, fixed & 0.586 (0.499--0.673) & 0.089 & -- \\
+NS & Predictor, fixed & 0.281 (0.196--0.364) & $<$0.001 & -- \\
+CAS & Predictor, fixed & 0.635 (0.545--0.725) & 0.006 & -- \\
+\addlinespace
+\multicolumn{5}{l}{\textit{Nerve conduction study}} \\
+SSA\_L & Excluded & 0.073 (0.039--0.115) & $<$0.001 & 35 (18.7) \\
+SSC\_L & Excluded & 0.226 (0.161--0.295) & $<$0.001 & 35 (18.7) \\
+SPSA\_L & Excluded & 0.136 (0.087--0.195) & $<$0.001 & 53 (28.3) \\
+SPSC\_L & Excluded & 0.205 (0.144--0.271) & $<$0.001 & 53 (28.3) \\
+MCV\_L & Excluded & 0.183 (0.126--0.244) & $<$0.001 & 2 (1.1) \\
+DL\_L & Excluded & 0.724 (0.652--0.798) & $<$0.001 & 2 (1.1) \\
+CMAPANK\_L & Excluded & 0.080 (0.042--0.127) & $<$0.001 & 2 (1.1) \\
+CMAPKNE\_L & Excluded & 0.075 (0.036--0.117) & $<$0.001 & 2 (1.1) \\
+FWAVE\_L & Excluded & 0.779 (0.712--0.841) & $<$0.001 & 4 (2.1) \\
+SSA\_R & Excluded & 0.081 (0.044--0.125) & $<$0.001 & 35 (18.7) \\
+SSC\_R & Excluded & 0.230 (0.169--0.297) & $<$0.001 & 35 (18.7) \\
+SPSA\_R & Excluded & 0.130 (0.081--0.186) & $<$0.001 & 53 (28.3) \\
+SPSC\_R & Excluded & 0.217 (0.155--0.285) & $<$0.001 & 53 (28.3) \\
+MCV\_R & Excluded & 0.149 (0.094--0.209) & $<$0.001 & 2 (1.1) \\
+DL\_R & Excluded & 0.630 (0.541--0.713) & 0.005 & 2 (1.1) \\
+CMAPANK\_R & Excluded & 0.095 (0.052--0.142) & $<$0.001 & 2 (1.1) \\
+CMAPKNE\_R & Excluded & 0.081 (0.039--0.130) & $<$0.001 & 2 (1.1) \\
+FWAVE\_R & Excluded & 0.745 (0.674--0.812) & $<$0.001 & 8 (4.3) \\
+\bottomrule
+\end{tabular}
+\begin{flushleft}\footnotesize AUC is the univariable directional area under the receiver operating characteristic curve for the feature used alone, with a stratified percentile bootstrap confidence interval. q-values are Benjamini--Hochberg false discovery rates computed within the 22 candidate predictors and, separately, within the 18 excluded nerve conduction variables. Non-recordable counts the patients whose nerve response was absent (recorded as \textit{NR} or \textit{NO F WAVE} in the source data and stored as zero); these zeros are retained in all summaries. $\diamond$ marks the counterfactual-actionable features.\end{flushleft}
+\end{table}

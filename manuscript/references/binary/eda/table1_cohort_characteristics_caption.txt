@@ -1,0 +1,19 @@
+Table 1 Characteristics of the analysed cohort, by diabetic peripheral neuropathy status.
+Values are given for all 187 analysed patients and separately for the 57 patients
+classified as Unconfirmed and the 130 classified as Confirmed under the 2009 Toronto
+consensus criteria, for each of the 22 candidate predictors
+available to the machine learning models. Continuous variables are summarised as median
+[interquartile range] and compared using the Mann-Whitney U test; binary variables are
+summarised as n (%) of the stated level and compared using the chi-square test, or Fisher's
+exact test where any expected cell count fell below 5, as was the
+case for the rarest comorbidities. Effect size is expressed as the directional area under the
+receiver operating characteristic curve (AUC) for continuous variables, where a value above
+0.5 indicates higher values among Confirmed patients and a value below 0.5 indicates lower
+values, and as the odds ratio for binary variables; confidence intervals for the AUC are
+stratified percentile bootstrap intervals based on 2000 resamples. The final
+column reports Benjamini-Hochberg false discovery rate q-values computed across all
+22 candidate predictors, of which 14 reached q < 0.05. The
+strongest single predictor was DEC_AR (AUC 0.748). Diamonds identify
+the 6 features that the counterfactual engine is permitted to modify; of these, only
+INSULIN reached q < 0.05, indicating that the
+modifiable feature set carries limited univariable signal relative to the fixed predictors.

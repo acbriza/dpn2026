@@ -1,0 +1,20 @@
+Fig. 2 Univariable discrimination of each candidate predictor.
+Each row shows the area under the receiver operating characteristic curve obtained when a
+single feature is used alone to separate Confirmed from Unconfirmed patients, with a stratified
+percentile bootstrap 95% confidence interval based on 2000 resamples; features
+are ordered by discrimination strength. A value of 0.5, marked by the dashed line, indicates no
+discrimination, while values below 0.5 indicate features whose values are lower among Confirmed
+patients (GBS, HAND_MEAN_ESC, FEET_MEAN_ESC, NS). Marker colour denotes the clinical domain and diamonds
+denote the 6 features the counterfactual engine is permitted to vary; circles denote the
+remaining candidate predictors. Regardless of shape, a filled marker denotes a feature reaching a
+Benjamini-Hochberg false discovery rate below 0.05, while an open marker denotes one that does
+not. The
+dotted line marks the discrimination achieved by the tuned CatBoost model
+(0.799), placing the multivariable result on the same scale as its inputs: the
+strongest individual feature, DEC_AR, already reaches 0.748, so the modelling
+gain over a single bedside measurement is modest. The actionable features span
+0.514 to 0.585 and cluster at the no-discrimination line, with only
+INSULIN reaching q < 0.05. Counterfactual
+explanations in this study are therefore constrained to move the features carrying the least
+marginal signal, which is the expected origin of the large feature displacements those
+explanations require.

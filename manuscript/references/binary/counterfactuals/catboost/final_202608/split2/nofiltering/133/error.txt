@@ -1,0 +1,4 @@
+Error generating Counterfactuals for Patient 133 (dataframe row 130) of model 2
+Start: 08-18 06:56:05
+End: 08-18 07:56:06
+Elapsed: 1.0000319397222222 hours.

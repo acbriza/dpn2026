@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="259.2pt" height="381.6pt" viewBox="0 0 259.2 381.6" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-08-18T17:20:22.508672</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.8, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 381.6 
+L 259.2 381.6 
+L 259.2 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 37.001739 89.82 
+L 130.982609 89.82 
+L 130.982609 27.396 
+L 37.001739 27.396 
+z
+" clip-path="url(#pc9bba68174)" style="fill: #f2f2f2; stroke: #595959; stroke-width: 0.7; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 37.001739 188.964 
+L 130.982609 188.964 
+L 130.982609 126.54 
+L 37.001739 126.54 
+z
+" clip-path="url(#pc9bba68174)" style="fill: #f2f2f2; stroke: #595959; stroke-width: 0.7; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 37.001739 288.108 
+L 130.982609 288.108 
+L 130.982609 225.684 
+L 37.001739 225.684 
+z
+" clip-path="url(#pc9bba68174)" style="fill: #f2f2f2; stroke: #595959; stroke-width: 0.7; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 83.992174 91.823643 
+Q 83.992174 108.183811 83.992174 123.761355 
+" clip-path="url(#pc9bba68174)" style="fill: none; stroke: #595959; stroke-width: 0.7; stroke-linecap: round"/>
+    <path d="M 85.592174 120.561355 
+L 83.992174 123.761355 
+L 82.392174 120.561355 
+z
+" clip-path="url(#pc9bba68174)" style="fill: #595959; stroke: #595959; stroke-width: 0.7; stroke-linecap: round"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 83.992174 190.967643 
+Q 83.992174 207.327811 83.992174 222.905355 
+" clip-path="url(#pc9bba68174)" style="fill: none; stroke: #595959; stroke-width: 0.7; stroke-linecap: round"/>
+    <path d="M 85.592174 219.705355 
+L 83.992174 222.905355 
+L 82.392174 219.705355 
+z
+" clip-path="url(#pc9bba68174)" style="fill: #595959; stroke: #595959; stroke-width: 0.7; stroke-linecap: round"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 85.994346 108.18 
+Q 111.744972 108.18 136.712975 108.18 
+" clip-path="url(#pc9bba68174)" style="fill: none; stroke: #595959; stroke-width: 0.7; stroke-linecap: round"/>
+    <path d="M 133.512975 106.58 
+L 136.712975 108.18 
+L 133.512975 109.78 
+z
+" clip-path="url(#pc9bba68174)" style="fill: #595959; stroke: #595959; stroke-width: 0.7; stroke-linecap: round"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 85.994346 207.324 
+Q 111.744972 207.324 136.712975 207.324 
+" clip-path="url(#pc9bba68174)" style="fill: none; stroke: #595959; stroke-width: 0.7; stroke-linecap: round"/>
+    <path d="M 133.512975 205.724 
+L 136.712975 207.324 
+L 133.512975 208.924 
+z
+" clip-path="url(#pc9bba68174)" style="fill: #595959; stroke: #595959; stroke-width: 0.7; stroke-linecap: round"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 83.992174 290.105367 
+Q 83.992174 295.451482 83.992174 300.014973 
+" clip-path="url(#pc9bba68174)" style="fill: none; stroke: #595959; stroke-width: 0.7; stroke-linecap: round"/>
+    <path d="M 85.592174 296.814973 
+L 83.992174 300.014973 
+L 82.392174 296.814973 
+z
+" clip-path="url(#pc9bba68174)" style="fill: #595959; stroke: #595959; stroke-width: 0.7; stroke-linecap: round"/>
+   </g>
+   <g id="text_1">
+    <text style="font-size: 7px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif" transform="translate(44.672408 56.620328)">Screened for eligibility</text>
+    <text style="font-size: 7px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif" transform="translate(69.935846 64.458797)">n = 201</text>
+   </g>
+   <g id="text_2">
+    <text style="font-size: 7px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif" transform="translate(69.740611 155.764328)">Enrolled</text>
+    <text style="font-size: 7px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif" transform="translate(69.935846 163.602797)">n = 190</text>
+   </g>
+   <g id="text_3">
+    <text style="font-size: 7px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif" transform="translate(67.992252 254.908328)">Analysed</text>
+    <text style="font-size: 7px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif" transform="translate(69.935846 262.746797)">n = 187</text>
+   </g>
+   <g id="text_4">
+    <text style="font-size: 5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #404040" transform="translate(143.754783 89.963516)">Excluded n = 11</text>
+    <text style="font-size: 5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #404040" transform="translate(143.754783 95.562422)">limb amputation,</text>
+    <text style="font-size: 5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #404040" transform="translate(143.754783 101.161328)">gangrenous or necrotic</text>
+    <text style="font-size: 5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #404040" transform="translate(143.754783 106.760234)">foot, implanted</text>
+    <text style="font-size: 5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #404040" transform="translate(143.754783 112.359141)">cardiac pacemaker or</text>
+    <text style="font-size: 5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #404040" transform="translate(143.754783 117.958047)">defibrillator, or</text>
+    <text style="font-size: 5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #404040" transform="translate(143.754783 123.556953)">another known cause of</text>
+    <text style="font-size: 5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #404040" transform="translate(143.754783 129.155859)">polyneuropathy</text>
+   </g>
+   <g id="text_5">
+    <text style="font-size: 5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #404040" transform="translate(143.754783 203.104781)">Excluded n = 3</text>
+    <text style="font-size: 5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #404040" transform="translate(143.754783 208.703687)">incomplete measurements</text>
+    <text style="font-size: 5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #404040" transform="translate(143.754783 214.302594)">(patient codes 36, 46, 173)</text>
+   </g>
+   <g id="text_6">
+    <text style="font-weight: 700; font-size: 6.5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle" x="83.992174" y="324.709422" transform="rotate(-0 83.992174 324.709422)">Confirmed n = 130  |  Unconfirmed n = 57</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pc9bba68174">
+   <rect x="7.2" y="7.2" width="244.8" height="367.2"/>
+  </clipPath>
+ </defs>
+</svg>

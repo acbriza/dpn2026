@@ -1,0 +1,14 @@
+Additional file 1: Table S2 Nerve conduction study variables.
+Descriptive summary of the 18 nerve conduction variables, which were recorded for every
+analysed patient but withheld from model development because an abnormal nerve conduction study
+forms part of the 2009 Toronto consensus definition of confirmed diabetic peripheral neuropathy.
+Values are median [interquartile range] overall and by outcome group, alongside the count of
+absent responses and the univariable area under the receiver operating characteristic curve.
+Absent responses are frequent and strongly patterned by outcome: SPSA_L was
+non-recordable in 52 of 130 Confirmed patients
+(40.0%) compared with
+1 of 57 Unconfirmed patients
+(1.8%). These variables are summarised here for
+completeness, since the dataset is newly collected and is being released alongside this work,
+and to document the discrimination that motivated their exclusion. q-values are
+Benjamini-Hochberg false discovery rates computed within this set of 18 variables.

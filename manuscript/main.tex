@@ -25,7 +25,7 @@
 
 %%\documentclass[sn-basic]{sn-jnl}% Basic Springer Nature Reference Style/Chemistry Reference Style
 
-%%Note: the following reference styles support Namedate and Numbered referencing. By default the style follows the most common style. To switch between the options you can add or remove “Numbered” in the optional parenthesis. 
+%%Note: the following reference styles support Namedate and Numbered referencing. By default the style follows the most common style. To switch between the options you can add or remove ï¿½Numberedï¿½ in the optional parenthesis. 
 %%The option is available for: sn-basic.bst, sn-chicago.bst%  
  
 %%\documentclass[pdflatex,sn-nature]{sn-jnl}% Style for submissions to Nature Portfolio journals
@@ -51,9 +51,9 @@
 \usepackage{textcomp}%
 \usepackage{manyfoot}%
 \usepackage{booktabs}%
-\usepackage{algorithm}%
-\usepackage{algorithmicx}%
-\usepackage{algpseudocode}%
+%\usepackage{algorithm}%
+%\usepackage{algorithmicx}%
+%\usepackage{algpseudocode}%
 \usepackage{listings}%
 %%%%
 
@@ -304,106 +304,11 @@ As per the \LaTeX\ standards you need to use eps images for \LaTeX\ compilation 
 %% \bigskip command. Please ignore this.       %%
 %%=============================================%%
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.9\textwidth]{fig.eps}
-\caption{This is a widefig. This is an example of long caption this is an example of long caption  this is an example of long caption this is an example of long caption}\label{fig1}
-\end{figure}
 
 In case of double column layout, the above format puts figure captions/images to single column width. To get spanned images, we need to provide \verb+\begin{figure*}+ \verb+...+ \verb+\end{figure*}+.
 
 For sample purpose, we have included the width of images in the optional argument of \verb+\includegraphics+ tag. Please ignore this. 
 
-\section{Algorithms, Program codes and Listings}\label{sec7}
-
-Packages \verb+algorithm+, \verb+algorithmicx+ and \verb+algpseudocode+ are used for setting algorithms in \LaTeX\ using the format:
-
-%%=============================================%%
-%% For presentation purpose, we have included  %%
-%% \bigskip command. Please ignore this.       %%
-%%=============================================%%
-\bigskip
-\begin{verbatim}
-\begin{algorithm}
-\caption{<alg-caption>}\label{<alg-label>}
-\begin{algorithmic}[1]
-. . .
-\end{algorithmic}
-\end{algorithm}
-\end{verbatim}
-\bigskip
-%%=============================================%%
-%% For presentation purpose, we have included  %%
-%% \bigskip command. Please ignore this.       %%
-%%=============================================%%
-
-You may refer above listed package documentations for more details before setting \verb+algorithm+ environment. For program codes, the ``verbatim'' package is required and the command to be used is \verb+\begin{verbatim}+ \verb+...+ \verb+\end{verbatim}+. 
-
-Similarly, for \verb+listings+, use the \verb+listings+ package. \verb+\begin{lstlisting}+ \verb+...+ \verb+\end{lstlisting}+ is used to set environments similar to \verb+verbatim+ environment. Refer to the \verb+lstlisting+ package documentation for more details.
-
-A fast exponentiation procedure:
-
-\lstset{texcl=true,basicstyle=\small\sf,commentstyle=\small\rm,mathescape=true,escapeinside={(*}{*)}}
-\begin{lstlisting}
-begin
-  for $i:=1$ to $10$ step $1$ do
-      expt($2,i$);  
-      newline() od                (*\textrm{Comments will be set flush to the right margin}*)
-where
-proc expt($x,n$) $\equiv$
-  $z:=1$;
-  do if $n=0$ then exit fi;
-     do if odd($n$) then exit fi;                 
-        comment: (*\textrm{This is a comment statement;}*)
-        $n:=n/2$; $x:=x*x$ od;
-     { $n>0$ };
-     $n:=n-1$; $z:=z*x$ od;
-  print($z$). 
-end
-\end{lstlisting}
-
-\begin{algorithm}
-\caption{Calculate $y = x^n$}\label{algo1}
-\begin{algorithmic}[1]
-\Require $n \geq 0 \vee x \neq 0$
-\Ensure $y = x^n$ 
-\State $y \Leftarrow 1$
-\If{$n < 0$}\label{algln2}
-        \State $X \Leftarrow 1 / x$
-        \State $N \Leftarrow -n$
-\Else
-        \State $X \Leftarrow x$
-        \State $N \Leftarrow n$
-\EndIf
-\While{$N \neq 0$}
-        \If{$N$ is even}
-            \State $X \Leftarrow X \times X$
-            \State $N \Leftarrow N / 2$
-        \Else[$N$ is odd]
-            \State $y \Leftarrow y \times X$
-            \State $N \Leftarrow N - 1$
-        \EndIf
-\EndWhile
-\end{algorithmic}
-\end{algorithm}
-
-%%=============================================%%
-%% For presentation purpose, we have included  %%
-%% \bigskip command. Please ignore this.       %%
-%%=============================================%%
-\bigskip
-\begin{minipage}{\hsize}%
-\lstset{frame=single,framexleftmargin=-1pt,framexrightmargin=-17pt,framesep=12pt,linewidth=0.98\textwidth,language=pascal}% Set your language (you can change the language for each code-block optionally)
-%%% Start your code-block
-\begin{lstlisting}
-for i:=maxint to 0 do
-begin
-{ do nothing }
-end;
-Write('Case insensitive ');
-Write('Pascal keywords.');
-\end{lstlisting}
-\end{minipage}
 
 \section{Cross referencing}\label{sec8}
 
@@ -417,7 +322,6 @@ the label declared for Figure~\ref{fig1} which is
 \verb+Figure \ref{fig1}+, for which it comes up as
 ``Figure~\ref{fig1}''. 
 
-To reference line numbers in an algorithm, consider the label declared for the line number 2 of Algorithm~\ref{algo1} is \verb+\label{algln2}+. To cross-reference it, use the command \verb+\ref{algln2}+ for which it comes up as line~\ref{algln2} of Algorithm~\ref{algo1}.
 
 \subsection{Details on reference citations}\label{subsec7}
 

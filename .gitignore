@@ -96,3 +96,20 @@ overleaf/*.aux
 overleaf/*.fdb_latexmk
 overleaf/*.fls
 overleaf/*.log
+
+# -----------------------------------
+# manuscript
+# -----------------------------------
+manuscript-ieee/
+manuscript/figures/
+manuscript/figures2/
+manuscript/Download+the+journal+article+template+package+*.zip
+manuscript/*.aux
+manuscript/*.bbl
+manuscript/*.blg
+manuscript/*.fdb_latexmk
+manuscript/*.fls
+manuscript/*.log
+manuscript/*.out
+manuscript/*.synctex.gz
+manuscript/main.pdf

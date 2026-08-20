@@ -51,10 +51,23 @@
 \usepackage{textcomp}%
 \usepackage{manyfoot}%
 \usepackage{booktabs}%
+\let\cline\cmidrule
 %\usepackage{algorithm}%
 %\usepackage{algorithmicx}%
 %\usepackage{algpseudocode}%
 \usepackage{listings}%
+
+
+% custom 
+\usepackage[font=footnotesize]{caption}
+\usepackage{subcaption}
+\usepackage{rotating}
+\usepackage{cleveref}
+\usepackage{float}
+\usepackage{lineno}
+\usepackage{newunicodechar}
+\newunicodechar{−}{\ensuremath{-}} % Unicode MINUS SIGN (U+2212), unmapped in the default font encoding
+
 %%%%
 
 %%%%%=============================================================================%%%%
@@ -90,7 +103,7 @@
 
 \begin{document}
 
-\title[Article Title]{Article Title}
+\title[ML and Counterfactuals for DPN Pre-screening]{An Application of Machine Learning and Counterfactuals for the Pre-screening and Explanation of Diabetic Peripheral Neuropathy}
 
 %%=============================================================%%
 %% GivenName	-> \fnm{Joergen W.}
@@ -101,19 +114,36 @@
 %%  \sfx{IV}}\email{iauthor@gmail.com}
 %%=============================================================%%
 
-\author*[1,2]{\fnm{First} \sur{Author}}\email{iauthor@gmail.com}
+\author*[1,2]{\fnm{Antonio C.} \sur{Briza}}\email{antonio.briza@asti.dost.gov.ph, AntonioBriza.PhDinDS2024@aim.edu}
 
-\author[2,3]{\fnm{Second} \sur{Author}}\email{iiauthor@gmail.com}
+\author[3]{\fnm{Niven} \sur{Fernan}}\email{email address or ORCID}
 \equalcont{These authors contributed equally to this work.}
 
-\author[1,2]{\fnm{Third} \sur{Author}}\email{iiiauthor@gmail.com}
-\equalcont{These authors contributed equally to this work.}
+\author[3]{\fnm{Elizer M.} \sur{Montemayor}}\email{email address or ORCID}
 
-\affil*[1]{\orgdiv{Department}, \orgname{Organization}, \orgaddress{\street{Street}, \city{City}, \postcode{100190}, \state{State}, \country{Country}}}
+\author[3]{\fnm{Levin} \sur{Danganan}}\email{email address or ORCID}
 
-\affil[2]{\orgdiv{Department}, \orgname{Organization}, \orgaddress{\street{Street}, \city{City}, \postcode{10587}, \state{State}, \country{Country}}}
+\author[3]{\fnm{Dan Neftalie A.} \sur{Juangco}}\email{email address or ORCID}
 
-\affil[3]{\orgdiv{Department}, \orgname{Organization}, \orgaddress{\street{Street}, \city{City}, \postcode{610101}, \state{State}, \country{Country}}}
+\author[3]{\fnm{Evelyn O.} \sur{Chua-Ley}}\email{email address or ORCID}
+
+\author[4]{\fnm{Roy Raoul} \sur{Felipe}}\email{email address or ORCID}
+
+\author[3]{\fnm{Deborah A.} \sur{Bernardo}}\email{email address or ORCID}
+
+\author[3]{\fnm{Levi S.} \sur{Rejuso Jr}}\email{email address or ORCID}
+
+\author[3]{\fnm{Marissa T.} \sur{Ong}}\email{email address or ORCID}
+
+\author[2]{\fnm{Christopher P.} \sur{Monterola}}\email{CMonterola@aim.edu}
+
+\affil*[1]{\orgdiv{Computer Software Division}, \orgname{DOST-Advanced Science and Technology Institute}, \orgaddress{\city{Quezon City}, \country{Philippines}}}
+
+\affil[2]{\orgdiv{Analytics, Computing, and Complex Systems Lab}, \orgname{Asian Institute of Management}, \orgaddress{\city{Makati City}, \country{Philippines}}}
+
+\affil[3]{\orgdiv{Department of Neurosciences}, \orgname{East Avenue Medical Center}, \orgaddress{\city{Quezon City}, \country{Philippines}}}
+
+\affil[4]{\orgdiv{Section of Endocrinology}, \orgname{East Avenue Medical Center}, \orgaddress{\city{Quezon City}, \country{Philippines}}}
 
 %%==================================%%
 %% Sample for unstructured abstract %%
@@ -133,7 +163,15 @@
 % 
 % \textbf{Conclusion:} The abstract serves both as a general introduction to the topic and as a brief, non-technical summary of the main results and their implications. The abstract must not include subheadings (unless expressly permitted in the journal's Instructions to Authors), equations or citations. As a guide the abstract should not exceed 200 words. Most journals do not set a hard limit however authors are advised to check the author instructions for the journal they are submitting to.}
 
-\keywords{keyword1, Keyword2, Keyword3, Keyword4}
+\abstract{\textbf{Purpose:} Diabetic peripheral neuropathy (DPN) is the most prevalent polyneuropathy among Filipinos with diabetes, yet remains underdiagnosed in up to 81\% of affected patients. Definitive diagnosis through nerve conduction study (NCS) is costly and geographically inaccessible in many settings. This study investigates the use of machine learning (ML) and counterfactual explanation techniques as a pre-diagnostic screening tool to identify patients with a high probability of DPN and prioritize them for NCS referral.
+
+\textbf{Methods:} A total of 190 adult Filipino patients diagnosedacnoquDov100acnoquDov100 with Diabetes Mellitus were recruited from a tertiary hospital in Quezon City, Philippines, between 2022 and 2023. Patients underwent Michigan Neuropathy Screening Instrument (MNSI) assessment, standard neurological examination, Sudoscan sudomotor testing, and lower extremity nerve conduction study. Patients were classified as Confirmed DPN (n = 131) or Unconfirmed DPN (n = 59) based on the 2009 Toronto consensus criteria. Fourteen classification algorithms were evaluated for baseline performance using default parameters using repeated stratified k-fold cross-validation (10 repeats × 4 folds) across twelve feature subsets. The best-performing model underwent Bayesian hyperparameter optimization. Post-hoc interpretability was provided through CatBoost feature importance, SHAP analysis, and counterfactual explanations generated using the DiCE (Diverse Counterfactual Explanations) framework.
+
+\textbf{Results:} CatBoost achieved the highest initial Area Under the Precision-Recall Curve (AUPRC) among 14 algorithms. After optimization across repeated cross-validation, it achieved an AUPRC of 0.885 (95\% CI: 0.868--0.902), representing a 29\% relative improvement over the no-skill baseline, while obtaining a mean sensitivity of 0.924 (95\% CI: 0.904--0.944). Feature set ablation revealed that neurological examination features produced the greatest performance degradation upon removal, and that the combination of Sudoscan and neurological examination findings maintained performance close to the full feature set. CatBoost feature importance and SHAP analyses converged consistently across all four cross-validation folds on decreased ankle reflex, decreased vibration sensation, Sudoscan-derived sudomotor parameters, and diabetes duration as the dominant predictors. However, while these features ranked highest in both importance and SHAP analyses, they represent measurements of neuropathic state rather than modifiable intervention targets, limiting their direct clinical actionability. Counterfactual analysis bridged this gap by identifying the minimal changes to modifiable patient features that would alter the model's predicted DPN classification: HbA1c modification emerged as the dominant actionable pathway in 91 of 97 generated counterfactuals (93.8\%), with dyslipidemia management and chronic kidney disease status identified as secondary intervention targets, appearing in 19.6\% and 23.7\% of counterfactuals respectively.
+
+\textbf{Conclusions:} A CatBoost-based ML model trained on non-NCS clinical features demonstrated high sensitivity for DPN pre-diagnostic screening in a Philippine clinical population, with performance competitive with published benchmarks. The multi-lens analytical approach --- spanning feature ablation, feature importance, SHAP, and counterfactual analysis --- revealed that while neurological examination and Sudoscan features are the strongest predictors of DPN risk, counterfactual explanations are necessary to translate model behavior into clinically actionable guidance. These findings support the potential utility of ML-assisted DPN screening in resource-constrained settings where NCS is unavailable or inaccessible, while identifying glycemic optimization, dyslipidemia management, and nephroprotective interventions as the most actionable modifiable risk pathways. External validation in multi-center, geographically diverse cohorts is necessary before clinical deployment.}
+
+\keywords{diabetic peripheral neuropathy, machine learning, CatBoost, pre-diagnostic screening, counterfactual explanations, explainable artificial intelligence, Sudoscan, nerve conduction study, SHAP, Philippines}
 
 %%\pacs[JEL Classification]{D8, H51}
 
@@ -142,10 +180,33 @@
 \maketitle
 
 \section{Introduction}\label{sec1}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The Introduction section, of referenced text \cite{bib1} expands on the background of the work (some overlap with the Abstract is acceptable). The introduction should not include subheadings.
+% The Introduction section, of referenced text \cite{bib1} expands on the background of the work (some overlap with the Abstract is acceptable). The introduction should not include subheadings.
 
-Springer Nature does not impose a strict layout as standard however authors are advised to check the individual requirements for the journal they are planning to submit to as there may be journal-level preferences. When preparing your text please also be aware that some stylistic choices are not supported in full text XML (publication version), including coloured font. These will not be replicated in the typeset article if it is accepted. 
+% Springer Nature does not impose a strict layout as standard however authors are advised to check the individual requirements for the journal they are planning to submit to as there may be journal-level preferences. When preparing your text please also be aware that some stylistic choices are not supported in full text XML (publication version), including coloured font. These will not be replicated in the typeset article if it is accepted. 
+
+Diabetic peripheral neuropathy (DPN) is the most common type of polyneuropathy affecting 42-58\% of Filipinos \cite{ropper2019adams, araneta2006hyperglycemia, dagang2016validation}.
+Characterized by progressive nerve damage, DPN often presents with symptoms such as pain, numbness, and loss of sensation in the extremities, particularly the feet. Beyond its direct impact on quality of life, DPN is a major risk factor for foot ulcers, infections, and lower-limb amputations, contributing significantly to healthcare burden.
+
+Despite being associated with reduced quality of life and debilitating complications,
+DPN is underdiagnosed in up to 81\% of patients \cite{vinik2012neuropathy, ziegler2018painful}. Hurdles in the early diagnosis of DPN includes the insidious progression, inconsistent disease presentation and the need for complicated equipment for definitive diagnosis \cite{vinik2012neuropathy, ziegler2018painful, casellini2013sudoscan}.
+
+Skin biopsy with quantitation of intraepidermal nerve fiber density is still the gold standard in detecting small fiber neuropathy, while sudorimetry is a rapidly evolving technology that can easily be integrated into clinical practice. The development of such technologies like the Sudoscan allows noninvasive and easy-to-perform tests for detection of small fiber neuropathy based on reverse iontophoresis and chronoamperometry to measure sudomotor function \cite{mayaudon:2010newsimple, vinik2015newage}.
+
+Early detection and management of DPN are therefore critical, yet remain challenging due to the multifactorial nature of the disease and the heterogeneity of patient profiles. In recent years, machine learning (ML) has emerged as a powerful tool for modeling complex, nonlinear relationships in medical data. By leveraging large clinical datasets, ML algorithms can identify patterns and interactions among risk factors that may not be readily apparent through traditional statistical approaches. 
+
+Numerous studies have developed ML models with good discriminatory performance (AUCs ranging from 0.64 to 0.93), employing diverse algorithms such as random forest, XGBoost, and gradient boosting. Models often incorporate clinical, biochemical, and even traditional Chinese medicine features, enhancing predictive accuracy and relevance \cite{ma2025machine,jiang2024multifeature,cui2023study,lian2023Study,Wei2024construction}. Internal validation methods like cross-validation are widely used, and some studies report calibration and decision curve analyses, supporting clinical utility \cite{cui2023study}.
+
+Despite the  predictive performance, many ML models—particularly ensemble and deep learning methods—are often criticized as “black boxes,” limiting their adoption in clinical settings where interpretability and trust are essential. To address this limitation, the field of explainable artificial intelligence (XAI) has gained increasing attention. XAI techniques aim to make model predictions more transparent by providing insights into how input features influence outcomes. Methods such as feature importance scores, SHAP (Shapley Additive Explanations), and partial dependence plots have been widely used to offer global and local interpretability. 
+
+The application of XAI techniques such as SHAP, LIME, and Anchor explanations is increasingly common, providing transparent insights into feature importance and model decisions, which is critical for clinical trust and adoption \cite{wu2025prognostic,jiang2024multifeature, pandey2024decoding, wu2024interpretable, sheikh2025predicting}. Integration of XAI with multimodal data enables identification of key risk factors and supports personalized treatment recommendations \cite{nguyen2024interpretable, alHudaibi2025explainable}. Some frameworks incorporate human-in-the-loop feedback to enhance interpretability and clinical relevance \cite{lalwani2025generative}. While these approaches help elucidate model behavior, they primarily describe associations rather than actionable insights, which are crucial for clinical decision-making.
+
+Counterfactual explanations represent a more recent and clinically meaningful approach within XAI. Instead of merely explaining why a prediction was made, counterfactuals answer “what-if” questions by identifying minimal changes to a patient’s features that would lead to a different predicted outcome. For example, a counterfactual explanation might suggest how modifying certain clinical variables—such as glycemic control or body mass index—could reduce a patient’s predicted risk of developing DPN. This aligns closely with the needs of personalized medicine, where interventions are tailored to individual patients based on modifiable risk factors. Several methodological approaches for generating counterfactual explanations have been proposed in the literature. One of the most popular is the DiCE framework \cite{mothilal2020explaining}, an optimization-based method, which formulate counterfactual generation as a constrained optimization problem that seeks minimal changes to input features while achieving a desired prediction;
+
+The integration of machine learning and counterfactual explanations offers a promising framework for both the prediction and interpretation of diabetic peripheral neuropathy. By combining high predictive accuracy with actionable, patient-specific insights, this approach has the potential to support clinicians in early diagnosis, risk assessment, and treatment planning. Moreover, it bridges the gap between advanced computational models and practical clinical utility, fostering greater trust and adoption of AI-driven tools in healthcare. 
+
+This study aims to investigate the application of machine learning models in conjunction with counterfactual explanation techniques for the prediction and interpretation of diabetic peripheral neuropathy (DPN) risk, thereby contributing to the growing body of research on interpretable and actionable artificial intelligence in medicine. The study also examines the potential insights derived from incorporating nerve conduction study results and Sudoscan measurements—modalities that are comparatively underrepresented in many AI-based DPN studies, which often rely primarily on routine clinical and demographic variables. Furthermore, by utilizing data collected within the Philippine clinical context, this work enhances the geographic diversity of current studies and provides context-specific insights into the application of explainable AI for DPN.
 
 \section{Results}\label{sec2}
 

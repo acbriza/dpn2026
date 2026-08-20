@@ -34,11 +34,15 @@ Method
 
 Sequence
 =======================================================================================
-selection.ipynb - Feature and Model selection 
-hparam_opt.ipynb - Repeated kfold of selected model for reporting
-explainability.ipynb - Train selected model, Feature Importance, SHAP, ROC-AUC plots
+selreport.py - Feature and Model selection
+optreport.py - Repeated kfold of selected model for reporting
+expreport.py - Train selected model, Feature Importance, SHAP, ROC-AUC plots
 cfreports.py - generate counterfactuals and reports via script
-reports.ipynb - experiment for report generation of cfs in batch
+edareport.py - exploratory data analysis report
+
+The original per-stage notebooks (selection.ipynb, hparam_opt.ipynb, explainability.ipynb,
+counterfactuals.ipynb, cfreports.ipynb) that these scripts were derived from/replaced are
+archived in module/legacy/202608/module/.
 
 
 COUNTERFACTUAL ANALYSIS (counterfactuls.ipynb and .py)

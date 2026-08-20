@@ -20,7 +20,8 @@ asserted from the manuscript.
 
 ## What the study actually is
 
-The session began with a plan based on [../overleaf/main.tex](../overleaf/main.tex). Two
+The session began with a plan based on [legacy/202608/overleaf/main.tex](legacy/202608/overleaf/main.tex)
+(then at `../overleaf/main.tex`, before the 2026-08-20 move to `module/legacy/202608/`). Two
 corrections from the author invalidated it, and the plan was re-derived from the code and
 the current run outputs in `experiments/binary/`:
 

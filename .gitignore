@@ -114,3 +114,8 @@ manuscript/*.out
 manuscript/*.synctex.gz
 manuscript/main.pdf
 manuscript/main-claude.pdf
+
+# -----------------------------------
+# old configs
+# -----------------------------------
+legacy/configs/

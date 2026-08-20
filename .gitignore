@@ -113,3 +113,4 @@ manuscript/*.log
 manuscript/*.out
 manuscript/*.synctex.gz
 manuscript/main.pdf
+manuscript/main-claude.pdf

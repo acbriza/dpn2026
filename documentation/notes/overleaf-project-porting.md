@@ -15,12 +15,26 @@ about the newer `manuscript/` folder at the repo root).
 - `manuscript/` — the active manuscript, re-templated to the Springer
   Nature journal template (`sn-jnl.cls`). This is what gets edited and
   submitted going forward.
+- `manuscript/main-claude.tex` — Claude's full first-pass translation of
+  the IEEE manuscript into the `sn-jnl` template (everything described
+  under "Porting the Overleaf zip" and "Bugs hit and fixed" below). Kept
+  as a reference/diff base, not built directly.
+- `manuscript/main.tex` — the author's working copy going forward: started
+  as a fresh copy of the template's own `sn-article.tex` skeleton, to be
+  manually rebuilt using `main-claude.tex` as the source of content and
+  fixes to pull from, rather than continuing to build on Claude's version
+  directly. **This is the file to open and build in VS Code.**
 - `manuscript/sn-article.tex` / `sn-bibliography.bib` — the template's own
   example article and bibliography, kept for reference (macro usage,
   environment examples). Not part of the actual paper.
-- `manuscript/main.tex` is self-contained (own `\documentclass` and
-  `\begin{document}`), so it needs no LaTeX Workshop root-file
-  configuration — open it and build directly.
+- Both `main.tex` and `main-claude.tex` are self-contained (own
+  `\documentclass` and `\begin{document}`), so neither needs LaTeX
+  Workshop root-file configuration — open either and build directly. When
+  rebuilding `main.tex` by hand, the fixes listed under "Bugs hit and
+  fixed along the way" still apply verbatim (they're template/font-level
+  issues, not specific to any particular section's content) — copy those
+  preamble lines and the em-dash/bib-`&` fixes across rather than
+  rediscovering them.
 
 ## VS Code: two LaTeX extensions, pick the right one
 
@@ -126,6 +140,7 @@ manuscript/*.log
 manuscript/*.out
 manuscript/*.synctex.gz
 manuscript/main.pdf
+manuscript/main-claude.pdf
 ```
 
 `figures/`/`figures2/` are ignored for size, which means a fresh clone

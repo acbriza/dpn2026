@@ -179,7 +179,7 @@
 
 \maketitle
 
-\section{Introduction}\label{sec1}
+\section{Introduction}\label{introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % The Introduction section expands on the background of the work (some overlap with the Abstract is acceptable). The introduction should not include subheadings.
@@ -207,19 +207,144 @@ The integration of machine learning and counterfactual explanations offers a pro
 
 This study aims to investigate the application of machine learning models in conjunction with counterfactual explanation techniques for the prediction and interpretation of diabetic peripheral neuropathy (DPN) risk, thereby contributing to the growing body of research on interpretable and actionable artificial intelligence in medicine. The study also examines the potential insights derived from incorporating nerve conduction study results and Sudoscan measurements—modalities that are comparatively underrepresented in many AI-based DPN studies, which often rely primarily on routine clinical and demographic variables. Furthermore, by utilizing data collected within the Philippine clinical context, this work enhances the geographic diversity of current studies and provides context-specific insights into the application of explainable AI for DPN.
 
+\section{Data Collection}\label{datacollection}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+A total of 201 adult Filipino patients diagnosed with Diabetes Mellitus (DM) were recruited
+between 2022 and 2023. Subjects with limb amputation, gangrenous/ necrotic foot, with implanted
+cardiac pacemakers or defibrillators, and patients with other known causes of polyneuropathy were
+excluded. Remaining 190 qualified subjects underwent a series of detailed assessment comprising of
+Michigan Neuropathy Screening Instrument (MNSI) test, serial neurologic tests, and lower extremity NCV
+examination to detect the presence of DPN. Subjects were then classified based on the 2009 Toronto
+consensus criteria as confirmed, probable, possible or no DPN \cite{tesfaye2010diabetic}. This study was approved by the local Institutional Ethics Review Board and all subjects gave their written consent prior to participating.
 
-\section{Methods}\label{sec11}
+Neuropathic symptoms were documented by subjectively asking patients for presence of any
+distal extremity numbness, paresthesia, or pain, and by asking them to answer the Filipino validated
+version of MNSI \cite{dagang2016validation}. Abnormal neurologic signs were detected using the standard 10g Semmes Weinstein monofilament examination (SWME) and standard 128-Hz clanging tuning fork tests \cite{feng2009semmes,oyer2007quantitative}. Additional examination for pinprick sensation was done using the same criteria for SWME. Achilles tendon reflex testing was also done and dichotomized subjects as either normal or hypo/areflexive. All neurological examinations were conducted by a single trained physician.
+
+Nerve conduction studies were performed at a stable skin temperature of 32°C and a room
+temperature of 24°C using Nihon Kohen EMG equipment with a filter width of 20 Hz to 3 kHz, amplifier
+setting at 200 $\mu$V/div, and sweep speed of 10 ms/div. 
+
+The following nerve attributes were measured: 
+\begin{itemize}
+\itemsep0em 
+\item Sural sensory nerve action potentials (SNAP) and conduction velocities (CV)
+\item Superficial peroneal SNAP and CV
+\item Tibial motor nerve compound muscle action potentials (CMAP), CV, distal latencies (DL) and
+F-wave latencies
+\end{itemize}
+
+All NCV testing was done by a single trained technician on the same day as other
+neurological examinations. Finally, sudomotor testing using Sudoscan was performed on each participant. Subjects placed palms of their hands and the soles of their feet on stainless steel electrodes and an incremental low direct voltage (<4V) was applied for about 2 minutes. The device produced an average electrochemical skin conductance (ESC) result for both hands and feet which is based on stimulation of sweat glands by the low-level voltage, allowing evidence of sweat dysfunction \cite{garcia2022detection}.
+
+The patients were classified into four categories: Confirmed, Probable, Possible and No DPN.  Given the limited number of samples from the latter three categories, this study combined the last three categories to form a larger group  labeled as Unconfirmed. Table~\ref{tab:data_categ} shows the breakdown among the different categories or labels. The full list of features, their groupings, description and code are shown in Table~\ref{tab:clinical_data}.
+
+%=======================================
+% Data and Categories
+%=======================================
+\begin{table}[h!]
+\centering
+\small
+\begin{tabular}{lrr}
+\toprule
+Label & \multicolumn{2}{c}{Support}  \\
+\midrule
+Negative  &  9 \\
+Possible  & 22 \\
+Probable  & 28  \\
+Unconfirmed (Negative+Possible+Probable) & &59 \\
+Confirmed & & 131 \\
+Overall Total & & 190 \\
+\bottomrule
+\end{tabular}
+\caption{Distribution of patient classifications in the study dataset (N = 190). Patients were categorized based on nerve conduction study (NCS) findings into four diagnostic groups: Confirmed DPN (n = 131), Probable DPN (n = 28), Possible DPN (n = 22), and Negative DPN (n = 9). As this study aims to serve as a pre-diagnostic screening tool for DPN, the latter three groups — whose DPN status could not be definitively established without further electrodiagnostic evaluation — were consolidated into a single composite class labeled Unconfirmed (n = 59). This two-class scheme — Confirmed versus Unconfirmed — reflects the clinical objective of the model: to identify patients with a high probability of DPN and prioritize them for referral to nerve conduction studies for confirmatory diagnosis, particularly in settings where NCS may be costly or inaccessible.}
+\label{tab:data_categ}
+\end{table}
+
+% =======================================
+% Table of Features, Codes, Description
+% =======================================
+\begin{table}[h!]
+\centering
+\footnotesize
+\begin{tabular}{llll}
+\toprule
+\textbf{A. Variables used in modeling} & & & \\
+\midrule
+\hspace{0.3cm} Group & Code & Description  & Type\\
+\midrule
+\hspace{0.3cm} Profile      & SEX & Patient's sex (M or F) & binary \\
+             & AGE & Patient's age  & continuous \\
+             & SUBJ & Other symptoms  & binary \\
+             & DM DUR & Diabetes Mellitus duration (years) & continuous \\
+             & INSULIN & Patient is taking insulin treatments & binary \\
+             & HBA1C & Hemoglobin A1c & continuous  \\
+\midrule
+\hspace{0.3cm} Commorbidity & HPN & Hypertension  & binary \\
+             & PAOD & Peripheral Arterial Occulsive Disease  & binary \\
+             & DSLPDMIA & Dyslipidemia & binary \\
+             & CKD & Chronic Kidney Disease  & binary \\
+             & GBS & Guillain-Barre Syndrome  & binary \\
+\midrule
+\hspace{0.3cm} Neurology Test   & DEC\_VS & Decreased Vibration Sensation & binary \\
+                 & DEC\_PPS & Decreased Pinprick Sensation  & binary \\
+                 & DEC\_LTS & Decreased Light Touch Sensation  & binary \\
+                 & DEC\_AR & Decreased Ankle Reflex  & binary \\
+\midrule
+\hspace{0.3cm} MNSI & MNSI & Michigan Neuropathy Screening Instrument  & continuous \\
+\midrule
+\hspace{0.3cm} Sudoscan & FEET\_MEAN\_ESC & Feet Mean Electrochemical Skin Conductance & continuous  \\
+         & FEET\_PCT\_ASYM & Feet Percentage of Asymmetry (\%) & continuous  \\
+         & HAND\_MEAN\_ESC & Hands Mean Electrochemical Skin Conductance & continuous  \\
+         & HAND\_PCT\_ASYM & Hands Percentage of Asymmetry (\%) & continuous  \\
+         & NS & Neuropathy Score & continuous  \\
+         & CAS & Cardiac Autonomic Neuropathy Score (\%) & continuous  \\
+ &  &   & \\
+\midrule
+\textbf{B. Variables not used in modeling} & & & \\
+\midrule
+\hspace{0.3cm} Group & Code & Description  & Type\\
+\midrule
+\hspace{0.3cm} Nerve Conduction Study & SSA\_L & Left Sural Sap Nerve Sensory Amplitude (Uv)  & continuous \\
+ & SSC\_L & Left Sural Nerve Sensory Conduction (m/s)  & continuous \\
+ & SPSA\_L & Left Superficial Peroneal Nerve Sensory Amplitude (Uv)  & continuous \\
+ & SPSC\_L & Left Superficial Peroneal Sensory Conductivity Velocity (m/s)  & continuous \\
+ & MCV\_L & Left Posterior Tibial Nerve Conduction Velocity  & continuous \\
+ & DL\_L & Left Posterior Tibial Nerve Distal Latency  & continuous \\
+ & CMAPANK\_L & Left Ankle Compound Muscle Action Potential  & continuous \\
+ & CMAPKNE\_L & Left Knee Compound Muscle Action Potential  & continuous \\
+ & FWAVE\_L & Left F-wave latency  & continuous \\
+ & SSA\_R & Right Sural sap Nerve Sensory Amplitude (Uv)  & continuous \\
+ & SSC\_R & Right Sural Nerve Sensory Conduction (m/s)  & continuous \\
+ & SPSA\_R & Right Superficial Peroneal Nerve Sensory Amplitude (Uv) & continuous  \\
+ & SPSC\_R & Right Superficial Peroneal Sensory Conductivity Velocity (m/s) & continuous  \\
+ & MCV\_R & Right Posterior Tibial Nerve Conduction Velocity & continuous  \\
+ & DL\_R & Right Posterior Tibial Nerve Distal Latency & continuous  \\
+ & CMAPANK\_R & Right Ankle Compound Muscle Action Potential & continuous  \\
+ & CMAPKNE\_R & Right Knee Compound Muscle Action Potential & continuous  \\
+ & FWAVE\_R & Right F-wave Latency & continuous  \\
+\bottomrule
+\end{tabular}
+\caption{
+ Complete listing of clinical variables collected in this study, organized by feature group, with their corresponding code, description, and data type. The Profile group captures patient demographic and metabolic baseline characteristics, including sex, age, diabetes mellitus duration, insulin use, and HbA1c. The Commorbidity group encodes the presence or absence of five concurrent conditions: hypertension (HPN), peripheral arterial occlusive disease (PAOD), dyslipidemia (DSLPDMIA), chronic kidney disease (CKD), and Guillain-Barré syndrome (GBS). The Neurology Test group contains binary findings from a standard neurological examination assessing vibration, pinprick, light touch, and ankle reflex responses. The MNSI group contains the score from the Michigan Neuropathy Screening Instrument, a validated clinical tool for peripheral neuropathy screening. The Sudoscan group comprises continuous measurements of electrochemical skin conductance and asymmetry for both the hands and feet, along with a composite Neuropathy Score and a Cardiac Autonomic Neuropathy Score. The Nerve Conduction Study (NCS) group contains electrophysiological measurements of sensory amplitude, conduction velocity, distal latency, and F-wave latency across bilateral lower limb nerves; these variables served as the diagnostic reference for DPN classification but were excluded from all predictive modeling, as the study objective is to enable pre-diagnostic screening in settings where NCS is unavailable or inaccessible. Binary variables are encoded as 0 (absent) or 1 (present); continuous variables retain their original measurement units.
+% A listing of all clinical variables collected in this study, including those that were used for machine learning modeling (Part A, 22 variables in total) and those that were not (Part B). Each variable is placed under a group and identified by its code, a plain-language description, and its data type (binary or continuous).  Part B of the table come from, Nerve Conduction Study — the reference standard for Diabetic Peripheral Neuropathy (DPN) diagnosis. These were excluded from machine learning modeling and are included solely for contextual reference.  The remaining features represent non-invasive or minimally invasive clinical assessments routinely available in outpatient settings, underscoring the practical deployability of any model trained on this feature space.
+}
+\label{tab:clinical_data}
+\end{table}
+
+
+\section{Methods}\label{methods}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Topical subheadings are allowed. Authors must ensure that their Methods section includes adequate experimental and characterization data necessary for others in the field to reproduce their work. Authors are encouraged to include RIIDs where appropriate. 
 
 % \textbf{Ethical approval declarations} (only required where applicable) Any article reporting experiment/s carried out on (i)~live vertebrate (or higher invertebrates), (ii)~humans or (iii)~human samples must include an unambiguous statement within the methods section that meets the following requirements: 
 
-\section{Discussion}\label{sec12}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Discussion}\label{discussion}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Discussions should be brief and focused. 
 
-\section{Conclusion}\label{sec13}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion}\label{conclusion}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Conclusions may be used to restate your hypothesis or research question, restate your major findings, explain the relevance and the added value of your work, highlight any limitations of your study, describe future directions for research and recommendations. 
 
 

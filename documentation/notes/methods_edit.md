@@ -213,3 +213,33 @@ caption and a `\label` for cross-referencing, at the three locations named above
 - Attempt a local `pdflatex`/`latexmk` compile of `main.tex` if the toolchain is
   available in this environment; otherwise do a careful manual syntax review (balanced
   braces/environments, no duplicate labels, all new `\includegraphics` paths resolve).
+
+## Outcome
+
+All five plan steps executed on branch `codereviewed_methods`, one commit per completed
+task:
+
+1. `c34ddb2` — this plan/prompt file.
+2. `c684e28` — Methods rewrite (`manuscript/main.tex`): corrected nested-CV structure,
+   added Preventing Data Leakage / Handling Class Imbalance / Explainability Analysis /
+   Sufficiency and Necessity Analysis subsections, fixed the `diversity_weight`,
+   borderline-window (`threshold_delta=0.08` vs. the old "±0.2 of the mean threshold"),
+   and permitted-range (`max(0, ...)` vs. the old `min(0, ...)`) mismatches against
+   `bin_cf_final_202608.yml`/`counterfactuals.py`.
+3. `60dc091` — three new figures (`manuscript/references/illustrations/`): pipeline
+   overview, compact nested-CV/optimization, counterfactual generation — each as
+   hand-authored SVG with a vector PDF render and a build-notes `.md` tracing every
+   number to code/config.
+
+Verification: `latexmk -pdf -halt-on-error` on `manuscript/main.tex` completed with no
+errors, 30 pages output; all three new figures render correctly at column width; the
+only unresolved reference is the intentional forward reference to
+`tab:optimization_metrics_summary`, which belongs to the Discussion section (out of
+scope for this session — Discussion is still a stub per `main.tex`).
+
+Not done in this session (out of scope — belongs to the "Results and Discussion" and
+later sections of the original prompt in `references/prompts/methodology.md`): writing
+the actual Discussion section, the `optimization_metrics_ci.csv` table, or any of the
+other Discussion-section figures/tables. The Methods rewrite establishes the vocabulary
+and mechanism (pooling method, fold-vs-pooled divergence, sufficiency/necessity
+semantics, etc.) those sections will need.

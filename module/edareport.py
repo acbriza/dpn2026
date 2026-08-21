@@ -643,9 +643,9 @@ modelling set and, separately, within the excluded nerve conduction set.
 # Figure 1 -- cohort overview
 # ---------------------------------------------------------------------------
 
-def _text_width(ax, renderer, text, fontsize):
+def _text_width(ax, renderer, text, fontsize, fontweight="normal"):
     """Width of `text`, in ax data coordinates, as it would actually render."""
-    artist = ax.text(0, 0, text, ha="center", va="center", fontsize=fontsize)
+    artist = ax.text(0, 0, text, ha="center", va="center", fontsize=fontsize, fontweight=fontweight)
     bbox = artist.get_window_extent(renderer=renderer)
     (x0, _), (x1, _) = ax.transData.inverted().transform([(bbox.x0, bbox.y0), (bbox.x1, bbox.y1)])
     artist.remove()
@@ -717,7 +717,8 @@ def figure1a_participant_flow(ctx, outputdir, formats):
 
     split_texts = [f"Confirmed\nn = {ctx['n_confirmed']}", f"Unconfirmed\nn = {ctx['n_unconfirmed']}"]
     split_fontsize = 6.5
-    split_box_width = 0.5 + max(_text_width(ax, renderer, t, split_fontsize) for t in split_texts)
+    split_box_width = 0.5 + max(_text_width(ax, renderer, t, split_fontsize, fontweight="bold")
+                                for t in split_texts)
     split_box_height = 1.1
     split_gap = 0.5
     split_y = 1.15

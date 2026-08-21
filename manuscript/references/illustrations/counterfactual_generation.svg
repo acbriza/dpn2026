@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="560" viewBox="0 0 1600 560">
+
+<rect x="0" y="0" width="1600" height="560" fill="#ffffff"/>
+
+<!-- ===================== HEADER ===================== -->
+<text x="40" y="34" font-family="Arial" font-size="21" font-weight="bold" fill="#0b0b0b">Counterfactual generation with DiCE, per persisted fold model</text>
+<text x="40" y="54" font-family="Arial" font-size="12.5" fill="#52514e">Applied independently to each of the four persisted fold models (Section 3.1.6) &#8212; not four separate analyses, four applications of the same procedure</text>
+
+<!-- ===================== STEP 1 : INSTANCE SELECTION ===================== -->
+<rect x="40" y="80" width="290" height="290" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="70" cy="110" r="15" fill="#0b0b0b"/>
+<text x="70" y="116" font-family="Arial" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">1</text>
+<text x="95" y="115" font-family="Arial" font-size="15" font-weight="bold" fill="#0b0b0b">Instances of interest</text>
+<rect x="55" y="128" width="260" height="1" fill="#e1e0d9"/>
+
+<text x="55" y="152" font-family="Arial" font-size="12" fill="#0b0b0b">Within that fold's own held-out</text>
+<text x="55" y="168" font-family="Arial" font-size="12" fill="#0b0b0b">test set, select patients who are:</text>
+
+<rect x="55" y="182" width="260" height="46" rx="5" fill="#ffffff" stroke="#eb6834" stroke-width="1.2"/>
+<text x="66" y="200" font-family="Arial" font-size="11.5" font-weight="bold" fill="#eb6834">Misclassified</text>
+<text x="66" y="216" font-family="Arial" font-size="11" fill="#52514e">predicted label &#8800; actual label</text>
+
+<text x="185" y="248" font-family="Arial" font-size="13" fill="#898781" text-anchor="middle">or</text>
+
+<rect x="55" y="256" width="260" height="60" rx="5" fill="#ffffff" stroke="#eb6834" stroke-width="1.2"/>
+<text x="66" y="274" font-family="Arial" font-size="11.5" font-weight="bold" fill="#eb6834">Borderline</text>
+<text x="66" y="290" font-family="Arial" font-size="11" fill="#52514e">|predicted prob. &#8722; that fold's</text>
+<text x="66" y="304" font-family="Arial" font-size="11" fill="#52514e">own threshold| &#8804; &#948;=0.08</text>
+
+<text x="55" y="342" font-family="Arial" font-size="11" fill="#898781">threshold_delta = 0.08</text>
+<text x="55" y="358" font-family="Arial" font-size="11" fill="#898781">(bin_cf_final_202608.yml)</text>
+
+<!-- Arrow 1 to 2 -->
+<line x1="330" y1="225" x2="356" y2="225" stroke="#898781" stroke-width="2"/>
+<polygon points="356,217 356,233 370,225" fill="#898781"/>
+
+<!-- ===================== STEP 2 : PERMITTED RANGES + DICE SETUP ===================== -->
+<rect x="376" y="80" width="330" height="290" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="406" cy="110" r="15" fill="#0b0b0b"/>
+<text x="406" y="116" font-family="Arial" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">2</text>
+<text x="431" y="115" font-family="Arial" font-size="15" font-weight="bold" fill="#0b0b0b">Permitted ranges</text>
+<rect x="391" y="128" width="300" height="1" fill="#e1e0d9"/>
+
+<rect x="391" y="140" width="300" height="60" rx="5" fill="#ffffff" stroke="#2a78d6" stroke-width="1.2"/>
+<text x="402" y="158" font-family="Arial" font-size="11.5" font-weight="bold" fill="#2a78d6">Global (whole cohort, n=187)</text>
+<text x="402" y="174" font-family="Arial" font-size="11" fill="#52514e">[max(0, x_min &#8722; &#963;),  x_max + &#963;]</text>
+<text x="402" y="190" font-family="Arial" font-size="10.5" fill="#898781">bounds dice_ml.Data's permitted_range</text>
+
+<rect x="391" y="210" width="300" height="60" rx="5" fill="#ffffff" stroke="#2a78d6" stroke-width="1.2"/>
+<text x="402" y="228" font-family="Arial" font-size="11.5" font-weight="bold" fill="#2a78d6">Local (per selected patient)</text>
+<text x="402" y="244" font-family="Arial" font-size="11" fill="#52514e">[max(0, value &#8722; &#963;),  value + &#963;]</text>
+<text x="402" y="260" font-family="Arial" font-size="10.5" fill="#898781">centred on that patient's own value</text>
+
+<text x="391" y="292" font-family="Arial" font-size="11.5" fill="#0b0b0b">Varied only over the 6 actionable</text>
+<text x="391" y="308" font-family="Arial" font-size="11.5" fill="#0b0b0b">features: INSULIN, HBA1C, HPN,</text>
+<text x="391" y="324" font-family="Arial" font-size="11.5" fill="#0b0b0b">PAOD, DSLPDMIA, CKD</text>
+<text x="391" y="346" font-family="Arial" font-size="10.5" fill="#898781">(remaining 16 features held fixed &#8212;</text>
+<text x="391" y="360" font-family="Arial" font-size="10.5" fill="#898781">Table: Feature Suitability as Counterfactuals)</text>
+
+<!-- Arrow 2 to 3 -->
+<line x1="716" y1="225" x2="742" y2="225" stroke="#898781" stroke-width="2"/>
+<polygon points="742,217 742,233 756,225" fill="#898781"/>
+
+<!-- ===================== STEP 3 : DICE GENETIC SEARCH ===================== -->
+<rect x="762" y="80" width="330" height="290" rx="8" fill="#f7f7f5" stroke="#4a3aa7" stroke-width="1.5"/>
+<circle cx="792" cy="110" r="15" fill="#4a3aa7"/>
+<text x="792" y="116" font-family="Arial" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">3</text>
+<text x="817" y="115" font-family="Arial" font-size="15" font-weight="bold" fill="#0b0b0b">DiCE genetic search</text>
+<rect x="777" y="128" width="300" height="1" fill="#e1e0d9"/>
+
+<text x="777" y="150" font-family="Arial" font-size="11.5" fill="#0b0b0b">dice_ml.Model: that fold's CatBoost,</text>
+<text x="777" y="166" font-family="Arial" font-size="11.5" fill="#0b0b0b">wrapped under that fold's own</text>
+<text x="777" y="182" font-family="Arial" font-size="11.5" fill="#0b0b0b">tuned decision threshold</text>
+
+<rect x="777" y="196" width="300" height="120" rx="5" fill="#ffffff" stroke="#4a3aa7" stroke-width="1"/>
+<text x="788" y="214" font-family="Arial" font-size="11" fill="#52514e">algorithm</text>
+<text x="900" y="214" font-family="Arial" font-size="11" fill="#0b0b0b">DiverseCF, method=genetic</text>
+<text x="788" y="232" font-family="Arial" font-size="11" fill="#52514e">desired_class</text>
+<text x="900" y="232" font-family="Arial" font-size="11" fill="#0b0b0b">opposite</text>
+<text x="788" y="250" font-family="Arial" font-size="11" fill="#52514e">total_CFs</text>
+<text x="900" y="250" font-family="Arial" font-size="11" fill="#0b0b0b">20</text>
+<text x="788" y="268" font-family="Arial" font-size="11" fill="#52514e">proximity_weight</text>
+<text x="900" y="268" font-family="Arial" font-size="11" fill="#0b0b0b">0.5</text>
+<text x="788" y="286" font-family="Arial" font-size="11" fill="#52514e">diversity_weight</text>
+<text x="900" y="286" font-family="Arial" font-size="11" fill="#0b0b0b">1.0</text>
+<text x="788" y="304" font-family="Arial" font-size="11" fill="#52514e">posthoc_sparsity</text>
+<text x="900" y="304" font-family="Arial" font-size="11" fill="#0b0b0b">binary, param=0.05</text>
+
+<text x="777" y="334" font-family="Arial" font-size="10.5" fill="#898781">Genetic search chosen over gradient-based</text>
+<text x="777" y="348" font-family="Arial" font-size="10.5" fill="#898781">methods because several actionable features</text>
+<text x="777" y="362" font-family="Arial" font-size="10.5" fill="#898781">(INSULIN, HPN, ...) are categorical.</text>
+
+<!-- Arrow 3 to 4 -->
+<line x1="1102" y1="225" x2="1128" y2="225" stroke="#898781" stroke-width="2"/>
+<polygon points="1128,217 1128,233 1142,225" fill="#898781"/>
+
+<!-- ===================== STEP 4 : OUTPUTS ===================== -->
+<rect x="1148" y="80" width="412" height="290" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="1178" cy="110" r="15" fill="#0b0b0b"/>
+<text x="1178" y="116" font-family="Arial" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">4</text>
+<text x="1203" y="115" font-family="Arial" font-size="15" font-weight="bold" fill="#0b0b0b">Per-patient outputs</text>
+<rect x="1163" y="128" width="382" height="1" fill="#e1e0d9"/>
+
+<rect x="1163" y="140" width="382" height="66" rx="5" fill="#ffffff" stroke="#1baf7a" stroke-width="1.2"/>
+<text x="1174" y="158" font-family="Arial" font-size="11.5" font-weight="bold" fill="#1baf7a">Diverse counterfactual set</text>
+<text x="1174" y="174" font-family="Arial" font-size="11" fill="#52514e">Up to 20 alternative feature-value combinations</text>
+<text x="1174" y="190" font-family="Arial" font-size="11" fill="#52514e">that flip the prediction to the opposite class</text>
+
+<rect x="1163" y="216" width="382" height="76" rx="5" fill="#ffffff" stroke="#1baf7a" stroke-width="1.2"/>
+<text x="1174" y="234" font-family="Arial" font-size="11.5" font-weight="bold" fill="#1baf7a">Sufficiency check (per feature)</text>
+<text x="1174" y="250" font-family="Arial" font-size="11" fill="#52514e">Does varying this one feature alone flip the</text>
+<text x="1174" y="266" font-family="Arial" font-size="11" fill="#52514e">prediction, with every other feature fixed?</text>
+<text x="1174" y="282" font-family="Arial" font-size="10.5" fill="#898781">total_CFs=1, maxiterations=500</text>
+
+<rect x="1163" y="302" width="382" height="76" rx="5" fill="#ffffff" stroke="#1baf7a" stroke-width="1.2"/>
+<text x="1174" y="320" font-family="Arial" font-size="11.5" font-weight="bold" fill="#1baf7a">Necessity check (per feature)</text>
+<text x="1174" y="336" font-family="Arial" font-size="11" fill="#52514e">With this feature fixed, can any combination of</text>
+<text x="1174" y="352" font-family="Arial" font-size="11" fill="#52514e">the other 5 flip the prediction (5 seeds)?</text>
+<text x="1174" y="368" font-family="Arial" font-size="10.5" fill="#898781">nrepeats=5, total_CFs=3/seed, maxiterations=500</text>
+
+<!-- ===================== FOOTER ===================== -->
+<rect x="40" y="400" width="1520" height="1" fill="#e1e0d9"/>
+<text x="40" y="424" font-family="Arial" font-size="12" fill="#0b0b0b">Feature suitability screen applied before step 2 (Table: Feature Suitability as Counterfactuals):</text>
+<text x="40" y="446" font-family="Arial" font-size="11.5" fill="#1baf7a">Suitable &#8594; INSULIN, HBA1C, HPN, DSLPDMIA</text>
+<text x="440" y="446" font-family="Arial" font-size="11.5" fill="#4a3aa7">Conditional &#8594; PAOD, CKD (partially modifiable)</text>
+<text x="900" y="446" font-family="Arial" font-size="11.5" fill="#898781">Unsuitable &#8594; SEX, AGE, SUBJ, DM_DUR, GBS, neurological exam, MNSI, Sudoscan (immutable or not directly actionable)</text>
+
+<text x="40" y="480" font-family="Arial" font-size="12" fill="#0b0b0b">Neither check is guaranteed to succeed within its iteration budget even when a valid counterfactual exists;</text>
+<text x="40" y="500" font-family="Arial" font-size="12" fill="#0b0b0b">the Discussion reports how many of the candidate instances yielded a usable result under this procedure.</text>
+
+</svg>

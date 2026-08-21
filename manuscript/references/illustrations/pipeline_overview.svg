@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="440" viewBox="0 0 1600 440">
+
+<rect x="0" y="0" width="1600" height="440" fill="#ffffff"/>
+
+<!-- ===================== HEADER ===================== -->
+<text x="40" y="34" font-family="Arial" font-size="21" font-weight="bold" fill="#0b0b0b">Modelling pipeline for DPN pre-screening and counterfactual explanation</text>
+<text x="40" y="54" font-family="Arial" font-size="12.5" fill="#52514e">Five stages, each driven by its own module/experiments/*.yml configuration and implemented as a standalone module/*report.py script</text>
+
+<!-- ===================== BOX 1 : DATA ===================== -->
+<rect x="45" y="88" width="280" height="270" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="75" cy="118" r="15" fill="#0b0b0b"/>
+<text x="75" y="124" font-family="Arial" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">1</text>
+<text x="100" y="123" font-family="Arial" font-size="15.5" font-weight="bold" fill="#0b0b0b">Data</text>
+<rect x="60" y="140" width="250" height="1" fill="#e1e0d9"/>
+
+<text x="60" y="164" font-family="Arial" font-size="12.5" fill="#0b0b0b">EAMC_DPN_Dataset.xlsx</text>
+<text x="60" y="184" font-family="Arial" font-size="12.5" fill="#52514e">187 patients &#215; 22 predictors</text>
+<text x="60" y="204" font-family="Arial" font-size="12.5" fill="#52514e">Confirmed (n=130) vs.</text>
+<text x="60" y="222" font-family="Arial" font-size="12.5" fill="#52514e">Unconfirmed (n=57) DPN</text>
+<text x="60" y="250" font-family="Arial" font-size="12" fill="#898781">dataload.py &#8212; DPN_data</text>
+<text x="60" y="270" font-family="Arial" font-size="11.5" fill="#eb6834">Nerve conduction study (NCS)</text>
+<text x="60" y="286" font-family="Arial" font-size="11.5" fill="#eb6834">features loaded but excluded:</text>
+<text x="60" y="302" font-family="Arial" font-size="11.5" fill="#eb6834">they enter the diagnostic</text>
+<text x="60" y="318" font-family="Arial" font-size="11.5" fill="#eb6834">reference standard.</text>
+
+<!-- ===================== BOX 2 : SELECTION ===================== -->
+<rect x="345" y="88" width="280" height="270" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="375" cy="118" r="15" fill="#0b0b0b"/>
+<text x="375" y="124" font-family="Arial" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">2</text>
+<text x="400" y="123" font-family="Arial" font-size="15.5" font-weight="bold" fill="#0b0b0b">Selection</text>
+<rect x="360" y="140" width="250" height="1" fill="#e1e0d9"/>
+
+<text x="360" y="162" font-family="Arial" font-size="11.5" fill="#898781">selreport.py</text>
+<text x="360" y="178" font-family="Arial" font-size="11.5" fill="#898781">bin_sel_final_202608.yml</text>
+<text x="360" y="202" font-family="Arial" font-size="12.5" fill="#0b0b0b">14 algorithms &#215; 12 feature</text>
+<text x="360" y="220" font-family="Arial" font-size="12.5" fill="#0b0b0b">sets, default hyperparameters</text>
+<text x="360" y="242" font-family="Arial" font-size="12.5" fill="#2a78d6">RepeatedStratifiedKFold</text>
+<text x="360" y="260" font-family="Arial" font-size="12.5" fill="#2a78d6">k=4 &#215; 10 repeats = 40 runs</text>
+<text x="360" y="280" font-family="Arial" font-size="12.5" fill="#52514e">Ranked by mean AUPRC</text>
+<text x="360" y="304" font-family="Arial" font-size="12.5" font-weight="bold" fill="#0b0b0b">&#8594; CatBoost, full feature set</text>
+
+<!-- ===================== BOX 3 : OPTIMIZATION ===================== -->
+<rect x="645" y="88" width="280" height="270" rx="8" fill="#f7f7f5" stroke="#4a3aa7" stroke-width="1.5"/>
+<circle cx="675" cy="118" r="15" fill="#4a3aa7"/>
+<text x="675" y="124" font-family="Arial" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">3</text>
+<text x="700" y="123" font-family="Arial" font-size="15.5" font-weight="bold" fill="#0b0b0b">Optimization</text>
+<rect x="660" y="140" width="250" height="1" fill="#e1e0d9"/>
+
+<text x="660" y="162" font-family="Arial" font-size="11.5" fill="#898781">optreport.py</text>
+<text x="660" y="178" font-family="Arial" font-size="11.5" fill="#898781">bin_opt_final_202608.yml</text>
+<text x="660" y="200" font-family="Arial" font-size="12.5" fill="#0b0b0b">Nested CV for CatBoost only</text>
+<text x="660" y="218" font-family="Arial" font-size="12.5" fill="#0b0b0b">(Figure 3): outer 4&#215;10=40,</text>
+<text x="660" y="236" font-family="Arial" font-size="12.5" fill="#0b0b0b">inner k=3, Optuna TPE search</text>
+<text x="660" y="258" font-family="Arial" font-size="12.5" fill="#52514e">Objective: mean AUPRC</text>
+<text x="660" y="276" font-family="Arial" font-size="12.5" fill="#52514e">&#8594; 40 pooled outer-test metrics</text>
+<rect x="660" y="290" width="250" height="30" rx="5" fill="#ffffff" stroke="#4a3aa7" stroke-width="1"/>
+<text x="670" y="304" font-family="Arial" font-size="11" font-weight="bold" fill="#4a3aa7">1st repeat&#8217;s 4 fold models</text>
+<text x="670" y="316" font-family="Arial" font-size="11" fill="#4a3aa7">persisted for reuse below</text>
+
+<!-- ===================== BOX 4 : EXPLAINABILITY ===================== -->
+<rect x="945" y="88" width="280" height="270" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="975" cy="118" r="15" fill="#0b0b0b"/>
+<text x="975" y="124" font-family="Arial" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">4</text>
+<text x="1000" y="123" font-family="Arial" font-size="15.5" font-weight="bold" fill="#0b0b0b">Explainability</text>
+<rect x="960" y="140" width="250" height="1" fill="#e1e0d9"/>
+
+<text x="960" y="162" font-family="Arial" font-size="11.5" fill="#898781">expreport.py</text>
+<text x="960" y="178" font-family="Arial" font-size="11.5" fill="#898781">bin_exp_final_202608.yml</text>
+<text x="960" y="200" font-family="Arial" font-size="12.5" fill="#0b0b0b">Retrains the 4 persisted fold</text>
+<text x="960" y="218" font-family="Arial" font-size="12.5" fill="#0b0b0b">models on their own tuned</text>
+<text x="960" y="236" font-family="Arial" font-size="12.5" fill="#0b0b0b">hyperparameters</text>
+<text x="960" y="258" font-family="Arial" font-size="12" fill="#52514e">Per fold: importance, SHAP,</text>
+<text x="960" y="274" font-family="Arial" font-size="12" fill="#52514e">ROC / precision&#8211;recall</text>
+<text x="960" y="296" font-family="Arial" font-size="12" fill="#52514e">Pooled: AUROC, AUPRC,</text>
+<text x="960" y="312" font-family="Arial" font-size="12" fill="#52514e">calibration, decision curve</text>
+
+<!-- ===================== BOX 5 : COUNTERFACTUALS ===================== -->
+<rect x="1245" y="88" width="280" height="270" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="1275" cy="118" r="15" fill="#0b0b0b"/>
+<text x="1275" y="124" font-family="Arial" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">5</text>
+<text x="1300" y="123" font-family="Arial" font-size="15.5" font-weight="bold" fill="#0b0b0b">Counterfactuals</text>
+<rect x="1260" y="140" width="250" height="1" fill="#e1e0d9"/>
+
+<text x="1260" y="162" font-family="Arial" font-size="11.5" fill="#898781">cfreports.py</text>
+<text x="1260" y="178" font-family="Arial" font-size="11.5" fill="#898781">bin_cf_final_202608.yml</text>
+<text x="1260" y="200" font-family="Arial" font-size="12.5" fill="#0b0b0b">Applied to the same 4</text>
+<text x="1260" y="218" font-family="Arial" font-size="12.5" fill="#0b0b0b">persisted fold models</text>
+<text x="1260" y="218" font-family="Arial" font-size="12.5" fill="#0b0b0b" opacity="0"> </text>
+<text x="1260" y="240" font-family="Arial" font-size="12" fill="#52514e">DiCE genetic algorithm,</text>
+<text x="1260" y="256" font-family="Arial" font-size="12" fill="#52514e">6 actionable features</text>
+<text x="1260" y="278" font-family="Arial" font-size="12" fill="#52514e">Misclassified / borderline</text>
+<text x="1260" y="294" font-family="Arial" font-size="12" fill="#52514e">patients (Figure 4)</text>
+<text x="1260" y="316" font-family="Arial" font-size="12" fill="#52514e">Sufficiency &amp; necessity checks</text>
+
+<!-- ===================== ARROWS BETWEEN BOXES (drawn last, on top) ===================== -->
+<g fill="none" stroke="#898781" stroke-width="2">
+<line x1="327" y1="220" x2="334" y2="220"/>
+<line x1="627" y1="220" x2="634" y2="220"/>
+<line x1="927" y1="220" x2="934" y2="220"/>
+<line x1="1227" y1="220" x2="1234" y2="220"/>
+</g>
+<g fill="#898781">
+<polygon points="334,213 334,227 343,220"/>
+<polygon points="634,213 634,227 643,220"/>
+<polygon points="934,213 934,227 943,220"/>
+<polygon points="1234,213 1234,227 1243,220"/>
+</g>
+
+<!-- ===================== FOOTER ===================== -->
+<rect x="40" y="392" width="1520" height="1" fill="#e1e0d9"/>
+<text x="40" y="416" font-family="Arial" font-size="11.5" fill="#898781">Every arrow denotes a persisted artefact consumed by the next stage: the selected model/feature set (2&#8594;3), and the first repeat&#8217;s four fold-specific models, thresholds and splits (3&#8594;4, 3&#8594;5). No stage refits against, or selects a threshold from, another stage&#8217;s held-out test data.</text>
+
+</svg>

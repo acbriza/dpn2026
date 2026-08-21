@@ -327,6 +327,67 @@ The Profile group captures patient demographic and metabolic baseline characteri
 \end{flushleft}
 \end{table}
 
+Table~\ref{tab:cohort} reports the baseline characteristics of the 187 analysed patients for each of the 22 candidate predictors, stratified by Confirmed and Unconfirmed DPN status, together with each variable's univariable effect size (AUC for continuous features, odds ratio for binary features) and Benjamini--Hochberg-corrected significance. The four neurological examination signs and diabetes mellitus duration showed the strongest univariable associations with confirmed DPN, while comorbidities other than hypertension were weakly and inconsistently associated with the outcome. The full per-patient distributions underlying these summary statistics are shown for the continuous and binary predictors in Figures~\ref{fig:s1} and~\ref{fig:s2} (Appendix), respectively; the provenance and completeness of the underlying data are detailed in Table~\ref{tab:s1_provenance} (Appendix).
+
+% Table 1 -- Cohort characteristics by DPN status % =======================================
+\begin{table}[!ht]
+\centering
+\footnotesize
+\caption{\textbf{Characteristics of the analysed cohort, by diabetic peripheral neuropathy status.} Values are shown for all 187 analysed patients and separately for the 57 Unconfirmed and 130 Confirmed patients, for each of the 22 candidate predictors available to the models.}
+\label{tab:cohort}
+\setlength{\tabcolsep}{1pt}
+\tiny
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Characteristic} & \textbf{Overall} (n=187) & \textbf{Unconfirmed} (n=57) & \textbf{Confirmed} (n=130) & \textbf{Effect size (95\% CI)} & \textbf{p} & \textbf{q} \\
+\midrule
+\addlinespace
+\multicolumn{7}{l}{\textit{Profile}} \\
+SEX, male  & 62 (33.2) & 15 (26.3) & 47 (36.2) & OR 1.59 (0.80--3.16) & 0.188 & 0.230 \\
+AGE, years  & 59 [50--66] & 52 [39--63] & 61 [53--67] & AUC 0.66 (0.57--0.74) & $<$0.001 & 0.001 \\
+SUBJ, yes  & 160 (85.6) & 41 (71.9) & 119 (91.5) & OR 4.22 (1.81--9.84) & $<$0.001 & 0.001 \\
+DM\_DUR, years  & 5 [2--10] & 2 [1--6] & 7 [3--12] & AUC 0.68 (0.59--0.76) & $<$0.001 & $<$0.001 \\
+INSULIN, yes $\diamond$ & 78 (41.7) & 17 (29.8) & 61 (46.9) & OR 2.08 (1.07--4.04) & 0.029 & 0.046 \\
+HBA1C, \% $\diamond$ & 7.5 [6.4--9.8] & 7.2 [6.4--8.8] & 7.6 [6.4--10.3] & AUC 0.55 (0.46--0.63) & 0.327 & 0.379 \\
+\addlinespace
+\multicolumn{7}{l}{\textit{Comorbidity}} \\
+HPN, yes $\diamond$ & 112 (59.9) & 33 (57.9) & 79 (60.8) & OR 1.13 (0.60--2.12) & 0.712 & 0.712 \\
+PAOD, yes $\diamond$ & 8 (4.3) & 1 (1.8) & 7 (5.4) & OR 3.19 (0.38--26.52) & 0.438 & 0.482 \\
+DSLPDMIA, yes $\diamond$ & 97 (51.9) & 24 (42.1) & 73 (56.2) & OR 1.76 (0.94--3.31) & 0.077 & 0.106 \\
+CKD, yes $\diamond$ & 37 (19.8) & 7 (12.3) & 30 (23.1) & OR 2.14 (0.88--5.22) & 0.088 & 0.114 \\
+GBS, yes  & 2 (1.1) & 1 (1.8) & 1 (0.8) & OR 0.43 (0.03--7.06) & 0.518 & 0.543 \\
+\addlinespace
+\multicolumn{7}{l}{\textit{Neurological examination}} \\
+DEC\_VS, yes  & 96 (51.3) & 11 (19.3) & 85 (65.4) & OR 7.90 (3.73--16.73) & $<$0.001 & $<$0.001 \\
+DEC\_PPS, yes  & 92 (49.2) & 15 (26.3) & 77 (59.2) & OR 4.07 (2.05--8.07) & $<$0.001 & $<$0.001 \\
+DEC\_LTS, yes  & 90 (48.1) & 17 (29.8) & 73 (56.2) & OR 3.01 (1.55--5.86) & $<$0.001 & 0.002 \\
+DEC\_AR, yes  & 94 (50.3) & 9 (15.8) & 85 (65.4) & OR 10.07 (4.53--22.38) & $<$0.001 & $<$0.001 \\
+\addlinespace
+\multicolumn{7}{l}{\textit{MNSI}} \\
+MNSI, score  & 5 [3--7] & 4 [2--6] & 6 [4--8] & AUC 0.67 (0.58--0.76) & $<$0.001 & $<$0.001 \\
+\addlinespace
+\multicolumn{7}{l}{\textit{Sudoscan}} \\
+FEET\_MEAN\_ESC, uS  & 53 [38--65] & 60 [48--71] & 48 [32--59] & AUC 0.32 (0.25--0.40) & $<$0.001 & $<$0.001 \\
+FEET\_PCT\_ASYM, \%  & 5 [2--11] & 3 [1--6] & 6 [3--12] & AUC 0.65 (0.56--0.73) & $<$0.001 & 0.002 \\
+HAND\_MEAN\_ESC, uS  & 58 [44--72] & 63 [51--75] & 56 [41--70] & AUC 0.39 (0.30--0.47) & 0.013 & 0.022 \\
+HAND\_PCT\_ASYM, \%  & 9 [4--14] & 6 [4--11] & 10 [4--17] & AUC 0.59 (0.50--0.67) & 0.061 & 0.089 \\
+NS, score  & 53 [46--64] & 61 [52--77] & 51 [44--58] & AUC 0.28 (0.20--0.36) & $<$0.001 & $<$0.001 \\
+CAS, \%  & 30 [25--35] & 28 [18--33] & 31 [27--35] & AUC 0.64 (0.54--0.72) & 0.003 & 0.006 \\
+\bottomrule
+\end{tabular}
+\begin{flushleft}\footnotesize Continuous variables are median [interquartile range] and were compared with the Mann--Whitney U test; binary variables are n (\%) of the stated level and were compared with the chi-square test, or Fisher's exact test where any expected cell count was below 5. Effect size is the directional area under the receiver operating characteristic curve (AUC) for continuous variables and the odds ratio (OR) for binary variables; an AUC above 0.5 indicates higher values in the Confirmed group and an AUC below 0.5 indicates lower values. AUC confidence intervals are stratified percentile bootstrap intervals (2000 resamples). q denotes the Benjamini--Hochberg false discovery rate across the 22 candidate predictors. $\diamond$ marks the features the counterfactual engine is permitted to vary.\end{flushleft}
+\end{table}
+
+Figure~\ref{fig:univariable_discrimination} places these per-feature associations on a single discrimination scale, ranking every candidate predictor by its univariable area under the receiver operating characteristic curve (AUC) and marking the discrimination achieved by the tuned multivariable CatBoost model (AUC 0.799) for comparison. No single feature approaches the multivariable model's performance -- the strongest, decreased ankle reflex (DEC\_AR), reaches an AUC of only 0.748 -- and the six counterfactual-actionable features cluster close to the no-discrimination line, indicating that any single modifiable variable carries little predictive signal on its own (distributions for these six features are shown in Figure~\ref{fig:s4}, Appendix). Redundancy among the candidate predictors, including the strong negative correlation between age and the Sudoscan neuropathy score, is examined in Figure~\ref{fig:s3} (Appendix).
+
+% Figure 2 -- Univariable discrimination % =======================================
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.65\textwidth]{references/eda/fig2_univariable_discrimination.pdf}
+\caption{Univariable discrimination of each candidate predictor. Each row shows the area under the receiver operating characteristic curve obtained when a single feature is used alone to separate Confirmed from Unconfirmed patients, with a stratified percentile bootstrap 95\% confidence interval based on 2000 resamples; features are ordered by discrimination strength. A value of 0.5, marked by the dashed line, indicates no discrimination, while values below 0.5 indicate features whose values are lower among Confirmed patients (GBS, HAND\_MEAN\_ESC, FEET\_MEAN\_ESC, NS). Marker colour denotes the clinical domain and diamonds denote the 6 features the counterfactual engine is permitted to vary; circles denote the remaining candidate predictors. Regardless of shape, a filled marker denotes a feature reaching a Benjamini--Hochberg false discovery rate below 0.05, while an open marker denotes one that does not. The dotted line marks the discrimination achieved by the tuned CatBoost model (0.799), placing the multivariable result on the same scale as its inputs: the strongest individual feature, DEC\_AR, already reaches 0.748, so the modelling gain over a single bedside measurement is modest. The actionable features span 0.514 to 0.585 and cluster at the no-discrimination line, with only INSULIN reaching q $<$ 0.05. Counterfactual explanations in this study are therefore constrained to move the features carrying the least marginal signal, which is the expected origin of the large feature displacements those explanations require.}
+\label{fig:univariable_discrimination}
+\end{figure}
+
 
 \section{Methods}\label{methods}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -348,7 +409,8 @@ The Profile group captures patient demographic and metabolic baseline characteri
 \bmhead{Supplementary information}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% If your article has accompanying supplementary file/s please state so here. 
+Supporting figures and tables referenced in the main text are provided in
+Appendix~\ref{secA1} (Supplementary Figures and Tables).
 
 
 \bmhead{Acknowledgements}
@@ -397,23 +459,146 @@ BMC journals: \url{https://www.biomedcentral.com/getpublished/editorial-policies
 
 \begin{appendices}
 
-\section{Section title of first appendix}\label{secA1}
+\section{Supplementary Figures and Tables}\label{secA1}
 
-% An appendix contains supplementary information that is not an essential part of the text itself but which may be helpful in providing a more comprehensive understanding of the research problem or it is information that is too cumbersome to be included in the body of the paper.
+This appendix provides supplementary figures and tables supporting the analyses summarised in
+the main text. Figures~\ref{fig:s1} and~\ref{fig:s2} show the full per-patient distributions
+underlying the univariable summary statistics in Table~\ref{tab:cohort} for the continuous and
+binary candidate predictors, respectively. Figure~\ref{fig:s3} examines redundancy and
+multicollinearity among the 22 candidate predictors. Table~\ref{tab:s1_provenance} documents the
+provenance and completeness of the analysed dataset. Figure~\ref{fig:s4} shows the distributions
+of the six counterfactual-actionable features discussed alongside Figure~\ref{fig:univariable_discrimination}.
 
-%%=============================================%%
-%% For submissions to Nature Portfolio Journals %%
-%% please use the heading ``Extended Data''.   %%
-%%=============================================%%
+% ===================== Figure S1 =====================
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\textwidth]{references/eda/s1_continuous_rainclouds.pdf}
+\caption{\textbf{Distribution of the continuous candidate predictors by outcome group.}
+Each panel shows, for one of the 10 continuous features in the modelling set, the kernel
+density of the values (right), a box plot of the median and interquartile range (centre) and
+the individual patient observations (left), separately for the 57 Unconfirmed and 130 Confirmed
+patients. Panels are ordered by univariable discrimination and annotated with the area under
+the receiver operating characteristic curve and the Benjamini--Hochberg q-value reported in
+Table~\ref{tab:cohort}. Showing the raw observations alongside the summaries makes the degree
+of overlap between the groups visible: even for the best-separating features the two
+distributions overlap substantially, which is consistent with the moderate specificity of the
+fitted models and with the wide range of predicted probabilities near the decision threshold
+that motivated the selection of borderline cases for counterfactual analysis.}
+\label{fig:s1}
+\end{figure}
 
-%%=============================================================%%
-%% Sample for another appendix section			       %%
-%%=============================================================%%
+\clearpage
 
-%% \section{Example of another appendix section}\label{secA2}%
-%% Appendices may be used for helpful, supporting or essential material that would otherwise 
-%% clutter, break up or be distracting to the text. Appendices can consist of sections, figures, 
-%% tables and equations etc.
+% ===================== Figure S2 =====================
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\textwidth]{references/eda/s2_categorical_features.pdf}
+\caption{\textbf{Binary candidate predictors and their association with confirmed
+diabetic peripheral neuropathy.} \textbf{a} Prevalence of each of the 12 binary features in the
+Unconfirmed and Confirmed groups, with Wilson 95\% confidence intervals, which remain valid for
+the rare comorbidities where normal-approximation intervals do not. \textbf{b} Odds ratios for
+the same features on a logarithmic scale, with Wald confidence intervals and a
+Haldane--Anscombe correction applied where a cell count was zero; the dashed line marks the
+null value of 1. Filled markers denote a Benjamini--Hochberg q-value below 0.05 and diamonds
+denote the features available to the counterfactual engine. The neurological examination signs
+(DEC\_LTS, DEC\_PPS, DEC\_VS, DEC\_AR) show the strongest and most consistent associations,
+whereas the comorbidities cluster tightly around the null with wide intervals reflecting their
+low prevalence, most extremely for GBS and PAOD. This pattern explains why the comorbidity
+ablation had little effect on model performance despite comorbidities forming the majority of
+the modifiable feature set.}
+\label{fig:s2}
+\end{figure}
+
+\clearpage
+
+% ===================== Figure S3 =====================
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.85\textwidth]{references/eda/s3_redundancy.pdf}
+\caption{\textbf{Redundancy among the candidate predictors.} \textbf{a} Spearman
+correlation matrix of the 22 modelling features, ordered by hierarchical clustering on
+correlation distance so that mutually redundant features appear adjacent; tick label colours
+denote the clinical domain. \textbf{b} The most strongly correlated pair, AGE and NS
+(rho = -0.88). The Sudoscan neuropathy score is age-adjusted by construction, so the two
+variables carry overlapping but not identical information. \textbf{c} Variance inflation
+factors, with the threshold of 5 used for the collinearity-pruned feature set marked by the
+dashed line. Exactly 2 features exceed that threshold (NS = 10.5, AGE = 7.2), and both belong
+to the pair shown in panel b. Removing them therefore discards two of the more informative
+predictors rather than redundant noise, which accounts for the collinearity-pruned feature set
+performing no better than the full set in the ablation experiments.}
+\label{fig:s3}
+\end{figure}
+
+\clearpage
+
+% ===================== Table S1 =====================
+\begin{table}[!ht]
+\centering
+\footnotesize
+\caption{\textbf{Data provenance and completeness.} Every alteration applied between
+the source spreadsheet and the analysed dataset.}
+\label{tab:s1_provenance}
+\begin{tabular}{llc}
+\toprule
+\textbf{Item} & \textbf{Change applied} & \textbf{Cells / records} \\
+\midrule
+\addlinespace
+\multicolumn{3}{l}{\textit{Value recoding}} \\
+SPSA\_L & \textit{NR} $\rightarrow$ 0 & 53 \\
+SPSA\_R & \textit{NR} $\rightarrow$ 0 & 53 \\
+SPSC\_L & \textit{NR} $\rightarrow$ 0 & 53 \\
+SPSC\_R & \textit{NR} $\rightarrow$ 0 & 53 \\
+SSA\_L & \textit{NR} $\rightarrow$ 0 & 35 \\
+SSA\_R & \textit{NR} $\rightarrow$ 0 & 35 \\
+SSC\_L & \textit{NR} $\rightarrow$ 0 & 35 \\
+SSC\_R & \textit{NR} $\rightarrow$ 0 & 35 \\
+DM\_DUR & \textit{<1} $\rightarrow$ 1 & 11 \\
+FWAVE\_R & \textit{NR} $\rightarrow$ 0 & 7 \\
+FWAVE\_L & \textit{NR} $\rightarrow$ 0 & 3 \\
+CMAPANK\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
+CMAPANK\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
+CMAPKNE\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
+CMAPKNE\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
+DL\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
+DL\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
+MCV\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
+MCV\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
+DM\_DUR & \textit{>10} $\rightarrow$ 11 & 1 \\
+FWAVE\_L & \textit{NO F WAVE} $\rightarrow$ 0 & 1 \\
+FWAVE\_R & \textit{NO F WAVE} $\rightarrow$ 0 & 1 \\
+\textit{all binary features} & \textit{Y}/\textit{M} $\rightarrow$ 1, \textit{N}/\textit{F} $\rightarrow$ 0 & deterministic \\
+\addlinespace
+\multicolumn{3}{l}{\textit{Excluded records}} \\
+Patient 36 & missing: NS, CAS & 1 \\
+Patient 46 & missing: DM\_DUR, HBA1C & 1 \\
+Patient 173 & missing: NS & 1 \\
+\bottomrule
+\end{tabular}
+\begin{flushleft}\footnotesize Generated from the audit trail written by the data loader, so
+the table cannot drift from the data actually analysed.\end{flushleft}
+\end{table}
+
+\clearpage
+
+% ===================== Figure S4 =====================
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\textwidth]{references/eda/s5_actionable_features.pdf}
+\caption{\textbf{The counterfactual-actionable features.} Distribution by outcome
+group of the 6 features that the counterfactual engine is permitted to vary, comprising the
+modifiable treatment and comorbidity variables; continuous features are shown as density, box
+and raw-observation displays and binary features as prevalence with Wilson 95\% confidence
+intervals. Each panel is annotated with the univariable area under the receiver operating
+characteristic curve and the Benjamini--Hochberg q-value from Table~\ref{tab:cohort}. The
+distributions overlap almost completely: discrimination ranges from 0.514 to 0.585, and only
+INSULIN (q = 0.046) reaches a false discovery rate below 0.05. Because these are the only
+features a counterfactual may change, the explanations generated for a given patient must
+displace variables that individually carry little marginal information, which accounts for the
+magnitude of the changes those explanations propose. This also yields a coherence check on the
+counterfactual results: the actionable feature with genuine univariable signal would be
+expected to appear among the most frequently altered features in the generated counterfactuals.}
+\label{fig:s4}
+\end{figure}
 
 \end{appendices}
 

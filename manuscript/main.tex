@@ -395,12 +395,21 @@ Figure~\ref{fig:univariable_discrimination} places these per-feature association
 
 % \textbf{Ethical approval declarations} (only required where applicable) Any article reporting experiment/s carried out on (i)~live vertebrate (or higher invertebrates), (ii)~humans or (iii)~human samples must include an unambiguous statement within the methods section that meets the following requirements: 
 
-This section describes the machine learning model development pipeline and the counterfactual generation methodology.
+This section describes the machine learning model development pipeline and the counterfactual generation methodology. The pipeline comprises five stages, each driven by its own configuration file and implemented as a standalone script: model/feature-set selection (\texttt{selreport.py}, \texttt{bin\_sel\_final\_202608.yml}), hyperparameter optimization (\texttt{optreport.py}, \texttt{bin\_opt\_final\_202608.yml}), explainability analysis (\texttt{expreport.py}, \texttt{bin\_exp\_final\_202608.yml}), counterfactual generation (\texttt{cfreports.py}, \texttt{bin\_cf\_final\_202608.yml}), and exploratory data analysis (\texttt{edareport.py}, \texttt{bin\_eda\_final\_202608.yml}). Every quantitative claim in this section and in the Discussion traces to one of these five configurations and its corresponding code, reproduced in Figure~\ref{fig:pipeline_overview}.
+
+% Figure -- General pipeline overview % =======================================
+\begin{figure*}[h]
+    \centering
+    \includegraphics[width=\textwidth]{references/illustrations/pipeline_overview.pdf}
+    \caption{Overview of the five-stage modelling pipeline. Nerve conduction study (NCS) features are excluded before the first stage because they enter the diagnostic reference standard (Table~\ref{tab:clinical_data}). Selection benchmarks 14 algorithms across 12 feature sets under repeated stratified 4-fold cross-validation and identifies CatBoost on the full feature set as the model carried forward. Hyperparameter optimization performs a nested cross-validation search for CatBoost only (Figure~\ref{fig:nested_cv}); its first cross-validation repeat is persisted and reused, without refitting, by both later stages. Explainability retrains the four persisted fold models to characterise feature importance, SHAP attributions, discrimination, calibration, and clinical utility. Counterfactual generation applies DiCE to the same four persisted fold models (Figure~\ref{fig:counterfactual_generation}) to produce patient-level, actionable explanations.}
+    \label{fig:pipeline_overview}
+\end{figure*}
 
 \subsection{Machine Learning Modeling}
-In this section, we describe the machine learning models used, stratified cross-validation, feature selection, and hyperparameter optimization.
+In this section, we describe the machine learning models used, the model and feature-set selection procedure, the safeguards against data leakage and against the effects of a small, imbalanced sample, and the nested-cross-validation hyperparameter optimization and explainability procedures applied to the selected model.
 
 \subsubsection{Models}
+\label{sec:models}
 %%%%%%%%%%%%%%%%%%%%%%%
 
 A diverse set of machine learning algorithms was evaluated in this study using default or standard parameter settings to ensure a consistent and unbiased baseline comparison. These models can be broadly grouped according to their underlying learning paradigms:
@@ -425,22 +434,16 @@ A Naive classifier that predicts the majority class was included as a baseline t
 
 Overall, this diverse selection of models allows for a comprehensive evaluation across linear, nonlinear, probabilistic, and ensemble-based learning paradigms, each with distinct strengths in terms of interpretability, flexibility, robustness, and predictive power.
 
-\subsubsection{Repeated Stratified k-Fold Cross-Validation}
+\subsubsection{Model and Feature Set Selection}
+\label{sec:modelselection}
 
-Given the relatively limited number of unconfirmed cases in the dataset, a robust evaluation strategy was used to generate reliable performance estimates. A repeated stratified k-fold cross-validation scheme was employed, with 4 folds and 10 repetitions, resulting in a total of 40 validation runs per model.
+Given the relatively limited number of unconfirmed cases in the dataset, a robust evaluation strategy was used to generate reliable performance estimates for the model-selection step. Fourteen algorithms (Section~\ref{sec:models}) were benchmarked with default/standard hyperparameters under a repeated stratified k-fold cross-validation scheme -- 4 folds $\times$ 10 repetitions, for 40 validation runs per model -- against each of twelve feature sets (Table~\ref{tab:feature_sets}), giving $14 \times 12 \times 40$ scored runs in total. Stratification ensures that each fold preserves the class distribution of the dataset, which is particularly important given 57 Unconfirmed patients; repetition reduces the variance of the resulting performance estimate by averaging results across multiple random partitions. This benchmarking is implemented in \texttt{selreport.py} and configured by \texttt{bin\_sel\_final\_202608.yml}.
 
-Stratification ensures that each fold preserves the class distribution of the dataset, which is particularly important in imbalanced classification settings. Repetition further reduces variance in performance estimates by averaging results across multiple random partitions.
+To assess the contribution of different feature subsets, all fourteen models were first trained on the complete feature set to establish baseline performance, then retrained on eleven further feature sets that systematically remove or isolate each feature group defined in Table~\ref{tab:clinical_data}-A (Table~\ref{tab:feature_sets}). This ablation strategy identifies which feature groups contribute most to predictive performance and quantifies the standalone value of the Sudoscan and nerve-conduction-study modalities.
 
+For every model--feature-set combination, the 40 per-run scores of each metric were summarised by their mean; models and feature sets were then ranked by mean Area Under the Precision--Recall Curve (\texttt{sort\_by: auprc} in the selection configuration), since AUPRC is the more informative summary of discrimination under class imbalance (Section~\ref{sec:classimbalance}). CatBoost on the full feature set attained the highest mean AUPRC and was carried forward to hyperparameter optimization (Section~\ref{sec:hpo}); the full model $\times$ feature-set comparison (mean AUPRC across all fourteen models and twelve feature sets) and the run-to-run distribution of AUPRC for the selected model and feature set are reported in the Discussion.
 
-
-\subsubsection{Performance Metrics}
-For each validation run, key performance metrics were recorded, including Receiver Operating Characteristic Area Under the Curve (ROC-AUC), Youden Index, Sensitivity (Recall), and Specificity. These metrics were selected to provide a balanced evaluation of discriminative ability and clinical relevance, particularly in distinguishing between Confirmed and Unconfirmed cases.
-
-\subsubsection{Feature Sets}
-
-To assess the contribution of different feature subsets, a structured feature selection and ablation strategy was implemented.
-
-First, all models were trained using the complete set of available features to establish baseline performance. Subsequently, based on the feature groupings defined in Table~\ref{tab:clinical_data}-A, , models were retrained while systematically removing each feature group. This ablation approach enables the identification of feature groups that contribute most significantly to predictive performance.
+In addition, multicollinearity among the 22 candidate predictors was addressed using the Variance Inflation Factor (VIF): features exceeding a VIF of 5 were dropped to construct the reduced ``NoCol'' feature set (Table~\ref{tab:feature_sets}), aimed at assessing model stability and interpretability under reduced collinearity.
 
 %=======================================
 % Feature Selection
@@ -470,20 +473,61 @@ Sudoscan and MNSI features only & SudoMnsi \\
 \label{tab:feature_sets}
 \end{table}
 
-In addition, multicollinearity was addressed using the Variance Inflation Factor (VIF). Features exhibiting a VIF greater than 5 were considered highly collinear and were removed, resulting in a reduced feature set aimed at improving model stability and interpretability.
+\subsubsection{Performance Metrics}
+For each of the 40 validation runs, nine metrics were recorded: accuracy, precision, sensitivity (recall), specificity, the Youden index, F1, F2, ROC-AUC, and AUPRC. Sensitivity and specificity jointly express the clinical trade-off of a pre-diagnostic screening tool, while AUPRC -- the metric used to rank models and feature sets (Section~\ref{sec:modelselection}) -- was prioritised over ROC-AUC because, at a 69.5\%/30.5\% class split, ROC-AUC can look favourable even when precision on the minority (Unconfirmed) class is poor, whereas AUPRC is sensitive to exactly that failure mode.
 
 To further investigate the predictive value of specific diagnostic modalities, models were also trained exclusively on nerve conduction study (NCS) features and Sudoscan features, respectively. This allows for a focused evaluation of their standalone predictive capabilities and their potential role in clinical decision support.
 
+\subsubsection{Preventing Data Leakage}
+\label{sec:leakage}
+
+Every stage of the pipeline enforces a strict separation between the data used to fit or tune a model and the data used to evaluate it, so that reported performance is not optimistically biased:
+
+\begin{itemize}
+    \itemsep0em
+    \item \textit{Selection.} The 40 repeated-CV runs for each model--feature-set pair each fit on a training fold and score on a disjoint test fold; no test fold is ever seen during fitting.
+    \item \textit{Hyperparameter optimization.} The nested cross-validation described in Section~\ref{sec:hpo} confines hyperparameter search, refitting, and decision-threshold selection entirely to each outer iteration's training fold; the corresponding outer test fold is touched exactly once, after tuning and thresholding are complete, purely to record performance. A runtime assertion in \texttt{optimization.py} verifies, for every repeat, that the four outer test folds jointly and exactly tile all 187 patients -- so pooled outer-test performance is computed over the whole cohort without double-counting or omission, and without any patient's test-fold prediction coming from a model that trained on them.
+    \item \textit{Explainability and counterfactual generation.} Both stages reuse the outer-training-fold models and fold-specific thresholds already fitted and selected during optimization (Section~\ref{sec:hpo}); they never refit against, or select a threshold from, an outer test fold.
+\end{itemize}
+
+This separation is what licenses treating outer-test performance, and the SHAP/feature-importance/discrimination/calibration diagnostics computed downstream of it, as out-of-sample estimates rather than measurements of how well the model fits data it has already seen.
+
+\subsubsection{Handling Class Imbalance and a Small Sample Size}
+\label{sec:classimbalance}
+
+The analysed cohort is small by machine-learning standards (187 patients, 22 candidate predictors) and imbalanced (130 Confirmed vs.\ 57 Unconfirmed, 69.5\%/30.5\%). Two complementary strategies address this, and a third common strategy -- synthetic minority oversampling -- was deliberately not used.
+
+Repeated stratified cross-validation (Sections~\ref{sec:modelselection} and~\ref{sec:hpo}) is the primary defence against the variance a small $n$ introduces into any single performance estimate: stratification keeps the 69.5\%/30.5\% split intact in every fold, and repetition (10 repeats at the selection stage, 10 at the optimization stage) averages out the sampling variability of any one particular partition of 187 patients into folds.
+
+Class imbalance itself is handled inside the model rather than by resampling the data. CatBoost's \texttt{scale\_pos\_weight} -- which reweights the contribution of each class to the training loss -- was included as a fourth tuned hyperparameter (searched over 0.3--1.0, alongside \texttt{depth}, \texttt{learning\_rate}, and \texttt{l2\_leaf\_reg}; Section~\ref{sec:hpo}), so every outer fold learns the class weighting that is best for its own training data. The Synthetic Minority Oversampling Technique (SMOTE) was deliberately not used: with only 57 Unconfirmed patients across 22 features, SMOTE's nearest-neighbour interpolation would synthesise clinically fabricated patients in a feature space that is already sparse, and, unless resampling were repeated correctly inside every one of the 400 selection folds and 40 optimization folds, risks leaking synthetic neighbours of test-fold patients into the corresponding training fold. Reweighting the loss via \texttt{scale\_pos\_weight} avoids both failure modes: it never fabricates a patient, and it cannot leak across folds because it changes how existing training examples are weighted, not which examples exist. Keeping every training example a real, observed patient also matters downstream: the counterfactual permitted ranges (Section~\ref{sec:generalsetup}) are calculated from the observed distribution of each feature, so a model trained only on real patients keeps that distribution -- and the counterfactuals anchored to it -- clinically interpretable.
+
 \subsubsection{Hyperparameter Optimization}
-Following the comparative evaluation, the best-performing model was selected based on the results of the previous steps. In this study, CatBoost demonstrated superior performance and was therefore chosen for further optimization, as detailed in the Results and Discussion section.
+\label{sec:hpo}
 
-Hyperparameter optimization was conducted using a Repeated Stratified k-Fold framework with 3 splits. For each split, the training portion of the data was subjected to a further 3-fold Bayesian optimization, with ROC-AUC as the objective function. This approach efficiently explores the hyperparameter space by balancing exploration and exploitation, leading to improved model configurations.
+CatBoost, selected on the full feature set as described in Section~\ref{sec:modelselection}, was carried forward to nested cross-validation hyperparameter optimization (\texttt{optreport.py}, \texttt{bin\_opt\_final\_202608.yml}; Figure~\ref{fig:nested_cv}). An \textit{outer} \texttt{RepeatedStratifiedKFold} loop -- $k=4$ folds $\times$ 10 repeats, 40 outer iterations, \texttt{random\_state=42} -- provides the training/test partitions over which final performance is reported; nested inside every one of those 40 outer iterations, an \textit{inner} \texttt{StratifiedKFold} loop ($k=3$) partitions that iteration's outer-training set only, and is used exclusively for hyperparameter search. These two loops serve different purposes and operate on different data, which is the mechanism described in Section~\ref{sec:leakage}.
 
-The optimal hyperparameters obtained from each training fold were then used to generate predictions on the corresponding test fold. A classification threshold was subsequently selected for each split, allowing for the calibration of sensitivity and specificity in accordance with the study objectives.
+% Figure -- Nested cross-validation for hyperparameter optimization % =======================================
+\begin{figure*}[h]
+    \centering
+    \includegraphics[width=\textwidth]{references/illustrations/nested_cv_optimization_compact.pdf}
+    \caption{Nested cross-validation for CatBoost hyperparameter optimization. The outer \texttt{RepeatedStratifiedKFold} loop (4 folds $\times$ 10 repeats = 40 iterations) supplies the train/test partitions over which performance is ultimately reported; within each outer iteration, the inner \texttt{StratifiedKFold} loop ($k=3$) partitions the outer-training set only, and an Optuna TPE search of 100 trials tunes \texttt{depth}, \texttt{learning\_rate}, \texttt{l2\_leaf\_reg}, and \texttt{scale\_pos\_weight} against the mean inner-validation AUPRC. The winning configuration is refit on the full outer-training set, an out-of-fold decision threshold is selected by maximising F1 on the inner out-of-fold precision--recall curve, and only then is the outer test fold touched, exactly once, to record the 13 metrics of Table~\ref{tab:optimization_metrics_summary}. The outer test fold (orange) is never seen during search, refitting, or threshold selection -- the property that licenses treating its metrics as an out-of-sample estimate (Section~\ref{sec:leakage}).}
+    \label{fig:nested_cv}
+\end{figure*}
 
-The mean and standard deviations of the threshold, ROC-AUC, Youden index, specificity and sensitivity are reported for the 3 splits, as well as the confidence interval at 5\% for thr ROC-AUC and the Youden index.
+Within each outer iteration, an Optuna Tree-structured Parzen Estimator (TPE) sampler ran 100 trials, each fitting three CatBoost models -- one per inner fold -- and scoring the trial by the mean AUPRC across those three inner validation folds (\texttt{optimization\_metric: auprc}). Four hyperparameters were searched: tree \texttt{depth} (4--10, integer), \texttt{learning\_rate} (0.003--0.3, log-uniform), \texttt{l2\_leaf\_reg} (1.0--10.0, uniform), and \texttt{scale\_pos\_weight} (0.3--1.0, uniform; Section~\ref{sec:classimbalance}). All other CatBoost settings were held constant across every trial, fold, and repeat: \texttt{loss\_function=Logloss}, \texttt{eval\_metric=AUC}, \texttt{iterations=500}, \texttt{early\_stopping\_rounds=50}.
 
-This multi-stage optimization framework ensures that the final model is both well-tuned and rigorously validated, enhancing its reliability and generalizability.
+After the search, the winning trial's parameters were refit once on the full outer-training set, and separately used to produce three further out-of-fold (OOF) refits over the same inner splits, yielding one held-out probability for every outer-training patient. A classification threshold was then selected, per outer iteration, as the value maximising the F1 score ($\beta=1$) on the precision--recall curve of those inner-OOF probabilities (\texttt{threshold\_selection\_metric: fscore}) -- never on the outer test fold. The refit model and its selected threshold were then applied once to the untouched outer test fold, recording the thirteen metrics in Table~\ref{tab:optimization_metrics_summary}: the threshold itself, accuracy, precision, sensitivity, specificity, F1, F1.25, F1.5, F1.75, F2, the Youden index, ROC-AUC, and AUPRC. These per-outer-iteration values are pooled across all 40 outer iterations as a mean $\pm$ 95\% confidence interval (normal approximation, $z=1.96$, computed excluding any iteration where a metric is undefined for that fold), which is what is reported in Table~\ref{tab:optimization_metrics_summary} in the Discussion.
+
+\textit{One modeling pipeline, evaluated by cross-validation.} It bears stating explicitly, because it is easy to misread otherwise: the procedure above is \textit{one} modeling pipeline -- one algorithm (CatBoost), one hyperparameter-search procedure -- evaluated by 4-fold cross-validation repeated 10 times, not four, or forty, separate studies. Its primary performance claim is the single pooled mean $\pm$ 95\% CI over the 40 outer iterations described above. The models and splits of the \textit{first} of those 10 repeats are additionally persisted to disk (its four outer-fold refits, their training/test partitions, tuned hyperparameters, and thresholds) for reuse, without refitting, by the Explainability and Counterfactual Generation stages below. Consequently, when those later sections refer to ``the four models'' or ``model~0'' through ``model~3'', this denotes the four outer-fold refits of that single retained repeat of the one nested-CV procedure above -- not four independently designed experiments, and not a claim that any one of the four is individually authoritative. Their agreement or disagreement (e.g.\ in feature importance or SHAP ranking) is itself evidence about the stability of the one pipeline, not a comparison between competing pipelines.
+
+\subsubsection{Explainability Analysis}
+\label{sec:explainability}
+
+Post-hoc interpretability was assessed on the four persisted outer-fold models from the first cross-validation repeat (\texttt{expreport.py}, \texttt{bin\_exp\_final\_202608.yml}). Each of the four is retrained from its stored outer-training partition using its own tuned hyperparameters (\texttt{best\_params}) from Section~\ref{sec:hpo} -- the same fold-specific configuration that Section~\ref{sec:hpo} selected, not a single shared configuration.
+
+Two complementary views are reported. \textit{Per-fold} (``all splits'') diagnostics -- feature importance, SHAP value attributions, and the ROC/precision--recall curves -- are computed and plotted separately for each of the four fold models, to show whether the top predictors and their ranking are stable across folds rather than an artefact of one particular training partition. \textit{Pooled} diagnostics -- AUROC, AUPRC, calibration (reliability), and decision curve analysis -- are computed by concatenating the four fold models' predictions on their own respective test sets, giving one out-of-sample prediction per patient across the full 187-patient cohort, no patient scored by a model trained on them.
+
+Because the four fold models come from independent per-fold hyperparameter searches (Section~\ref{sec:hpo}), each has its own predicted-probability scale (e.g.\ scale\_pos\_weight differs by fold), and pooling raw scores across those four scales does not behave like evaluating one fixed model. This has a specific, documented, and opposite-signed effect on the two families of pooled diagnostics, which the Discussion presents but does not re-derive: pooled AUROC and AUPRC are systematically \textit{more conservative} than the fold-wise mean, because ranking probabilities across incomparable scales degrades discrimination; pooled calibration is systematically \textit{more optimistic} than the fold-wise mean ECE, because folds that over-predict and folds that under-predict partially cancel once pooled. The pooled calibration curve therefore characterises a four-model mixture that is never deployed as such, and should be read alongside the fold-wise mean $\pm$ std rather than in place of it; Brier score is unaffected, being a per-observation average.
 
 \subsection{Counterfactual Generation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -527,16 +571,25 @@ Sudoscan & All & No &  These are measurements of a procedure direct intervention
 \end{table}
 
 \subsubsection{General Setup}
-Here we discuss the global permitted range and configuration parameters to be used by the DiCE object.
+\label{sec:generalsetup}
+Counterfactuals are generated separately for each of the four persisted fold models (Section~\ref{sec:hpo}), each wrapped with \textit{that fold's own} tuned decision threshold rather than a threshold shared across folds -- consistent with Section~\ref{sec:hpo}'s point that these are four fold-specific configurations of one pipeline, not four independent choices. Figure~\ref{fig:counterfactual_generation} summarises the end-to-end procedure described in this subsection and the two that follow.
+
+% Figure -- Counterfactual generation procedure % =======================================
+\begin{figure*}[h]
+    \centering
+    \includegraphics[width=\textwidth]{references/illustrations/counterfactual_generation.pdf}
+    \caption{Counterfactual generation procedure, applied independently to each of the four persisted fold models. For each fold's held-out test set, misclassified and borderline patients (predicted probability within $\delta=0.08$ of that fold's own tuned threshold) are selected as instances of interest. DiCE is configured with a genetic-algorithm search over the six actionable features (Table~\ref{tab:cf_features}), bounded by a global permitted range computed once over the whole cohort and, for local counterfactual generation, a per-instance range centred on that patient's own values (Table~\ref{tab:local_cf}). Diverse counterfactual sets, and separate single-feature sufficiency and necessity checks (Section~\ref{sec:sufficiencynecessity}), are produced for each instance of interest.}
+    \label{fig:counterfactual_generation}
+\end{figure*}
 
 \textit{Global Permitted Range}.
-To ensure feasibility of generated counterfactuals, a global permitted range was defined for all continuous features. The bounds were computed as follows:
+To ensure feasibility of generated counterfactuals, a global permitted range was defined for all continuous features, using every patient in the dataset (training and test partitions of the fold together, so the range describes the whole observed cohort rather than one fold's split of it) The bounds were computed as follows:
 \begin{itemize}
-    \itemsep0em 
-    \item Minimum: $min(0,x_{min} - \sigma)$
+    \itemsep0em
+    \item Minimum: $\max(0,\ x_{min} - \sigma)$
     \item Maximum: $x_{max} + \sigma$
 \end{itemize}
-where $x_{min}$ and $x_{max}$ denote the observed minimum and maximum values, respectively, of each feature in the entire dataset, while $\sigma)$ is the standard deviation. This formulation prevents unrealistic values while allowing controlled extrapolation beyond the observed data.
+where $x_{min}$ and $x_{max}$ denote the observed minimum and maximum values, respectively, of each feature over the whole cohort, and $\sigma$ is its standard deviation, also over the whole cohort. Bounding the minimum at 0 keeps a naturally non-negative clinical quantity (e.g.\ HbA1c) from being pushed below zero by the $-\sigma$ margin; the $+\sigma$ margin at both ends allows a counterfactual to propose a value a little beyond the observed range while remaining plausible.
 
 \textit{DiCE Configuration Parameters}. The configuration of the DiCE framework is summarized in Table~\ref{tab:dice_setup}. The genetic algorithm was selected as the optimization method because of the presence of multiple categorical features which renders the use of gradients for optimization not feasible. Genetic algorithm is also effectiveness in exploring high-dimensional feature spaces and generating diverse counterfactuals under multiple constraints.
 
@@ -549,21 +602,22 @@ where $x_{min}$ and $x_{max}$ denote the observed minimum and maximum values, re
 \begin{tabular}{lll}
 \toprule
 Component & Parameter & Value / Description \\
-% \multirow{3}{*}{Data (dice\_ml.Data)} 
+% \multirow{3}{*}{Data (dice\_ml.Data)}
 \midrule
-Data (dice\_ml.Data) & continuous\_features & continuous features as defined in Table~\ref{tab:clinical_data}-A \\
+Data (dice\_ml.Data) & dataframe & that fold's own held-out test set \\
+& continuous\_features & continuous features as defined in Table~\ref{tab:clinical_data}-A \\
 & categorical\_features & binary categorical features as defined in Table~\ref{tab:clinical_data}-A \\
 & permitted\_range & global permitted range as defined in the section \textit{General Setup}\\
 \midrule
-% \multirow{3}{*}{Model (dice\_ml.Model)} 
-Model (dice\_ml.Model) & model & trained model under the mean threshold \\
+% \multirow{3}{*}{Model (dice\_ml.Model)}
+Model (dice\_ml.Model) & model & that fold's trained CatBoost model, wrapped under that fold's own tuned threshold \\
 & backend & sklearn \\
 & model\_type & classifier \\
 \midrule
 DiCE object(dice\_ml.Dice)  & method & genetic \\
 \bottomrule
 \end{tabular}
-\caption{Configuration parameters used to initialize the DiCE (Diverse Counterfactual Explanations) framework for post-hoc model interpretability. Three core objects were instantiated: the Data object (dice\_ml.Data), which defines the continuous and binary categorical input features alongside their globally permitted ranges; the Model object (dice\_ml.Model), which wraps the trained scikit-learn classifier operating under the mean decision threshold; and the DiCE object (dice\_ml.Dice), which executes counterfactual generation using a genetic algorithm. Together, these components enable the generation of actionable counterfactual explanations that identify the minimal feature changes required to alter a patient's predicted DPN classification.}
+\caption{Configuration parameters used to initialize the DiCE (Diverse Counterfactual Explanations) framework for post-hoc model interpretability, instantiated once per fold model. Three core objects were instantiated: the Data object (dice\_ml.Data), which supplies that fold's held-out test set as DiCE's background data alongside the continuous and binary categorical input features and their globally permitted ranges; the Model object (dice\_ml.Model), which wraps that fold's trained CatBoost classifier operating under that fold's own tuned decision threshold (Section~\ref{sec:hpo}); and the DiCE object (dice\_ml.Dice), which executes counterfactual generation using a genetic algorithm. Together, these components enable the generation of actionable counterfactual explanations that identify the minimal feature changes required to alter a patient's predicted DPN classification.}
 \label{tab:dice_setup}
 \end{table}
 
@@ -571,16 +625,17 @@ DiCE object(dice\_ml.Dice)  & method & genetic \\
 We describe here how instances were chosen for counterfactual generation and how the permitted range was computed for each instance.
 
 \textit{Targeted Instance Selection}.
-Local counterfactual explanations were generated from misclassified and borderline cases. Borderline cases are for instances whose predicted probabilities lie within ±0.2 of the mean decision threshold obtained during hyperparameter optimization. These instances represent cases where small feature changes may alter the predicted outcome, making them particularly informative for analysis.
+Within each fold's test set, local counterfactual explanations were generated for misclassified and borderline cases. Borderline cases are instances whose predicted probability lies within $\delta = 0.08$ of \textit{that fold's own} tuned decision threshold (\texttt{threshold\_delta} in \texttt{bin\_cf\_final\_202608.yml}) -- not a single threshold shared across folds. These instances represent cases where a small feature change may alter the predicted outcome, making them particularly informative for analysis; Figure~\ref{fig:univariable_discrimination}'s discrimination scale gives a sense of why so many patients fall this close to the boundary given the modest signal in most individual features.
 
 \textit{Local Permitted Range}.
-For each selected instance, an instance-specific permitted range was defined for each feature. Similar to the global permitted range, this ensures that generated counterfactuals remain both realistic and tailored to the specific instance.
+For each selected instance, an instance-specific permitted range was defined for each feature to vary. Similar to the global permitted range, this ensures that generated counterfactuals remain both realistic and tailored to the specific instance:
 
 \begin{itemize}
-    \itemsep0em 
-    \item Minimum: $min(0, instance\_value - \sigma)$
-    \item Maximum: $ instance\_value + \sigma)$
+    \itemsep0em
+    \item Minimum: $\max(0,\ \mathrm{instance\_value} - \sigma)$
+    \item Maximum: $\mathrm{instance\_value} + \sigma$
 \end{itemize}
+where, as for the global range, $\sigma$ is each feature's standard deviation over the whole cohort; the interval is centred on the patient's own observed value rather than the cohort mean, so a proposed change is scaled to a magnitude already seen in the cohort but anchored to where this particular patient starts from.
 
 \subsubsection{Local Counterfactual Generation Parameters}
 The parameters used for generating local counterfactuals via $generate\_counterfactuals$ are summarized in Table~\ref{tab:local_cf}. The selected parameters balance proximity, diversity, and sparsity, ensuring that generated counterfactuals are close to the original instances, sufficiently varied, and involve minimal feature changes. This results in actionable and interpretable explanations suitable for clinical applications.
@@ -597,18 +652,23 @@ total\_CFs & 20 \\
 desired\_class & opposite \\
 permitted\_range & local permitted range \\
 features\_to\_vary & all features except those marked unsuitable in Table~\ref{tab:cf_features} \\
-stopping\_threshold & mean threshold from hyperparameter optimization \\
+stopping\_threshold & that fold's own tuned threshold from hyperparameter optimization \\
 posthoc\_sparsity\_algorithm & binary \\
 posthoc\_sparsity\_param & 0.05 \\
 proximity\_weight & 0.5 \\
-diversity\_weight & 0.1 \\
+diversity\_weight & 1.0 \\
 categorical\_penalty & 0.1 \\
 algorithm & DiverseCF \\
 \hline
 \end{tabular}
-\caption{Parameters passed to the $generate\_counterfactuals$ function for local counterfactual generation. For each selected misclassified or borderline instance, up to 20 counterfactuals targeting the opposite class were generated, with feature variations constrained to locally permitted ranges.}
+\caption{Parameters passed to the $generate\_counterfactuals$ function for local counterfactual generation. For each selected misclassified or borderline instance, up to 20 counterfactuals targeting the opposite class were generated, with feature variations constrained to locally permitted ranges. A relatively high \texttt{diversity\_weight} was used deliberately: because only 6 features are eligible to vary (Table~\ref{tab:cf_features}), the search is pushed to explore genuinely different combinations of those 6 features rather than converging on 20 near-duplicates of the same edit.}
 \label{tab:local_cf}
 \end{table}
+
+\subsubsection{Sufficiency and Necessity Analysis}
+\label{sec:sufficiencynecessity}
+
+Beyond the diverse counterfactual sets of Table~\ref{tab:local_cf}, two single-feature checks were run for each targeted instance to characterise the role of individual actionable features, rather than only sets of them. \textit{Sufficiency} asks whether varying one feature alone, with every other feature held fixed, is enough to flip the predicted class: DiCE is asked for one counterfactual (\texttt{total\_CFs=1}) with \texttt{features\_to\_vary} restricted to that single feature; if a valid counterfactual is returned within the iteration budget, that feature is sufficient on its own for that patient. \textit{Necessity} asks the complementary question -- whether a feature must change at all: DiCE is asked to vary every \textit{other} actionable feature, with the feature under test held fixed, across \texttt{nrepeats=5} random seeds and up to \texttt{total\_CFs=3} counterfactuals per seed; if no valid counterfactual is found across all 5 seeds, the held-fixed feature is deemed necessary, because the desired class could not be reached without it. Neither check is expected to succeed for every candidate instance -- the search is not guaranteed to converge within its iteration budget even when a valid counterfactual exists -- and the Discussion reports how many of the candidate instances yielded a usable result under this procedure.
 
 \section{Discussion}\label{discussion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

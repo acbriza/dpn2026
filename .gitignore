@@ -103,6 +103,7 @@ overleaf/*.log
 manuscript-ieee/
 manuscript/figures/
 manuscript/figures2/
+manuscript/rrl
 manuscript/Download+the+journal+article+template+package+*.zip
 manuscript/*.aux
 manuscript/*.bbl
@@ -119,3 +120,4 @@ manuscript/main-claude.pdf
 # old configs
 # -----------------------------------
 legacy/configs/
+

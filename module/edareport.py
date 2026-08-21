@@ -691,7 +691,8 @@ def figure1a_participant_flow(ctx, outputdir, formats):
                f"(patient codes {ctx['dropped_codes_text']})"),
     ]
     excl_gap = 0.4
-    excl_width = max(_text_width(ax, renderer, text, 5.0) for _, text in excl)
+    excl_fontsize = 6
+    excl_width = max(_text_width(ax, renderer, text, excl_fontsize) for _, text in excl)
     content_right = right + excl_gap + 0.2 + excl_width
     new_xlim = content_right + left  # mirror the left margin so both sides match
     if new_xlim != xlim:
@@ -713,7 +714,7 @@ def figure1a_participant_flow(ctx, outputdir, formats):
     for y, text in excl:
         ax.add_patch(FancyArrowPatch((centre, y), (right + excl_gap, y), arrowstyle="-|>",
                                      shrinkA=0, mutation_scale=8, linewidth=0.7, color="0.35"))
-        ax.text(right + excl_gap + 0.2, y, text, ha="left", va="center", fontsize=5.0, color="0.25")
+        ax.text(right + excl_gap + 0.2, y, text, ha="left", va="center", fontsize=excl_fontsize, color="0.25")
 
     split_texts = [f"Confirmed\nn = {ctx['n_confirmed']}", f"Unconfirmed\nn = {ctx['n_unconfirmed']}"]
     split_fontsize = 6.5

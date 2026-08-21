@@ -215,8 +215,25 @@ cardiac pacemakers or defibrillators, and patients with other known causes of po
 excluded. Remaining 190 qualified subjects underwent a series of detailed assessment comprising of
 Michigan Neuropathy Screening Instrument (MNSI) test, serial neurologic tests, and lower extremity NCV
 examination to detect the presence of DPN. Subjects were then classified based on the 2009 Toronto
-consensus criteria as confirmed, probable, possible or no DPN \cite{tesfaye2010diabetic}. 
-This study was approved by the local Institutional Ethics Review Board and all subjects gave their written consent prior to participating.
+consensus criteria as confirmed, probable, possible or no DPN \cite{tesfaye2010diabetic}.  Of the 190 enrolled patients, 3 patients were excluded from the analysis due to incomplete data, resulting in a final dataset of 187 patients.  As the purpose of the study is prescreening for DPN, the study focused on the binary classification of patients into two groups: Confirmed DPN and Unconfirmed DPN. This resulted in a dataset of 131 patients with Confirmed DPN and 56 patients with Unconfirmed DPN.  The patient flow and classification breakdown is shown in Figure~\ref{fig:patient_flow_classification}.
+
+\begin{figure*}[h]
+    \centering
+    \begin{subfigure}[b]{0.5\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{references/eda/fig1a_participant_flow.pdf}
+        \caption{Participant flow}
+        \label{fig:fig1a_participant_flow}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.36\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{references/eda/fig1bv_classification_composition.pdf}
+        \caption{Classification composition}
+        \label{fig:fleet_size}
+    \end{subfigure}
+    \caption{.\hphantom{.}Patient flow and classification breakdown for the study cohort. (a) Of 201 patients screened, 190 were enrolled after applying the exclusion criteria, and 187 were analyzed after 3 records (patient codes 36, 46, 173) were removed for incomplete measurements. (b) 130 patients (69.5\%) met the 2009 Toronto consensus criteria for confirmed diabetic peripheral neuropathy and 57 did not; the latter group combines the negative, possible and probable categories. As this study aims to serve as a pre-diagnostic screening tool for DPN, the latter three groups — whose DPN status could not be definitively established without further electrodiagnostic evaluation — were consolidated into a single composite class labeled Unconfirmed (n = 59). This two-class scheme — Confirmed versus Unconfirmed — reflects the clinical objective of the model: to identify patients with a high probability of DPN and prioritize them for referral to nerve conduction studies for confirmatory diagnosis, particularly in settings where NCS may be costly or inaccessible. The cohort provides 2.6 minority-class events per candidate predictor across the 22 features available to the models, a low ratio that motivates the repeated cross-validation strategy used throughout and that should temper the interpretation of any single fitted coefficient.}
+    \label{fig:patient_flow_classification}
+\end{figure*}
 
 Neuropathic symptoms were documented by subjectively asking patients for presence of any
 distal extremity numbness, paresthesia, or pain, and by asking them to answer the Filipino validated
@@ -238,29 +255,10 @@ F-wave latencies
 All NCV testing was done by a single trained technician on the same day as other
 neurological examinations. Finally, sudomotor testing using Sudoscan was performed on each participant. Subjects placed palms of their hands and the soles of their feet on stainless steel electrodes and an incremental low direct voltage (<4V) was applied for about 2 minutes. The device produced an average electrochemical skin conductance (ESC) result for both hands and feet which is based on stimulation of sweat glands by the low-level voltage, allowing evidence of sweat dysfunction \cite{garcia2022detection}.
 
-Of the 190 enrolled patients, 3 patients were excluded from the analysis due to incomplete data, resulting in a final dataset of 187 patients.  As the purpose of the study is prescreening for DPN, the study focused on the binary classification of patients into two groups: Confirmed DPN and Unconfirmed DPN. This resulted in a dataset of 131 patients with Confirmed DPN and 56 patients with Unconfirmed DPN.  The patient flow and classification breakdown is shown in Figure~\ref{fig:patient_flow_classification}.
-
-\begin{figure*}[h]
-    \centering
-    \begin{subfigure}[b]{0.5\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{references/eda/fig1a_participant_flow.pdf}
-        \caption{Participant flow}
-        \label{fig:fig1a_participant_flow}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.36\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{references/eda/fig1bv_classification_composition.pdf}
-        \caption{Classification composition}
-        \label{fig:fleet_size}
-    \end{subfigure}
-    \caption{.\hphantom{.}Patient flow and classification breakdown for the study cohort. (a) Of 201 patients screened, 190 were enrolled after applying the exclusion criteria, and 187 were analyzed after 3 records (patient codes 36, 46, 173) were removed for incomplete measurements. (b) 130 patients (69.5\%) met the 2009 Toronto consensus criteria for confirmed diabetic peripheral neuropathy and 57 did not; the latter group combines the negative, possible and probable categories. The cohort therefore provides 2.6 minority-class events per candidate predictor across the 22 features available to the models, a low ratio that motivates the repeated cross-validation strategy used throughout and that should temper the interpretation of any single fitted coefficient.}
-    \label{fig:patient_flow_classification}
-\end{figure*}
-
-Table~\ref{tab:data_categ} shows the breakdown among the different categories or labels.
 
 The full list of features, their groupings, description and code are shown in Table~\ref{tab:clinical_data}.
+
+This study was approved by the local Institutional Ethics Review Board and all subjects gave their written consent prior to participating.
 
 %=======================================
 % Data and Categories
@@ -280,7 +278,7 @@ Confirmed & & 131 \\
 Overall Total & & 190 \\
 \bottomrule
 \end{tabular}
-\caption{Distribution of patient classifications in the study dataset (N = 190). Patients were categorized based on nerve conduction study (NCS) findings into four diagnostic groups: Confirmed DPN (n = 131), Probable DPN (n = 28), Possible DPN (n = 22), and Negative DPN (n = 9). As this study aims to serve as a pre-diagnostic screening tool for DPN, the latter three groups — whose DPN status could not be definitively established without further electrodiagnostic evaluation — were consolidated into a single composite class labeled Unconfirmed (n = 59). This two-class scheme — Confirmed versus Unconfirmed — reflects the clinical objective of the model: to identify patients with a high probability of DPN and prioritize them for referral to nerve conduction studies for confirmatory diagnosis, particularly in settings where NCS may be costly or inaccessible.}
+\caption{Distribution of patient classifications in the study dataset (N = 190). Patients were categorized based on nerve conduction study (NCS) findings into four diagnostic groups: Confirmed DPN (n = 131), Probable DPN (n = 28), Possible DPN (n = 22), and Negative DPN (n = 9). }
 \label{tab:data_categ}
 \end{table}
 

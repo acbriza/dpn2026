@@ -208,7 +208,7 @@ The integration of machine learning and counterfactual explanations offers a pro
 This study aims to investigate the application of machine learning models in conjunction with counterfactual explanation techniques for the prediction and interpretation of diabetic peripheral neuropathy (DPN) risk, thereby contributing to the growing body of research on interpretable and actionable artificial intelligence in medicine. The study also examines the potential insights derived from incorporating nerve conduction study results and Sudoscan measurements—modalities that are comparatively underrepresented in many AI-based DPN studies, which often rely primarily on routine clinical and demographic variables. Furthermore, by utilizing data collected within the Philippine clinical context, this work enhances the geographic diversity of current studies and provides context-specific insights into the application of explainable AI for DPN.
 
 \section{Data Collection}\label{datacollection}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 A total of 201 adult Filipino patients diagnosed with Diabetes Mellitus (DM) were recruited
 between 2022 and 2023. Subjects with limb amputation, gangrenous/ necrotic foot, with implanted
 cardiac pacemakers or defibrillators, and patients with other known causes of polyneuropathy were
@@ -395,6 +395,221 @@ Figure~\ref{fig:univariable_discrimination} places these per-feature association
 
 % \textbf{Ethical approval declarations} (only required where applicable) Any article reporting experiment/s carried out on (i)~live vertebrate (or higher invertebrates), (ii)~humans or (iii)~human samples must include an unambiguous statement within the methods section that meets the following requirements: 
 
+This section describes the machine learning model development pipeline and the counterfactual generation methodology.
+
+\subsection{Machine Learning Modeling}
+In this section, we describe the machine learning models used, stratified cross-validation, feature selection, and hyperparameter optimization.
+
+\subsubsection{Models}
+%%%%%%%%%%%%%%%%%%%%%%%
+
+A diverse set of machine learning algorithms was evaluated in this study using default or standard parameter settings to ensure a consistent and unbiased baseline comparison. These models can be broadly grouped according to their underlying learning paradigms:
+
+\textit{(a) Linear and Probabilistic Models}.
+This group includes Logistic Regression, Linear Discriminant Analysis (LDA), Quadratic Discriminant Analysis (QDA), Stochastic Gradient Descent (SGDClassifier), Naive Bayes (GaussianNB), and Linear Support Vector Machine (Linear SVM). These models are generally characterized by strong interpretability and computational efficiency. Logistic Regression and Linear SVM are effective in high-dimensional spaces and provide robust linear decision boundaries. LDA and QDA model class-conditional distributions, with QDA allowing nonlinear decision boundaries through class-specific covariance matrices. Naive Bayes is particularly efficient and performs well under conditional independence assumptions, while SGDClassifier enables scalable optimization for large datasets.
+
+\textit{(b) Distance-Based and Instance-Based Learning}.
+The k-Nearest Neighbors (kNN) algorithm falls under this category. It is a non-parametric method that makes predictions based on the proximity of data points in feature space. Its strength lies in its simplicity and ability to capture complex decision boundaries without explicit model training, although it may be sensitive to feature scaling and noise.
+
+\textit{(c) Tree-Based and Ensemble Methods}.
+This group includes Decision Tree, Random Forest, Extra Trees, and Gradient Boosting. Decision Trees are intuitive and capable of capturing nonlinear relationships and feature interactions. Random Forest and Extra Trees extend this capability through ensemble learning, improving generalization and reducing variance via bagging and randomized feature selection. Gradient Boosting builds models sequentially to correct previous errors, often achieving strong predictive performance.
+
+\textit{(d) Advanced Gradient Boosting Frameworks}.
+More sophisticated implementations of boosting are represented by XGBoost, LightGBM, and CatBoost. These algorithms are optimized for efficiency and performance on structured/tabular data. XGBoost incorporates regularization and efficient handling of sparse data; LightGBM employs histogram-based learning and leaf-wise tree growth for speed and scalability; CatBoost is particularly effective in handling categorical variables and mitigating overfitting through ordered boosting techniques.
+
+\textit{(e) Kernel-Based Models}.
+The RBF Support Vector Machine (RBF SVM) extends linear SVM by applying a radial basis function kernel, enabling the modeling of nonlinear decision boundaries. This makes it powerful for complex datasets where linear separability is not sufficient.
+
+\textit{(f) Baseline Model}.
+A Naive classifier that predicts the majority class was included as a baseline to contextualize the performance of all other models.
+
+Overall, this diverse selection of models allows for a comprehensive evaluation across linear, nonlinear, probabilistic, and ensemble-based learning paradigms, each with distinct strengths in terms of interpretability, flexibility, robustness, and predictive power.
+
+\subsubsection{Repeated Stratified k-Fold Cross-Validation}
+
+Given the relatively limited number of unconfirmed cases in the dataset, a robust evaluation strategy was used to generate reliable performance estimates. A repeated stratified k-fold cross-validation scheme was employed, with 4 folds and 10 repetitions, resulting in a total of 40 validation runs per model.
+
+Stratification ensures that each fold preserves the class distribution of the dataset, which is particularly important in imbalanced classification settings. Repetition further reduces variance in performance estimates by averaging results across multiple random partitions.
+
+
+
+\subsubsection{Performance Metrics}
+For each validation run, key performance metrics were recorded, including Receiver Operating Characteristic Area Under the Curve (ROC-AUC), Youden Index, Sensitivity (Recall), and Specificity. These metrics were selected to provide a balanced evaluation of discriminative ability and clinical relevance, particularly in distinguishing between Confirmed and Unconfirmed cases.
+
+\subsubsection{Feature Sets}
+
+To assess the contribution of different feature subsets, a structured feature selection and ablation strategy was implemented.
+
+First, all models were trained using the complete set of available features to establish baseline performance. Subsequently, based on the feature groupings defined in Table~\ref{tab:clinical_data}-A, , models were retrained while systematically removing each feature group. This ablation approach enables the identification of feature groups that contribute most significantly to predictive performance.
+
+%=======================================
+% Feature Selection
+%=======================================
+\begin{table}[h!]
+\centering
+\small
+\begin{tabular}{ll}
+\toprule
+Feature Set & Code  \\
+\midrule
+All features (full feature set) &  All   \\
+No collinear features  &  NoCol\\
+No Clinical Profile features  &  NoProf\\
+No Comorbidities features & NoCom \\
+No Neurological Examination features & NoNeuro \\
+No Michigan Neuropathy Screening Instrument feature & NoMSI  \\
+No Sudoscan features & NoSudo \\
+Sudoscan features only & Sudo \\
+Sudoscan and Clinical Profile features only & SudoProf \\
+Sudoscan and Comorbidities features only & SudoCom \\
+Sudoscan and Neurological Examination features only & SudoNeuro \\
+Sudoscan and MNSI features only & SudoMnsi \\
+\bottomrule
+\end{tabular}
+\caption{Feature sets examined during the baseline model evaluation phase. Twelve distinct feature sets were constructed to systematically assess the contribution of each clinical feature group — Clinical Profile, Comorbidities, Neurological Examination, MNSI, and Sudoscan — both individually and in combination. The "All" set serves as the full-feature reference, while ablation sets (e.g., NoCol, NoProf, NoCom) isolate the effect of removing one feature group at a time. Additive sets anchored on Sudoscan (e.g., SudoProf, SudoCom, SudoNeuro, SudoMnsi) were additionally constructed given Sudoscan's established role in peripheral neuropathy screening, allowing assessment of its complementary value when paired with other feature groups.}
+\label{tab:feature_sets}
+\end{table}
+
+In addition, multicollinearity was addressed using the Variance Inflation Factor (VIF). Features exhibiting a VIF greater than 5 were considered highly collinear and were removed, resulting in a reduced feature set aimed at improving model stability and interpretability.
+
+To further investigate the predictive value of specific diagnostic modalities, models were also trained exclusively on nerve conduction study (NCS) features and Sudoscan features, respectively. This allows for a focused evaluation of their standalone predictive capabilities and their potential role in clinical decision support.
+
+\subsubsection{Hyperparameter Optimization}
+Following the comparative evaluation, the best-performing model was selected based on the results of the previous steps. In this study, CatBoost demonstrated superior performance and was therefore chosen for further optimization, as detailed in the Results and Discussion section.
+
+Hyperparameter optimization was conducted using a Repeated Stratified k-Fold framework with 3 splits. For each split, the training portion of the data was subjected to a further 3-fold Bayesian optimization, with ROC-AUC as the objective function. This approach efficiently explores the hyperparameter space by balancing exploration and exploitation, leading to improved model configurations.
+
+The optimal hyperparameters obtained from each training fold were then used to generate predictions on the corresponding test fold. A classification threshold was subsequently selected for each split, allowing for the calibration of sensitivity and specificity in accordance with the study objectives.
+
+The mean and standard deviations of the threshold, ROC-AUC, Youden index, specificity and sensitivity are reported for the 3 splits, as well as the confidence interval at 5\% for thr ROC-AUC and the Youden index.
+
+This multi-stage optimization framework ensures that the final model is both well-tuned and rigorously validated, enhancing its reliability and generalizability.
+
+\subsection{Counterfactual Generation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+To provide interpretable insights into the predictions of the trained machine learning models, counterfactual explanations were generated using the DiCE (Diverse Counterfactual Explanations) framework \cite{mothilal2020explaining}. DiCE is well-suited for this study due to its model-agnostic capability, enabling its application across a wide range of classifiers, including complex ensemble models. Furthermore, it supports diversity-aware counterfactual generation, allowing the identification of multiple plausible feature modifications that can alter model predictions—an important requirement in clinical decision support. Its ability to incorporate feature constraints (e.g., permitted ranges and immutable variables) ensures that generated counterfactuals remain realistic and clinically meaningful.
+
+\subsubsection{Feature Suitability as Counterfactuals}
+Table~\ref{tab:cf_features} shows the feature set and their suitability for counterfactual analysis. We note that nerve conduction studies and Sudoscan features are marked as \textit{conditional} counterfactuals. These are biomarker outcomes of neuropathy. While these are not directly actionable inputs, they can be treated as counterfactuals that answer "what must change". Intervention is left to the physician. 
+
+% =======================================
+% Table of Counterfactual Features
+% =======================================
+\begin{table}[h!]
+\centering
+\footnotesize
+\begin{tabular}{p{0.1\linewidth} p{0.25\linewidth} p{0.1\linewidth} p{0.35\linewidth}}
+\toprule
+\textbf{Group} &  \textbf{Feature(s)} & \textbf{Suitable?} & \textbf{Reason} \\
+\midrule
+Profile      & Patient's sex (M or F) & No & Cannot be changed \\
+             & Patient's age & No & Cannot be changed \\
+             & Other symptoms & No & Too vague to have an intervention \\
+             & Diabetes Mellitus duration & No & Cannot be reversed \\
+             & Patient is on insulin  & Yes & Treatment can be started, stopped, or changed \\
+             & Hemoglobin A1c & Yes & Modifiable through lifestyle, diet, and medication \\
+\midrule
+Commorbidity & Hypertension & Yes & Manageable through antihypertensives and lifestyle \\
+             & Peripheral Arterial Occulsive Disease & Conditional & Partially treatable (revascularization, lifestyle) but not fully reversible \\
+             & Dyslipidemia & Yes & Modifiable through statins, diet, exercise\\
+             & Chronic Kidney Disease & Conditional & Partially modifiable (nephroprotective interventions) but not reversible \\
+             & Guillain-Barre Syndrome & No & Acute/post-infectious, not a modifiable \\
+\midrule
+Neurology \newline Examination & All  & No &  These are measurements of an examination direct intervention for which is difficult to define. \\
+\midrule
+MNSI            & Michigan Neuropathy \newline  Screening Instrument & No & This is measurement of an examination direct intervention for which is difficult to define.   \\
+\midrule
+Sudoscan & All & No &  These are measurements of a procedure direct intervention for which is difficult to define.\\
+\bottomrule
+\end{tabular}
+\caption{Actionability classification of input features for counterfactual explanation generation. Each feature was evaluated along three criteria: clinical modifiability, reversibility, and intervention feasibility. Features rated Suitable are both modifiable and clinically actionable (e.g., HbA1c via diet or medication; insulin use via prescription change). Features rated Conditional are partially manageable but not fully reversible (e.g., Chronic Kidney Disease through nephroprotective interventions; Peripheral Arterial Occlusive Disease through revascularization). Features rated Unsuitable are either immutable (sex, age, diabetes duration), too vague for targeted intervention (other symptoms), or reflective of examination or procedural measurements rather than modifiable patient states (neurological examination findings, MNSI score, Sudoscan readings). Only Suitable and Conditional features were included in counterfactual generation to ensure that all generated counterfactual scenarios correspond to clinically meaningful and potentially achievable patient states.}
+\label{tab:cf_features}
+\end{table}
+
+\subsubsection{General Setup}
+Here we discuss the global permitted range and configuration parameters to be used by the DiCE object.
+
+\textit{Global Permitted Range}.
+To ensure feasibility of generated counterfactuals, a global permitted range was defined for all continuous features. The bounds were computed as follows:
+\begin{itemize}
+    \itemsep0em 
+    \item Minimum: $min(0,x_{min} - \sigma)$
+    \item Maximum: $x_{max} + \sigma$
+\end{itemize}
+where $x_{min}$ and $x_{max}$ denote the observed minimum and maximum values, respectively, of each feature in the entire dataset, while $\sigma)$ is the standard deviation. This formulation prevents unrealistic values while allowing controlled extrapolation beyond the observed data.
+
+\textit{DiCE Configuration Parameters}. The configuration of the DiCE framework is summarized in Table~\ref{tab:dice_setup}. The genetic algorithm was selected as the optimization method because of the presence of multiple categorical features which renders the use of gradients for optimization not feasible. Genetic algorithm is also effectiveness in exploring high-dimensional feature spaces and generating diverse counterfactuals under multiple constraints.
+
+% =======================================
+% DICE General Configuration
+% =======================================
+\begin{table}[h!]
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+Component & Parameter & Value / Description \\
+% \multirow{3}{*}{Data (dice\_ml.Data)} 
+\midrule
+Data (dice\_ml.Data) & continuous\_features & continuous features as defined in Table~\ref{tab:clinical_data}-A \\
+& categorical\_features & binary categorical features as defined in Table~\ref{tab:clinical_data}-A \\
+& permitted\_range & global permitted range as defined in the section \textit{General Setup}\\
+\midrule
+% \multirow{3}{*}{Model (dice\_ml.Model)} 
+Model (dice\_ml.Model) & model & trained model under the mean threshold \\
+& backend & sklearn \\
+& model\_type & classifier \\
+\midrule
+DiCE object(dice\_ml.Dice)  & method & genetic \\
+\bottomrule
+\end{tabular}
+\caption{Configuration parameters used to initialize the DiCE (Diverse Counterfactual Explanations) framework for post-hoc model interpretability. Three core objects were instantiated: the Data object (dice\_ml.Data), which defines the continuous and binary categorical input features alongside their globally permitted ranges; the Model object (dice\_ml.Model), which wraps the trained scikit-learn classifier operating under the mean decision threshold; and the DiCE object (dice\_ml.Dice), which executes counterfactual generation using a genetic algorithm. Together, these components enable the generation of actionable counterfactual explanations that identify the minimal feature changes required to alter a patient's predicted DPN classification.}
+\label{tab:dice_setup}
+\end{table}
+
+\subsubsection{Local Counterfactual Analysis}
+We describe here how instances were chosen for counterfactual generation and how the permitted range was computed for each instance.
+
+\textit{Targeted Instance Selection}.
+Local counterfactual explanations were generated from misclassified and borderline cases. Borderline cases are for instances whose predicted probabilities lie within ±0.2 of the mean decision threshold obtained during hyperparameter optimization. These instances represent cases where small feature changes may alter the predicted outcome, making them particularly informative for analysis.
+
+\textit{Local Permitted Range}.
+For each selected instance, an instance-specific permitted range was defined for each feature. Similar to the global permitted range, this ensures that generated counterfactuals remain both realistic and tailored to the specific instance.
+
+\begin{itemize}
+    \itemsep0em 
+    \item Minimum: $min(0, instance\_value - \sigma)$
+    \item Maximum: $ instance\_value + \sigma)$
+\end{itemize}
+
+\subsubsection{Local Counterfactual Generation Parameters}
+The parameters used for generating local counterfactuals via $generate\_counterfactuals$ are summarized in Table~\ref{tab:local_cf}. The selected parameters balance proximity, diversity, and sparsity, ensuring that generated counterfactuals are close to the original instances, sufficiently varied, and involve minimal feature changes. This results in actionable and interpretable explanations suitable for clinical applications.
+
+\begin{table}[h!]
+\centering
+\small
+\begin{tabular}{ll}
+\hline
+\textbf{Parameter} & \textbf{Value / Description} \\
+\hline
+instances & Selected misclassified and borderline instances \\
+total\_CFs & 20 \\
+desired\_class & opposite \\
+permitted\_range & local permitted range \\
+features\_to\_vary & all features except those marked unsuitable in Table~\ref{tab:cf_features} \\
+stopping\_threshold & mean threshold from hyperparameter optimization \\
+posthoc\_sparsity\_algorithm & binary \\
+posthoc\_sparsity\_param & 0.05 \\
+proximity\_weight & 0.5 \\
+diversity\_weight & 0.1 \\
+categorical\_penalty & 0.1 \\
+algorithm & DiverseCF \\
+\hline
+\end{tabular}
+\caption{Parameters passed to the $generate\_counterfactuals$ function for local counterfactual generation. For each selected misclassified or borderline instance, up to 20 counterfactuals targeting the opposite class were generated, with feature variations constrained to locally permitted ranges.}
+\label{tab:local_cf}
+\end{table}
+
 \section{Discussion}\label{discussion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Discussions should be brief and focused. 
@@ -440,22 +655,22 @@ Appendix~\ref{secA1} (Supplementary Figures and Tables).
 %% For presentation purpose, we have included        %%
 %% \bigskip command. Please ignore this.             %%
 %%===================================================%%
-\bigskip
-\begin{flushleft}%
-Editorial Policies for:
+% \bigskip
+% \begin{flushleft}%
+% Editorial Policies for:
 
-\bigskip\noindent
-Springer journals and proceedings: \url{https://www.springer.com/gp/editorial-policies}
+% \bigskip\noindent
+% Springer journals and proceedings: \url{https://www.springer.com/gp/editorial-policies}
 
-\bigskip\noindent
-Nature Portfolio journals: \url{https://www.nature.com/nature-research/editorial-policies}
+% \bigskip\noindent
+% Nature Portfolio journals: \url{https://www.nature.com/nature-research/editorial-policies}
 
-\bigskip\noindent
-\textit{Scientific Reports}: \url{https://www.nature.com/srep/journal-policies/editorial-policies}
+% \bigskip\noindent
+% \textit{Scientific Reports}: \url{https://www.nature.com/srep/journal-policies/editorial-policies}
 
-\bigskip\noindent
-BMC journals: \url{https://www.biomedcentral.com/getpublished/editorial-policies}
-\end{flushleft}
+% \bigskip\noindent
+% BMC journals: \url{https://www.biomedcentral.com/getpublished/editorial-policies}
+% \end{flushleft}
 
 \begin{appendices}
 

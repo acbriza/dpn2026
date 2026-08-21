@@ -217,6 +217,7 @@ Michigan Neuropathy Screening Instrument (MNSI) test, serial neurologic tests, a
 examination to detect the presence of DPN. Subjects were then classified based on the 2009 Toronto
 consensus criteria as confirmed, probable, possible or no DPN \cite{tesfaye2010diabetic}.  Of the 190 enrolled patients, 3 patients were excluded from the analysis due to incomplete data, resulting in a final dataset of 187 patients.  As the purpose of the study is prescreening for DPN, the study focused on the binary classification of patients into two groups: Confirmed DPN and Unconfirmed DPN. This resulted in a dataset of 131 patients with Confirmed DPN and 56 patients with Unconfirmed DPN.  The patient flow and classification breakdown is shown in Figure~\ref{fig:patient_flow_classification}.
 
+% Participant Flow and Classification %=======================================
 \begin{figure*}[h]
     \centering
     \begin{subfigure}[b]{0.5\textwidth}
@@ -255,102 +256,75 @@ F-wave latencies
 All NCV testing was done by a single trained technician on the same day as other
 neurological examinations. Finally, sudomotor testing using Sudoscan was performed on each participant. Subjects placed palms of their hands and the soles of their feet on stainless steel electrodes and an incremental low direct voltage (<4V) was applied for about 2 minutes. The device produced an average electrochemical skin conductance (ESC) result for both hands and feet which is based on stimulation of sweat glands by the low-level voltage, allowing evidence of sweat dysfunction \cite{garcia2022detection}.
 
-
 The full list of features, their groupings, description and code are shown in Table~\ref{tab:clinical_data}.
 
 This study was approved by the local Institutional Ethics Review Board and all subjects gave their written consent prior to participating.
 
-%=======================================
-% Data and Categories
-%=======================================
-\begin{table}[h!]
-\centering
-\small
-\begin{tabular}{lrr}
-\toprule
-Label & \multicolumn{2}{c}{Support}  \\
-\midrule
-Negative  &  9 \\
-Possible  & 22 \\
-Probable  & 28  \\
-Unconfirmed (Negative+Possible+Probable) & &59 \\
-Confirmed & & 131 \\
-Overall Total & & 190 \\
-\bottomrule
-\end{tabular}
-\caption{Distribution of patient classifications in the study dataset (N = 190). Patients were categorized based on nerve conduction study (NCS) findings into four diagnostic groups: Confirmed DPN (n = 131), Probable DPN (n = 28), Possible DPN (n = 22), and Negative DPN (n = 9). }
-\label{tab:data_categ}
-\end{table}
-
-% =======================================
-% Table of Features, Codes, Description
-% =======================================
-\begin{table}[h!]
+% Table of Features, Codes, Description % =======================================
+\begin{table}[!ht]
 \centering
 \footnotesize
-\begin{tabular}{llll}
+\caption{\textbf{Clinical variable codes.} Variable codes used throughout this manuscript, organized by feature group, with a plain-language description of each. Nerve conduction study (NCS) variables are reported bilaterally and are shown as mirrored left/right code pairs sharing one description.}
+\label{tab:clinical_data}
+\begin{tabular}{lll}
 \toprule
-\textbf{A. Variables used in modeling} & & & \\
+\multicolumn{3}{l}{\textbf{A. Variables used in modeling}} \\
 \midrule
-\hspace{0.3cm} Group & Code & Description  & Type\\
+\textbf{Code} & \multicolumn{2}{l}{\textbf{Description}} \\
 \midrule
-\hspace{0.3cm} Profile      & SEX & Patient's sex (M or F) & binary \\
-             & AGE & Patient's age  & continuous \\
-             & SUBJ & Other symptoms  & binary \\
-             & DM DUR & Diabetes Mellitus duration (years) & continuous \\
-             & INSULIN & Patient is taking insulin treatments & binary \\
-             & HBA1C & Hemoglobin A1c & continuous  \\
+\addlinespace
+\multicolumn{3}{l}{\textit{Profile}} \\
+SEX & \multicolumn{2}{l}{Patient's sex (M or F)} \\
+AGE & \multicolumn{2}{l}{Patient's age} \\
+SUBJ & \multicolumn{2}{l}{Other symptoms} \\
+DM\_DUR & \multicolumn{2}{l}{Diabetes Mellitus duration (years)} \\
+INSULIN & \multicolumn{2}{l}{Patient is taking insulin treatments} \\
+HBA1C & \multicolumn{2}{l}{Hemoglobin A1c} \\
+\addlinespace
+\multicolumn{3}{l}{\textit{Comorbidity}} \\
+HPN & \multicolumn{2}{l}{Hypertension} \\
+PAOD & \multicolumn{2}{l}{Peripheral Arterial Occlusive Disease} \\
+DSLPDMIA & \multicolumn{2}{l}{Dyslipidemia} \\
+CKD & \multicolumn{2}{l}{Chronic Kidney Disease} \\
+GBS & \multicolumn{2}{l}{Guillain-Barre Syndrome} \\
+\addlinespace
+\multicolumn{3}{l}{\textit{Neurological examination}} \\
+DEC\_VS & \multicolumn{2}{l}{Decreased Vibration Sensation} \\
+DEC\_PPS & \multicolumn{2}{l}{Decreased Pinprick Sensation} \\
+DEC\_LTS & \multicolumn{2}{l}{Decreased Light Touch Sensation} \\
+DEC\_AR & \multicolumn{2}{l}{Decreased Ankle Reflex} \\
+\addlinespace
+\multicolumn{3}{l}{\textit{MNSI}} \\
+MNSI & \multicolumn{2}{l}{Michigan Neuropathy Screening Instrument} \\
+\addlinespace
+\multicolumn{3}{l}{\textit{Sudoscan}} \\
+FEET\_MEAN\_ESC & \multicolumn{2}{l}{Feet Mean Electrochemical Skin Conductance} \\
+FEET\_PCT\_ASYM & \multicolumn{2}{l}{Feet Percentage of Asymmetry (\%)} \\
+HAND\_MEAN\_ESC & \multicolumn{2}{l}{Hands Mean Electrochemical Skin Conductance} \\
+HAND\_PCT\_ASYM & \multicolumn{2}{l}{Hands Percentage of Asymmetry (\%)} \\
+NS & \multicolumn{2}{l}{Neuropathy Score} \\
+CAS & \multicolumn{2}{l}{Cardiac Autonomic Neuropathy Score (\%)} \\
 \midrule
-\hspace{0.3cm} Commorbidity & HPN & Hypertension  & binary \\
-             & PAOD & Peripheral Arterial Occulsive Disease  & binary \\
-             & DSLPDMIA & Dyslipidemia & binary \\
-             & CKD & Chronic Kidney Disease  & binary \\
-             & GBS & Guillain-Barre Syndrome  & binary \\
+\multicolumn{3}{l}{\textbf{B. Variables not used in modeling}} \\
 \midrule
-\hspace{0.3cm} Neurology Test   & DEC\_VS & Decreased Vibration Sensation & binary \\
-                 & DEC\_PPS & Decreased Pinprick Sensation  & binary \\
-                 & DEC\_LTS & Decreased Light Touch Sensation  & binary \\
-                 & DEC\_AR & Decreased Ankle Reflex  & binary \\
+\textbf{Code (L)} & \textbf{Code (R)} & \textbf{Description} \\
 \midrule
-\hspace{0.3cm} MNSI & MNSI & Michigan Neuropathy Screening Instrument  & continuous \\
-\midrule
-\hspace{0.3cm} Sudoscan & FEET\_MEAN\_ESC & Feet Mean Electrochemical Skin Conductance & continuous  \\
-         & FEET\_PCT\_ASYM & Feet Percentage of Asymmetry (\%) & continuous  \\
-         & HAND\_MEAN\_ESC & Hands Mean Electrochemical Skin Conductance & continuous  \\
-         & HAND\_PCT\_ASYM & Hands Percentage of Asymmetry (\%) & continuous  \\
-         & NS & Neuropathy Score & continuous  \\
-         & CAS & Cardiac Autonomic Neuropathy Score (\%) & continuous  \\
- &  &   & \\
-\midrule
-\textbf{B. Variables not used in modeling} & & & \\
-\midrule
-\hspace{0.3cm} Group & Code & Description  & Type\\
-\midrule
-\hspace{0.3cm} Nerve Conduction Study & SSA\_L & Left Sural Sap Nerve Sensory Amplitude (Uv)  & continuous \\
- & SSC\_L & Left Sural Nerve Sensory Conduction (m/s)  & continuous \\
- & SPSA\_L & Left Superficial Peroneal Nerve Sensory Amplitude (Uv)  & continuous \\
- & SPSC\_L & Left Superficial Peroneal Sensory Conductivity Velocity (m/s)  & continuous \\
- & MCV\_L & Left Posterior Tibial Nerve Conduction Velocity  & continuous \\
- & DL\_L & Left Posterior Tibial Nerve Distal Latency  & continuous \\
- & CMAPANK\_L & Left Ankle Compound Muscle Action Potential  & continuous \\
- & CMAPKNE\_L & Left Knee Compound Muscle Action Potential  & continuous \\
- & FWAVE\_L & Left F-wave latency  & continuous \\
- & SSA\_R & Right Sural sap Nerve Sensory Amplitude (Uv)  & continuous \\
- & SSC\_R & Right Sural Nerve Sensory Conduction (m/s)  & continuous \\
- & SPSA\_R & Right Superficial Peroneal Nerve Sensory Amplitude (Uv) & continuous  \\
- & SPSC\_R & Right Superficial Peroneal Sensory Conductivity Velocity (m/s) & continuous  \\
- & MCV\_R & Right Posterior Tibial Nerve Conduction Velocity & continuous  \\
- & DL\_R & Right Posterior Tibial Nerve Distal Latency & continuous  \\
- & CMAPANK\_R & Right Ankle Compound Muscle Action Potential & continuous  \\
- & CMAPKNE\_R & Right Knee Compound Muscle Action Potential & continuous  \\
- & FWAVE\_R & Right F-wave Latency & continuous  \\
+\addlinespace
+\multicolumn{3}{l}{\textit{Nerve Conduction Study}} \\
+SSA\_L & SSA\_R & Sural Sap Nerve Sensory Amplitude (Uv) \\
+SSC\_L & SSC\_R & Sural Nerve Sensory Conduction (m/s) \\
+SPSA\_L & SPSA\_R & Superficial Peroneal Nerve Sensory Amplitude (Uv) \\
+SPSC\_L & SPSC\_R & Superficial Peroneal Sensory Conductivity Velocity (m/s) \\
+MCV\_L & MCV\_R & Posterior Tibial Nerve Conduction Velocity \\
+DL\_L & DL\_R & Posterior Tibial Nerve Distal Latency \\
+CMAPANK\_L & CMAPANK\_R & Ankle Compound Muscle Action Potential \\
+CMAPKNE\_L & CMAPKNE\_R & Knee Compound Muscle Action Potential \\
+FWAVE\_L & FWAVE\_R & F-wave Latency \\
 \bottomrule
 \end{tabular}
-\caption{
- Complete listing of clinical variables collected in this study, organized by feature group, with their corresponding code, description, and data type. The Profile group captures patient demographic and metabolic baseline characteristics, including sex, age, diabetes mellitus duration, insulin use, and HbA1c. The Commorbidity group encodes the presence or absence of five concurrent conditions: hypertension (HPN), peripheral arterial occlusive disease (PAOD), dyslipidemia (DSLPDMIA), chronic kidney disease (CKD), and Guillain-Barré syndrome (GBS). The Neurology Test group contains binary findings from a standard neurological examination assessing vibration, pinprick, light touch, and ankle reflex responses. The MNSI group contains the score from the Michigan Neuropathy Screening Instrument, a validated clinical tool for peripheral neuropathy screening. The Sudoscan group comprises continuous measurements of electrochemical skin conductance and asymmetry for both the hands and feet, along with a composite Neuropathy Score and a Cardiac Autonomic Neuropathy Score. The Nerve Conduction Study (NCS) group contains electrophysiological measurements of sensory amplitude, conduction velocity, distal latency, and F-wave latency across bilateral lower limb nerves; these variables served as the diagnostic reference for DPN classification but were excluded from all predictive modeling, as the study objective is to enable pre-diagnostic screening in settings where NCS is unavailable or inaccessible. Binary variables are encoded as 0 (absent) or 1 (present); continuous variables retain their original measurement units.
-% A listing of all clinical variables collected in this study, including those that were used for machine learning modeling (Part A, 22 variables in total) and those that were not (Part B). Each variable is placed under a group and identified by its code, a plain-language description, and its data type (binary or continuous).  Part B of the table come from, Nerve Conduction Study — the reference standard for Diabetic Peripheral Neuropathy (DPN) diagnosis. These were excluded from machine learning modeling and are included solely for contextual reference.  The remaining features represent non-invasive or minimally invasive clinical assessments routinely available in outpatient settings, underscoring the practical deployability of any model trained on this feature space.
-}
-\label{tab:clinical_data}
+\begin{flushleft}\footnotesize
+The Profile group captures patient demographic and metabolic baseline characteristics, including sex, age, diabetes mellitus duration, insulin use, and HbA1c. The Comorbidity group encodes the presence or absence of five concurrent conditions: hypertension (HPN), peripheral arterial occlusive disease (PAOD), dyslipidemia (DSLPDMIA), chronic kidney disease (CKD), and Guillain-Barré syndrome (GBS). The Neurological examination group contains findings from a standard neurological examination assessing vibration, pinprick, light touch, and ankle reflex responses. The MNSI group contains the score from the Michigan Neuropathy Screening Instrument, a validated clinical tool for peripheral neuropathy screening. The Sudoscan group comprises measurements of electrochemical skin conductance and asymmetry for both the hands and feet, along with a composite Neuropathy Score and a Cardiac Autonomic Neuropathy Score. The Nerve Conduction Study (NCS) group contains electrophysiological measurements of sensory amplitude, conduction velocity, distal latency, and F-wave latency across bilateral lower limb nerves; these variables served as the diagnostic reference for DPN classification but were excluded from all predictive modeling, as the study objective is to enable pre-diagnostic screening in settings where NCS is unavailable or inaccessible.
+\end{flushleft}
 \end{table}
 
 

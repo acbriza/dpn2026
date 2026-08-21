@@ -676,7 +676,7 @@ def figure1a_participant_flow(ctx, outputdir, formats):
     boxes = [
         (8.6, f"Screened for eligibility\nn = {ctx['n_screened']}"),
         (5.9, f"Enrolled\nn = {ctx['n_enrolled']}"),
-        (3.2, f"Analysed\nn = {ctx['n_analysed']}"),
+        (3.2, f"Analyzed\nn = {ctx['n_analysed']}"),
     ]
     padding = 0.7
     box_width = max(4.4, padding + max(_text_width(ax, renderer, text, fontsize)
@@ -692,11 +692,15 @@ def figure1a_participant_flow(ctx, outputdir, formats):
     ]
     excl_gap = 0.4
     excl_width = max(_text_width(ax, renderer, text, 5.0) for _, text in excl)
-    needed = right + excl_gap + 0.2 + excl_width + 0.3
-    if needed > xlim:
-        fig.set_figwidth(fig.get_figwidth() + (needed - xlim) * inches_per_unit)
-        xlim = needed
+    content_right = right + excl_gap + 0.2 + excl_width
+    new_xlim = content_right + left  # mirror the left margin so both sides match
+    if new_xlim != xlim:
+        fig.set_figwidth(fig.get_figwidth() + (new_xlim - xlim) * inches_per_unit)
+        xlim = new_xlim
         ax.set_xlim(0, xlim)
+
+    shift = 0.5 * left  # nudge the whole drawing right within the same canvas width
+    ax.set_xlim(-shift, xlim - shift)
 
     for y, text in boxes:
         ax.add_patch(Rectangle((left, y - box_height / 2), box_width, box_height,
@@ -708,13 +712,32 @@ def figure1a_participant_flow(ctx, outputdir, formats):
                                      linewidth=0.7, color="0.35"))
     for y, text in excl:
         ax.add_patch(FancyArrowPatch((centre, y), (right + excl_gap, y), arrowstyle="-|>",
-                                     mutation_scale=8, linewidth=0.7, color="0.35"))
+                                     shrinkA=0, mutation_scale=8, linewidth=0.7, color="0.35"))
         ax.text(right + excl_gap + 0.2, y, text, ha="left", va="center", fontsize=5.0, color="0.25")
-    ax.text(centre, 1.4,
-            f"Confirmed n = {ctx['n_confirmed']}  |  Unconfirmed n = {ctx['n_unconfirmed']}",
-            ha="center", va="center", fontsize=6.5, fontweight="bold")
-    ax.add_patch(FancyArrowPatch((centre, 2.35), (centre, 1.95), arrowstyle="-|>",
-                                 mutation_scale=8, linewidth=0.7, color="0.35"))
+
+    split_texts = [f"Confirmed\nn = {ctx['n_confirmed']}", f"Unconfirmed\nn = {ctx['n_unconfirmed']}"]
+    split_fontsize = 6.5
+    split_box_width = 0.5 + max(_text_width(ax, renderer, t, split_fontsize) for t in split_texts)
+    split_box_height = 1.1
+    split_gap = 0.5
+    split_y = 1.15
+    branch_y = 1.95
+    stem_top = 3.2 - box_height / 2
+    left_x = centre - split_gap / 2 - split_box_width / 2
+    right_x = centre + split_gap / 2 + split_box_width / 2
+
+    ax.add_patch(FancyArrowPatch((centre, stem_top), (centre, branch_y), arrowstyle="-",
+                                 shrinkB=0, linewidth=0.7, color="0.35"))
+    ax.add_patch(FancyArrowPatch((left_x, branch_y), (right_x, branch_y), arrowstyle="-",
+                                 shrinkA=0, shrinkB=0, linewidth=0.7, color="0.35"))
+    for x, text in zip((left_x, right_x), split_texts):
+        ax.add_patch(FancyArrowPatch((x, branch_y), (x, split_y + split_box_height / 2), arrowstyle="-|>",
+                                     shrinkA=0, mutation_scale=8, linewidth=0.7, color="0.35"))
+        ax.add_patch(Rectangle((x - split_box_width / 2, split_y - split_box_height / 2),
+                               split_box_width, split_box_height,
+                               facecolor="#F2F2F2", edgecolor="0.35", linewidth=0.7))
+        ax.text(x, split_y, text, ha="center", va="center", ma="center",
+               fontsize=split_fontsize, fontweight="bold")
 
     # svg.fonttype "none" keeps panel labels as real, editable <text> elements
     # in the SVG rather than flattening them to glyph outlines.
@@ -724,7 +747,7 @@ def figure1a_participant_flow(ctx, outputdir, formats):
 
     caption_txt = f"""
 Fig. 1a Participant flow. Of {ctx['n_screened']} patients screened, {ctx['n_enrolled']} were
-enrolled after applying the exclusion criteria, and {ctx['n_analysed']} were analysed after
+enrolled after applying the exclusion criteria, and {ctx['n_analysed']} were analyzed after
 {ctx['n_enrolled'] - ctx['n_analysed']} records (patient codes {ctx['dropped_codes_text']}) were
 removed for incomplete measurements.
 """

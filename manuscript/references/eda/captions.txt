@@ -41,7 +41,7 @@ modelling set and, separately, within the excluded nerve conduction set.
 
 % ---- fig1a_participant_flow --------------------------------------
 Fig. 1a Participant flow. Of 201 patients screened, 190 were
-enrolled after applying the exclusion criteria, and 187 were analysed after
+enrolled after applying the exclusion criteria, and 187 were analyzed after
 3 records (patient codes 36, 46, 173) were
 removed for incomplete measurements.
 

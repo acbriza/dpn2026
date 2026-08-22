@@ -674,6 +674,441 @@ Beyond the diverse counterfactual sets of Table~\ref{tab:local_cf}, two single-f
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Discussions should be brief and focused. 
 
+In this section, we discuss the performance of the machine learning models, the hyperparameter optimization and local explainability of features through feature importance and SHAP specifically for CatBoost, the selected ML model for counterfactual generation. We then proceed to an analysis of the counterfactuals by discussing the  global feature importances, describing local counterfactual instances per model split, and finally, providing metrics for the counterfactuals per split.
+
+\subsection{Feature Set and Model Selection}
+
+\subsubsection{Baseline Model Evaluation: Rationale and Metric Selection}
+The primary objective of this baseline evaluation was to identify the most promising classification algorithm for subsequent optimization as a machine learning-based pre-diagnostic screening tool for Diabetic Peripheral Neuropathy (DPN). Fourteen algorithms spanning diverse learning paradigms were assessed using default hyperparameters and repeated stratified k-fold cross-validation (10 repeats × 4 folds; 40 total runs) to obtain stable, low-variance performance estimates without data leakage.
+Given the inherent class imbalance in this dataset — 131 DPN-confirmed patients versus 59 unconfirmed cases (approximately 69\% positive prevalence) — AUPRC was chosen as the primary ranking metric in preference to ROC-AUC. This decision is well-supported in the methodological literature: ROC-AUC can present an overly optimistic picture of classifier performance under class imbalance because it incorporates the true negative rate, which inflates when the negative class is underrepresented. AUPRC, by contrast, focuses exclusively on the precision-recall trade-off and is therefore more sensitive to performance differences among classifiers on the minority class \cite{saito2015precision, davis2006relationship}. The Naïve baseline — which predicts the majority class uniformly — achieved an AUPRC of only 0.68 across all feature sets and conditions, despite attaining perfect sensitivity (1.0) and a reasonable accuracy of 68.4\%, illustrating precisely why accuracy and sensitivity alone are insufficient evaluation criteria in imbalanced screening tasks.
+
+\subsubsection{Model Performance and Selection}
+Across all 40 runs on the full feature set, ensemble tree-based methods consistently outperformed other model families (Table~\ref{tab:selection_metrics}). CatBoost and Extra Trees achieved the highest mean AUPRC (0.890), with a median AUPRC distribution that was both elevated and comparatively compact relative to other top models (Figure~\ref{fig:auprc_violins}), reflecting strong performance consistency across data partitions. Random Forest and RBF SVM also achieved a high AUPRC (0.889 and 0.887, respectively) but the widest distributional spread among top models — suggesting heightened sensitivity to the specific composition of training and test folds, which is a practical concern in small-sample clinical datasets.
+
+From a clinical deployment standpoint, the balance between sensitivity and specificity is of critical importance in pre-diagnostic screening. A tool intended to triage patients toward the more costly and less accessible Nerve Conduction Study (NCS) must prioritize minimizing false negatives (i.e., maintaining high sensitivity) to avoid denying care to patients who truly have DPN. 
+
+Under this clinical framing, CatBoost's sensitivity of 0.912 — combined with it achieving the highest AUPRC — is particularly compelling. RBF SVM achieved the highest sensitivity overall (0.939), but at the cost of the lower specificity in the cohort (0.5). CatBoost provides a more balanced operating point, and its gradient-boosting architecture with native categorical feature handling offers additional practical advantages in heterogeneous clinical tabular data \cite{dorogush2018catboost}.
+
+\subsubsection{Feature Set Analysis}
+The heatmap of average AUPRC across feature sets Figure~\ref{fig:auprc_heatmaps} reveals several findings with direct clinical relevance. First, the top models (CatBoost, Extra Trees, Random Forest, RBF SVM) are remarkably robust to the removal of most feature groups: ablating Clinical Profile, Comorbidities, Sudoscan or MNSI features produced negligible AUPRC degradation for these models ($\le 0.02$ points). This robustness implies that no single feature group is singularly indispensable, and that redundancy across the feature space is substantial. The exception are Neurological Examination features, the removal of which showed the greatest performance degradation suggesting that these features may be strong predictors. 
+
+The Sudoscan only feature set understandably lowered the performance, while the additive Sudoscan-anchored feature sets (SudoProf, SudoCom, SudoNeuro, SudoMnsi) generally demonstrated modest but inconsistent improvements over the Sudoscan only set, suggesting diminishing returns from adding other feature groups once Sudoscan data are available. 
+One exception worth noting is that the SudoNeuro combination (Sudoscan with Neurological Examination findings) maintained high performance across more model types, indicating that simple bedside neurological signs — vibration sensation, pinprick, light touch, and ankle reflex — may complement electrochemical skin conductance data in a synergistic manner that benefits less flexible classifiers.
+
+We note that since these metrics reported are based on default parameters for the methods, a more complete picture of the importances of the features will be explored during the hyperparameter optimization that follows. 
+
+
+\subsubsection{Reproducibility and Stability of Estimates}
+We use of 10-repeat × 4-fold stratified cross-validation was chosen deliberately to obtain stable performance estimates given the modest sample size (n = 190). With a single k-fold split, estimates can exhibit high variance due to the stochastic partitioning of a small dataset \cite{kim2009estimating}. 
+
+Repeated cross-validation substantially reduces this variance, and the violin plot distributions (Figure~\ref{fig:auprc_violins}) confirm that top models maintain consistent AUPRC distributions with limited lower-tail excursions, lending confidence to the relative ranking of algorithms. The absence of hyperparameter tuning or threshold optimization in this phase is also intentional: these results represent genuine baseline performance, ensuring that the subsequent model selection and optimization pipeline is not confounded by information leakage from the full dataset.
+
+\subsubsection{Study Limitations at the Baseline Evaluation Stage}
+Several limitations must be acknowledged at this stage. The dataset is relatively small (n = 190), and though repeated stratified cross-validation mitigates instability, external validation on an independent cohort remains necessary before clinical deployment. The class imbalance, while modest compared to many medical screening contexts, may still influence threshold-dependent metrics (sensitivity, specificity, accuracy) reported here, all of which used the default 0.5 probability threshold — a suboptimal choice for screening applications. Threshold calibration and optimization  will be addressed in the subsequent modeling phase. 
+
+\subsubsection{Selected Feature Set and Model}
+Because of CatBoost's notable performance (AUPRC of 0.89, narrow AUPRC distribution and sensitivity of 0.912), we choose it as the model to undergo the next stages of this research, namely, hyperparameter optimization and counterfactual generation. Moreover, since the full feature dataset as the data set that the ML model will be trained on since it consistently achieved high performance across multiple methods.
+
+% selection Stage - All Metrics Table
+% -----------------------------------
+\begin{table}[h!]
+\centering
+\footnotesize
+\begin{tabular}{lcccccccc}
+\toprule
+Algorithm & AUPRC & ROC-AUC & Sensitivity & Specificity & Accuracy & Precision & Youden Index & F1 Score\\
+\midrule
+CatBoost & 0.890 & 0.817 & 0.912 & 0.567 & 0.803 & 0.821 & 0.479 & 0.864 \\
+Extra Trees & 0.890 & 0.807 & 0.879 & 0.548 & 0.775 & 0.810 & 0.428 & 0.842 \\
+Random Forest & 0.889 & 0.817 & 0.902 & 0.568 & 0.797 & 0.820 & 0.471 & 0.858 \\
+RBF SVM & 0.887 & 0.824 & 0.939 & 0.500 & 0.801 & 0.804 & 0.439 & 0.866 \\
+Naive Bayes & 0.879 & 0.808 & 0.656 & 0.633 & 0.649 & 0.729 & 0.289 & 0.647 \\
+LDA & 0.871 & 0.800 & 0.845 & 0.627 & 0.776 & 0.832 & 0.472 & 0.837 \\
+Logistic Regression & 0.865 & 0.792 & 0.874 & 0.582 & 0.782 & 0.821 & 0.456 & 0.845 \\
+XGBoost & 0.861 & 0.772 & 0.849 & 0.563 & 0.759 & 0.809 & 0.412 & 0.827 \\
+Gradient Boosting & 0.858 & 0.766 & 0.863 & 0.558 & 0.767 & 0.811 & 0.422 & 0.834 \\
+Linear SVM & 0.854 & 0.775 & 0.849 & 0.570 & 0.761 & 0.812 & 0.419 & 0.828 \\
+LightGBM & 0.851 & 0.765 & 0.849 & 0.553 & 0.755 & 0.805 & 0.402 & 0.825 \\
+kNN & 0.834 & 0.753 & 0.856 & 0.508 & 0.746 & 0.791 & 0.365 & 0.821 \\
+SGDClassifier & 0.812 & 0.716 & 0.735 & 0.422 & 0.637 & 0.756 & 0.157 & 0.699 \\
+Decision Tree & 0.758 & 0.648 & 0.775 & 0.520 & 0.695 & 0.778 & 0.295 & 0.775 \\
+Naive & 0.684 & 0.500 & 1.000 & 0.000 & 0.684 & 0.684 & 0.000 & 0.812 \\
+\bottomrule
+\end{tabular}
+\caption{Aggregate performance metrics — AUPRC, ROC-AUC, Sensitivity, Specificity, Accuracy, Precision, Youden Index, and F1 Score — for all 14 classification algorithms evaluated on the full feature set under 10-repeat × 4-fold stratified cross-validation (40 total runs; n = 190). All metrics are reported as averages across runs. CatBoost achieves the highest AUPRC (0.89) alongside the highest sensitivity (0.912), making it the most suitable candidate for a DPN pre-diagnostic screening tool where minimizing false negatives is clinically paramount. Extra Trees and Random Forest follow closely in AUPRC (both 0.89 and 0.889, respectively), with competitive sensitivity values. RBF SVM attains the highest overall sensitivity (0.939) at the cost of the lowest specificity (0.5), indicating a pronounced bias toward positive-class prediction. The Naïve classifier — predicting the majority class throughout — achieves perfect sensitivity and zero specificity, representing an uninformative lower bound for comparison. No threshold optimization or hyperparameter tuning was applied at this stage; all models used default parameters to provide an unbiased baseline for subsequent model selection.)
+}
+\label{tab:selection_metrics}
+\end{table}
+
+% AURPRC HEATMAPS
+%------------------------------
+\begin{figure*}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures2/modeling/auprc_summary_table.png}
+    \caption{Heatmap of average AUPRC scores across 14 classification models (rows) and 12 feature sets (columns), computed over 40 repeated stratified k-fold runs. Color intensity encodes AUPRC magnitude. The top models (CatBoost, Extra Trees, Random Forest, RBF SVM) are remarkably robust to the removal of most feature groups: ablating Clinical Profile, Comorbidities, Sudoscan or MNSI features produced negligible AUPRC degradation for these models. The NoNeuro column shows the greatest performance degradation across different models suggesting that these features may be strong predictors. We highlight that the SudoNeuro combination (Sudoscan with Neurological Examination findings) maintained high performance across more model types, achieving values close or sometimes better than the full feature set. The Naïve baseline remains uniformly at 0.68 across all feature sets, serving as a meaningful lower bound. Since these values are based on default parameters for the algorithms, a more complete picture of the importances of the features will be explored during the hyperparameter optimization that follows.}
+    \label{fig:auprc_heatmaps}
+\end{figure*}
+
+% Violin Plots
+%-------------
+\begin{figure*}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures2/modeling/auprc_violin.png}
+    \label{fig:violin_auprc}
+    \caption{Distribution of Area Under the Precision-Recall Curve (AUPRC) scores across 40 evaluation runs (10-repeat × 4-fold stratified cross-validation) for all 14 classification models evaluated on the full feature set. Each violin depicts the spread and density of AUPRC values, with the embedded box plot indicating the median (white line) and interquartile range. Models are ordered from left to right by descending mean AUPRC (see Table~\ref{tab:selection_metrics} for actual values). CatBoost and Extra Trees, the top 2 methods, demonstrate comparatively compact distributional spread reflecting both strong average performance and consistency across data partitions. Random Forest has a wider spread suggesting sensitivity to data partitioning.  In contrast, the Naïve baseline model exhibits minimal variance, consistent with its degenerate majority-class prediction strategy.}
+    \label{fig:auprc_violins}
+\end{figure*}
+
+\subsection{CatBoost Model Training and Optimization}
+In this subsection, we describe the model training and hyperparameter optimization CatBoost model for the full feature set (all data in Table~\ref{tab:clinical_data}-A). Four CatBoost models were independently trained and optimized across a 4-fold stratified cross-validation scheme. The test set of each fold underwent Bayesian optimization and threshold selection, under a 3-fold scheme (optimization of parameters for 2/3 of the fold's training set, threshold selection for 1/3 of the fold's training set). The optimization targeted the Area Under the Precision-Recall Curve (AUPRC) using the CatBoost parameters tree depth, learning rate, L2 leaf regularization, and positive class scale weight. The reported metrics were obtained through the hold out set of each outer fold, completely unseen by both the optimization and threshold selection process, thus preventing any data leakage. 
+
+\subsubsection{Model Performance and Clinical Suitability for Pre-Diagnostic Screening}
+% ============================================================================================
+
+% CatBoost Performance Metrics First 4 Models
+%--------------------------------------------
+\begin{table}[t]
+\centering
+\footnotesize
+\begin{tabular}{llcccccc}
+\toprule
+& & Model 0 & Model 1 & Model 2 & Model 3 & Mean & Std\\
+\midrule
+Parameter &  threshold & 0.427 & 0.392 & 0.447 & 0.470 & 0.434 & 0.026 \\
+\midrule
+Catboost Parameters & depth & 5.000 & 8.000 & 10.000 & 4.000 & 6.750 & 2.133 \\
+& learning\_rate & 0.249 & 0.004 & 0.007 & 0.004 & 0.066 & 0.095 \\
+& l2\_leaf\_reg & 2.713 & 9.273 & 7.789 & 9.909 & 7.421 & 2.527 \\
+& scale\_pos\_weight & 0.885 & 0.906 & 0.748 & 0.988 & 0.882 & 0.077 \\
+\midrule
+Metrics & AUPRC & 0.925 & 0.857 & 0.892 & 0.907 & 0.895 & 0.022 \\
+& ROC-AUC & 0.848 & 0.824 & 0.835 & 0.821 & 0.832 & 0.010 \\
+& Sensitivity & 0.879 & 0.970 & 0.938 & 0.906 & 0.923 & 0.030 \\
+& Specificity & 0.467 & 0.400 & 0.733 & 0.533 & 0.533 & 0.112 \\
+& F1 Score & 0.829 & 0.865 & 0.909 & 0.853 & 0.864 & 0.026 \\
+& Youden Index & 0.345 & 0.370 & 0.671 & 0.440 & 0.456 & 0.115 \\
+& Precision & 0.784 & 0.780 & 0.882 & 0.806 & 0.813 & 0.037 \\
+& Accuracy & 0.750 & 0.792 & 0.872 & 0.787 & 0.800 & 0.040 \\
+\bottomrule
+\end{tabular}
+\caption{Best parameters and performance metrics of 4 CatBoost models independently trained and tested over 4 data splits. Optimized hyperparameters and classification performance metrics for four independently trained and evaluated CatBoost models across a 4-fold stratified cross-validation scheme. Each model was tuned using Bayesian optimization targeting the Area Under the Precision-Recall Curve (AUPRC). Threshold, tree depth, learning rate, L2 leaf regularization, and positive class scale weight were optimized per fold. Performance metrics are reported for the held-out test partition of each fold, together constituting evaluation across the entire dataset.}
+\label{tab:catboost_metrics_first4}
+\end{table}
+
+% CATBOOST AUPRC
+%------------------------------
+\begin{figure*}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{figures2/explainability/catboost_all_splits_auprc.png}
+\caption{Precision-Recall (PR) curves for each of the four CatBoost models (Models 0–3) trained and evaluated on independent held-out test partitions across a 4-fold cross-validation scheme. Individual model Average Precision (AP) values were 0.93, 0.86, 0.89, and 0.90, respectively. The bold blue curve represents the mean PR performance across all folds (mean AP = 0.89 ± 0.03 SD). The red dashed horizontal line denotes the no-skill baseline (AP = 0.69), corresponding to the positive class prevalence in the study cohort (131/190 = 68.9\%). All four models substantially exceeded the no-skill baseline across the full recall range, demonstrating robust and consistent discriminative performance for identifying patients who should be referred for Nerve Conduction Study (NCS). AP was computed as the weighted mean of precisions across all classification thresholds.}
+\label{fig:catboost_auprc}
+\end{figure*}
+
+% CatBoost Repeated k-fold Performance Metrics
+%---------------------------------------------
+\begin{table}[t]
+\centering
+\footnotesize
+\begin{tabular}{llrrrr}
+\toprule
+&  & Mean & STD & CI Lower & CI Upper \\
+\midrule
+Parameter & Threshold & 0.363 & 0.136 & 0.320 & 0.405 \\
+\midrule
+Metrics &  AUPRC & 0.885 & 0.054 & 0.868 & 0.902 \\
+& ROC-AUC & 0.810 & 0.064 & 0.790 & 0.830 \\
+& Sensitivity & 0.924 & 0.063 & 0.904 & 0.944 \\
+& Specificity & 0.475 & 0.144 & 0.430 & 0.520 \\
+& Accuracy & 0.782 & 0.045 & 0.768 & 0.796 \\
+& Precision & 0.795 & 0.040 & 0.782 & 0.808 \\
+& F1-score & 0.853 & 0.032 & 0.843 & 0.863 \\
+& F-beta at 1.25 & 0.867 & 0.035 & 0.856 & 0.878 \\
+& F-beta at 1.5 & 0.878 & 0.039 & 0.866 & 0.890 \\
+& F-beta at 1.75 & 0.887 & 0.043 & 0.873 & 0.900 \\
+& F-beta at 2.0 & 0.893 & 0.046 & 0.879 & 0.908 \\
+& Youden Index & 0.399 & 0.126 & 0.359 & 0.438 \\
+\bottomrule
+\end{tabular}
+
+
+\caption{Aggregate performance metrics for the CatBoost model evaluated under repeated stratified k-fold cross-validation (10 repeats × 4 folds; 40 total evaluation runs; n = 190). Metrics are summarized as the mean, standard deviation (STD), and 95\% confidence interval bounds (CI Lower, CI Upper) across all runs. The F-beta family of metrics ($\beta$ = 1.25, 1.50, 1.75, and 2.0) supplements the standard F1-score by progressively weighting sensitivity over precision, reflecting the clinical priority of minimizing false negatives in a pre-diagnostic screening context. The Youden Index (sensitivity + specificity - 1) is reported as a threshold-independent summary of overall discriminative balance. This repeated cross-validation scheme was performed to obtain statistically stable, bias-reduced estimates of out-of-sample performance that are less sensitive to any particular random partition of the dataset. The optimized decision threshold is reported separately from performance metrics, as it represents the operating parameter selected per fold during Bayesian optimization rather than an outcome of model discrimination.}
+\label{tab:rkfold}
+\end{table}
+
+Table \ref{tab:catboost_metrics_first4} shows the best parameters and performance metrics for the four models, together with their mean and standard deviation. Mean AUPRC and Sensitivity (0.895 and 0.923) are slightly higher than the baseline unoptimized CatBoost model (0.89 and 0.912, see Table~\ref{tab:selection_metrics}). The high mean sensitivity across folds indicates that the models correctly identified over 90\% of DPN-positive patients on average. For a pre-diagnostic screening instrument intended to triage patients toward the more resource-intensive and often geographically inaccessible Nerve Conduction Study (NCS), the clinical priority is high sensitivity — minimizing false negatives and ensuring DPN cases are not missed at the screening stage [3]. 
+The mean sensitivity across folds is consistent with thresholds recommended for screening tools in conditions where undetected disease has significant downstream consequences, including progression to foot ulceration, amputation, or autonomic failure [4, 5].  
+
+The comparatively lower mean specificity of 0.533 (range: 0.400–0.733) reflects the deliberate calibration of decision thresholds — which ranged from 0.392 to 0.470 — toward recall maximization, a known and clinically acceptable tradeoff in screening paradigms where the cost of a missed true positive outweighs the cost of an unnecessary referral [6].
+
+Variability in Youden Index across folds (0.345 to 0.671) highlights that model 2 achieved a more balanced sensitivity-specificity operating point, potentially attributable to the particular composition of its training partition. Nevertheless, the consistency of high sensitivity across all four folds, each covering a non-overlapping test segment of the full cohort, supports the robustness and generalizability of the approach. The use of 4-fold stratified cross-validation — rather than a single train-test split — ensured that every patient contributed to model evaluation, reducing selection bias and providing a more reliable estimate of out-of-sample performance for a dataset of this size [7].
+
+The F1-scores, ranging from 0.829 to 0.909 (mean: 0.864), and the AUPRC values across all four models remaining well above 0.85, are competitive with published machine learning models for DPN detection. Prior works employing logistic regression, support vector machines, and neural networks on comparable clinical datasets have reported AUPRC values in the 0.75–0.88 range [8, 9], while CatBoost and gradient boosting approaches have demonstrated particular advantages in handling mixed feature types and class imbalance without extensive preprocessing — properties especially beneficial in clinical tabular data [10, 11].
+
+Figure \ref{fig:catboost_auprc} shows the Precision-Recall (PR) curve for each of the four CatBoost models trained and evaluated across independent folds. The plot shows that the models consistently achieved high discriminative performance, with mean AUPRC of 0.89 ± 0.03. Given the inherent class imbalance in the study cohort — where 68.9\% of patients (131/190) carried confirmed DPN — the AUPRC is the more informative summary metric, as it is sensitive to model behavior among the minority (DPN-negative) class and is not inflated by the abundance of true negatives [1, 2]. The mean AP of 0.89 represents a 29\% relative improvement over the no-skill baseline (AP = 0.69), indicating that the CatBoost substantially exceeded chance discrimination.
+
+\subsubsection{Repeated Cross-Validation}
+% =======================================================================================================
+While the 4-fold stratified cross-validation results Table~\ref{tab:catboost_metrics_first4} established that each independently trained model achieved strong discriminative performance, the generalizability of those estimates depends on the assumption that the single partitioning was representative of the underlying data distribution — an assumption that becomes increasingly fragile in datasets of modest size [7]. To address this limitation, repeated stratified k-fold cross-validation was performed over 10 independent repetitions of the 4-fold scheme, yielding 40 total evaluation runs and producing the aggregate estimates presented in Table~\ref{tab:rkfold}.
+
+The mean AUPRC across all 40 runs was 0.885 (95\% CI: 0.868–0.902, STD = 0.054), closely corroborating the single-repeat estimate of 0.89 ± 0.03 obtained from Table~\ref{tab:catboost_metrics_first4}, and confirming that the strong precision-recall performance observed previously was not an artifact of a favorable random partition. Critically, the tight confidence interval — spanning just 3.4 percentage points — indicates that model performance is highly reproducible across varying data splits, an important criterion for clinical tool reliability [7, 18]. 
+
+The mean sensitivity of 0.924 (95\% CI: 0.904–0.944) — the most clinically critical metric for a pre-diagnostic screening instrument — was the best-constrained of all metrics, with a relatively narrow confidence interval spanning just 4 percentage points and a STD of 0.063. This stability indicates that the model's ability to correctly identify DPN-positive patients is robust to partition variability, a finding of direct clinical relevance: in a screening context where the consequence of a missed DPN case includes delayed intervention, progressive nerve damage, and increased risk of foot ulceration or lower-limb amputation, a consistently high and predictable sensitivity is more valuable than a high average sensitivity with wide variability [4, 5]. By contrast, specificity showed the greatest instability across runs (mean = 0.475, STD = 0.144, 95\% CI: 0.430–0.520), confirming that the model's ability to correctly exclude DPN-negative patients was more sensitive to partition composition. This reflects the relatively smaller size of the DPN-negative class (n = 59) and the deliberate calibration of decision thresholds toward recall; specificity variability of this magnitude is consistent with published benchmarks for imbalanced clinical screening models [1, 6].
+
+The F-beta metric family provides a principled framework for evaluating the sensitivity-precision tradeoff at varying clinical cost assumptions [19]. The progressive increase in mean F-beta scores from F1 = 0.853 at $\beta$ = 1.0 to F2 = 0.893 at $\beta$ = 2.0 reflects the model's stronger performance when sensitivity is weighted more heavily than precision, which is the appropriate operating regime for a screening tool. Importantly, the confidence intervals for all F-beta metrics remained narrow (range of CI widths: 0.022–0.029), confirming stable performance regardless of the chosen $\beta$ weighting. Clinicians or health system administrators calibrating the model for deployment can therefore select a $\beta$ value reflecting their local cost tolerance — for example, choosing $\beta$ = 1.5 (mean = 0.878, 95\% CI: 0.866–0.890) if a moderate emphasis on sensitivity over precision is deemed appropriate — with confidence that the reported performance bounds will generalize reliably.
+
+The mean Youden Index of 0.399 (95\% CI: 0.359–0.438, STD = 0.126) was the most variable metric in relative terms, consistent with its dependence on both sensitivity and specificity, the latter being inherently unstable in imbalanced settings. Nevertheless, a Youden Index above 0.35 across the full confidence interval confirms that the model operates meaningfully above chance discrimination at the selected thresholds [20]. The relatively wide CI of the Youden Index further underscores that composite balance metrics are more partition-sensitive than sensitivity-dominant metrics in this class distribution, reinforcing the clinical rationale for prioritizing AUPRC and sensitivity as primary evaluation criteria for this use case.
+
+Taken together, the repeated cross-validation results establish that the CatBoost model's performance estimates are statistically stable and not the product of favorable data splitting. The concordance between single-repeat (Table~\ref{tab:catboost_metrics_first4} ) and repeated cross-validation (Table~\ref{tab:rkfold} ) estimates across all metrics — within one standard deviation in every case — supports the reliability of the single-fold models as representative of expected deployment performance. This is a prerequisite for advancing the model toward prospective clinical validation, and addresses a common methodological criticism of machine learning studies in clinical medicine that rely on single train-test splits or single cross-validation repetitions [18, 21].
+
+
+\subsection{Feature Importance and Model Interpretability}
+% =========================================================
+
+% Feature Importances
+% ---------------------
+\begin{figure}
+\centering
+\includegraphics[width=0.85\textwidth]{figures2/explainability/catboost_all_splits_feature_importances.png}
+\caption{
+CatBoost-derived feature importance scores for the 22 input features across all four independently trained models (Models 0–3). Features are color-coded by clinical domain group: Sudoscan-derived electrochemical skin conductance parameters (orange), patient demographic and clinical profile variables (blue), comorbidity indicators (green), clinical neurological examination findings (red/pink), and the Michigan Neuropathy Screening Instrument (MNSI) subscores (purple). Importance scores reflect the mean absolute contribution of each feature to reducing prediction loss across all trees in the ensemble. Features are ranked by their average importance across folds.}
+\label{fig:feature_importances}
+\end{figure}
+
+% SHAP
+%------------------------------
+\begin{figure}
+\centering
+\includegraphics[width=0.85\textwidth]{figures2/explainability/catboost_all_splits_shap.png}
+\caption{
+ Heatmap of mean absolute SHAP (SHapley Additive exPlanations) values for each of the 22 input features across the four independently trained CatBoost models (Models 0–3). Each cell represents the mean absolute SHAP value for that feature in the corresponding model, reflecting the average magnitude of that feature's contribution to individual predictions. Feature color coding follows the same clinical domain groupings as Figure \ref{fig:feature_importances}. Higher SHAP values indicate greater average influence on the model output regardless of direction. Features are ordered by their average mean absolute SHAP value across folds.
+ }
+\label{fig:shap}
+\end{figure}
+
+Across all four folds, CatBoost feature importances (Figure~\ref{fig:feature_importances}) and SHAP-based explanations (Figure~\ref{fig:shap}) converged on a consistent set of clinically meaningful predictors, reinforcing the model's interpretability and lending biological plausibility to its decision logic — a critical consideration for clinical acceptance of machine learning tools [12].
+
+Two neurological examination findings — decreased ankle reflex (DEC\_AR) and decreased vibration sensation (DEC\_VS) — emerged as the most consistently dominant predictors across all models. DEC\_AR was the single most important feature overall, with importance scores ranging from 9.74 to 14.43 and mean absolute SHAP values of 0.072–0.076 across all four folds. DEC\_VS similarly ranked among the top five features in every fold (importance: 5.78–10.24; SHAP: 0.039–0.072). This is clinically expected and biologically plausible: loss of ankle deep tendon reflexes and impaired vibration perception are among the earliest and most reliable large fiber neurological signs of DPN, and both are incorporated as cardinal diagnostic criteria in established clinical and electrophysiological staging frameworks [4, 5, 17]. Their consistent dominance across all partitions confirms that the model is anchoring its discriminative reasoning on the most diagnostically informative clinical signs — a reassuring finding for clinical translation and acceptance.
+
+Multiple Sudoscan-derived features collectively contributed substantial predictive weight, forming the second most influential feature group in aggregate. Feet asymmetry percentage (FEET\_PCT\_ASYM) ranked consistently among the top features across all folds (importance: 7.66–9.88; SHAP: 0.018–0.048), as did the neuropathy score (NS; importance: 7.43–9.65; SHAP: 0.021–0.047) and the cardiac autonomic score (CAS; importance: 3.52–8.78; SHAP: 0.010–0.049). Foot-level mean electrochemical skin conductance (FEET\_MEAN\_ESC) and its hand-level counterpart (HAND\_MEAN\_ESC, HAND\_PCT\_ASYM) provided additional moderate contributions. Sudoscan measures small fiber sudomotor function through galvanic skin response and has been validated as a rapid, noninvasive surrogate marker of sudomotor neuropathy — an early manifestation of diabetic small fiber neuropathy that frequently precedes or accompanies the large fiber involvement detectable by NCS [13, 14]. The co-prominence of both large fiber neurological examination findings and multiple Sudoscan-derived small fiber parameters across all folds is particularly noteworthy: it suggests the model is integrating complementary information spanning the full spectrum of peripheral nerve fiber subtypes affected in DPN, rather than relying exclusively on any single modality. This multimodal integration may contribute to the model's robust sensitivity, as patients presenting with predominantly small fiber or predominantly large fiber involvement would each be captured through different feature pathways. This may also explain the initial finding on why, in the initial study of unoptimized models, the combination of the two set of features produced performance metrics close to the full set features (Figure~\ref{fig:auprc_heatmaps}).
+
+Diabetes duration (DM\_DUR) ranked second in importance in Model 0 and remained consistently in the top five features across all folds (importance: 6.97–12.27; SHAP: 0.016–0.079), corroborating its well-established epidemiological role as a major risk factor for DPN. The relationship between disease duration and neuropathy risk is thought to reflect cumulative metabolic insult, oxidative stress, and neuroinflammation over time [4, 5]. Similarly, age (AGE), HbA1c (HBA1C), and insulin use (INSULIN) contributed consistently, albeit at lower magnitudes, consistent with their documented roles in DPN pathophysiology [4].
+
+The MNSI score, reflecting structured patient-reported and clinician-assessed symptom burden, contributed meaningfully — particularly in Models 0 and 3 — with SHAP values of 0.010–0.041, suggesting it retains discriminative value even in a multivariate, data-driven framework alongside the more objective neurological examination and Sudoscan findings. This is relevant for settings where Sudoscan devices may not be available, as it implies the model draws meaningful signal from symptom-based instruments as well [15].
+
+In contrast, comorbidities Hypertension (HPN) and Chronic Kidney Disease (CKD) received little feature importance and SHAP values, while peripheral arterial occlusive disease (PAOD) and Guillain-Barré syndrome (GBS) received near-zero importance in all four models, suggesting these comorbidities do not independently contribute to DPN prediction in this cohort — a finding that likely reflects their low prevalence in the study population and their pathophysiological distinction from diabetic neuropathy.
+
+\subsection{Counterfactual Analysis}
+%===============================================================
+To move beyond predictive accuracy and toward clinical utility, this study employed counterfactual explanation analysis using the DiCE (Diverse Counterfactual Explanations) framework \cite{mothilal2020}. Counterfactual explanations address the question: "What is the minimal change to a patient's features that would result in a different model prediction?" Unlike global feature importance methods such as SHAP or LIME, which describe average model behavior, counterfactuals are inherently patient-specific and action-oriented, making them particularly suited to clinical decision support contexts \cite{wachter2017}.
+
+% Local CF Summary Across Models
+% -------------------------------
+\begin{table}[h]
+\footnotesize
+\centering
+\begin{tabular}{ccccccccc}
+\toprule
+Model & Candidates & Misclassified & Borderline & Instances with CF & Total CFs & Sparsity Mean & L1 Mean & L2 Mean \\
+\midrule
+0 & 12 & 12 & 2 & 4 & 58 & 4.19 & 4.17 & 3.29 \\
+1 & 16 & 9 & 10 & 3 & 22 & 3.40 & 1.85 & 1.33 \\
+2 & 11 & 7 & 7 & 2 & 14 & 3.32 & 1.18 & 0.82 \\
+3 & 14 & 9 & 8 & 1 & 3 & 4.00 & 1.77 & 1.14 \\
+\bottomrule
+\end{tabular}
+\caption{Aggregate summary of local counterfactual generation across four CatBoost models trained on cross-validation folds. Candidates denotes the number of test-set patients selected for counterfactual analysis based on being either misclassified or borderline (prediction probability within a defined low-confidence margin). Misclassified indicates the subset with incorrect predictions, while Borderline indicates low-confidence predictions (whether predictions were correct or not). Instances with CF reports how many candidate patients successfully yielded at least one valid counterfactual. Total CFs indicate the total number of counterfactuals the model produced for all instances. Sparsity Mean reflects the average number of features altered per counterfactual; L1 and L2 means quantify the magnitude of feature changes using Manhattan and Euclidean distances, respectively. Model 2 produced the most parsimonious counterfactuals (sparsity: 3.32; L1: 1.18; L2: 0.82), suggesting that its decision boundary permits smaller, more targeted feature perturbations to achieve a prediction reversal. Model 0 required the largest perturbations overall (L1: 4.17; L2: 3.29), indicating a more complex or less linearly separable boundary for its fold. The relatively low sparsity values across all models (range: 3.32–4.19 out of 6 actionable features) suggest that prediction reversals generally require changes to more than half of the available actionable features, highlighting the multifactorial nature of DPN risk.
+}
+\label{tab:localcf-model-level}
+\end{table}
+
+% Local CF Details Across Models
+% -------------------------------
+\begin{table}[h]
+\footnotesize
+\centering
+\begin{tabular}{ccccccccc}
+\toprule
+Model & Patient ID & Probability & Margin & Outcome & CF Count & Sparsity Mean & L1 mean & L2 Mean \\
+\midrule
+0 & 60 & 0.52 & 0.10 & False Positive  & 32 & 3.33 & 1.23 & 1.15 \\
+0 & 85 & 0.73 & 0.30 & False Positive  & 3 & 4.25 & 2.00 & 1.17 \\
+0 & 99 & 0.22 & 0.20 & False Negative & 1 & 4.50 & 2.35 & 1.06 \\
+0 & 135 & 0.80 & 0.37 & False Positive  & 22 & 4.70 & 11.09 & 9.78 \\
+1 & 30 & 0.44 & 0.04 & False Positive  & 20 & 3.19 & 1.90 & 1.77 \\
+1 & 58 & 0.46 & 0.07 & True Positive & 1 & 3.50 & 2.20 & 1.39 \\
+1 & 74 & 0.46 & 0.06 & False Positive  & 1 & 3.50 & 1.45 & 0.84 \\
+2 & 48 & 0.47 & 0.02 & True Positive & 13 & 3.14 & 0.86 & 0.78 \\
+2 & 55 & 0.50 & 0.06 & True Positive & 1 & 3.50 & 1.50 & 0.87 \\
+3 & 97 & 0.52 & 0.05 & True Positive & 3 & 4.00 & 1.77 & 1.14 \\
+\bottomrule
+\end{tabular}
+\caption{Instance-level counterfactual statistics for individual candidate patients across four CatBoost models. Each row represents a patient for which counterfactuals were successfully generated. The model indicates where this patient was included as part of the test set.   
+The rest of the columns report the model's predicted probability for the patient, the margin (distance from the 0.5 decision threshold), prediction outcome, the number of valid counterfactuals produced (CF Count), and the mean sparsity (number of features changed), L1 (Manhattan), and L2 (Euclidean) distances of those counterfactuals. Patients with very low margins (e.g., ID 48, margin = 0.02; ID 97, margin = 0.05) sit near the decision boundary, requiring only small feature changes (L1 $\le$ 1.77) to reverse classification. In contrast, Patient 135, a False Positive with probability 0.80 and margin 0.37, required substantially larger perturbations (L1 mean: 11.09; L2 mean: 9.78) across 22 counterfactuals, indicating a deeply embedded misclassification. Counterfactuals were generated for both misclassified (False Positive, False Negative) and correctly classified borderline (True Positive) cases, providing explanatory value for model uncertainty regardless of prediction correctness. The inclusion of True Positive borderline cases is clinically relevant: these represent patients correctly identified as high-risk but with low model confidence, for whom counterfactual scenarios can guide preventive clinical decisions.
+}
+\label{tab:localcf-listing}
+\end{table}
+
+
+\paragraph{Feature Actionability and the Counterfactual Candidate Pool}
+A prerequisite for clinically meaningful counterfactuals is that the features being altered must correspond to interventions that are realistically achievable. Accordingly, features were stratified by actionability prior to counterfactual generation (Table~\ref{tab:cf_features}). Immutable demographic attributes (sex, age, DM duration) and examination-derived measurements (neurological findings, MNSI, Sudoscan readings) were excluded, as these do not correspond to modifiable patient states. This exclusion is not merely a technical constraint: counterfactuals generated from non-actionable features risk producing explanations that are statistically valid but clinically misleading [CITE:karimi2020]. The final actionable feature set—HbA1c, insulin use, hypertension, dyslipidemia, CKD, and PAOD—reflects a pragmatic and evidence-aligned subset of DPN risk factors for which clinical pathways exist. The inclusion of CKD and PAOD as conditional features acknowledges that while these conditions are not reversible, their management through nephroprotective and revascularization strategies can meaningfully alter the patient's risk trajectory.
+
+\paragraph{Candidate Instances and Counterfactual Generation}
+We identified misclassified instances (incorrect predictions) and borderline instances (prediction probability within 0.1) as candidate instances for counterfactual generation. A total of 53 candidates were identified but only 10 yielded counterfactuals across the 4 models after a predefined generation timeout of 1 hour. Table~\ref{tab:localcf-model-level} provides a summary of the counterfactuals generated per model while Table~\ref{tab:localcf-listing} provides details of the 10 candidates that successfully generated counterfactuals.
+
+\subsubsection{Instance Level Counterfactual Analysis}
+% =====================================================
+In this section we provide an analysis and synthesis of the instances that were able to produce counterfactuals. Due to limitation of space, we will confine ourselves to the analysis of counterfactuals from Model 0. A feature change heatmap for these instances can be found in Figures~\ref{fig:localcf-m0-60}-\ref{fig:localcf-m0-135}. 
+
+We chose Model 0 for detailed discussion since it produced the most counterfactuals and offers diverse scenarios covering borderline correct classification, confident misclassifications, and the sole example of a false negative outcome.  Collectively, these cases provide a rich and internally coherent account of Model 0's learned decision structure, its characteristic counterfactual behavior, and its specific strengths and vulnerabilities as a component of the ensemble pre-diagnostic screening framework. The counterfactuals for the Models 1-3 will be discussed in the aggregation-level counterfactual analysis that follows.
+
+Model 0 applies a classification threshold of 0.4266 — a relatively moderate threshold that is neither the most liberal (Model 1 at 0.3917) nor the most conservative (Model 3 at 0.47). Four instances generated a total of 58 counterfactuals under this model. We proceed with the discussion of these instances and their counterfactuals below.
+
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=0.97\textwidth]{figures2/counterfactuals/060catboost_split0_local_cf.png}
+\caption{Counterfactuals for Patient 60}
+\label{fig:localcf-m0-60}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=0.97\textwidth]{figures2/counterfactuals/catboost_split0_local_cf_85.png}
+\caption{Counterfactuals for Patient 85}
+\label{fig:localcf-m0-85}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=0.97\textwidth]{figures2/counterfactuals/catboost_split0_local_cf_99.png}
+\caption{Counterfactuals for Patient 99}
+\label{fig:localcf-m0-99}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=0.97\textwidth]{figures2/counterfactuals/135catboost_split0_local_cf.png}
+\caption{Counterfactuals for Patient 135}
+\label{fig:localcf-m0-135}
+\end{figure}
+
+
+\paragraph{Patient 99 --- Confident False Negative}
+\textit{Patient Profile}: Female, 42 years old; HbA1c 8.6\%; no insulin use; hypertension present; dyslipidemia present; no PAOD or CKD. Incorrectly predicted as Unconfirmed DPN at a probability of 0.2249, substantially below the Model 0 threshold of 0.4266 (margin = -0.2016), despite a confirmed clinical diagnosis.
+
+Patient 99 represents the most clinically consequential misclassification type in a pre-diagnostic screening framework — a false negative — in which a patient with confirmed DPN was classified by Model 0 as Unconfirmed DPN, with a predicted probability of only 0.2249. The large negative decision margin of 0.2016  indicates that this patient was positioned far from Model 0's decision boundary of 0.4266, deep within the unconfirmed DPN classification region of the model's learned feature space. This deep mispositioning is particularly notable given that Patient 99 is the only false negative instance in Model 0.   
+
+In the context of the proposed screening system, a false negative of this magnitude carries direct clinical risk: the patient would not be flagged for nerve conduction study referral, potentially delaying diagnosis and appropriate neuropathic management in a relatively young individual. The counterfactual heatmap (Figure~\ref{fig:localcf-m0-99}) underscores the severity of this misclassification: only a single counterfactual instance was generated.  
+
+The analysis of this counterfactual must take into consideration that the suggestions are to flip the false negative prediction from Unconfirmed DPN to Confirmed DPN. The sole counterfactual proposed the simultaneous initiation of insulin therapy (INSULIN: 0→1), an increase in HbA1c (+0.7), the management of hypertension and dyslipidemia (HPN: 1→0; DSLPDMIA: 1→0), and the introduction of CKD (CKD: 0→1). While three of these five proposed changes are non-actionable — the removal of existing comorbidities and the introduction of a new pathological condition — and one (the HbA1c increase) is counterintuitive from a clinical management perspective, they are intuitive when understood from the perspective of flipping this patient's classification from Unconfirmed DPN to Confirmed DPN, that is, it can be understood that an increase in glycemic index, the introduction of chronic kidney disease and the recommendation to start taking insulin are characteristics, according to this model, of someone with Confirmed DPN. 
+
+From a pre-diagnostic screening perspective, the false negative classification of Patient 99 serves as a critical reminder that even within a well-performing cross-validated model, individual fold-specific representational gaps can produce clinically consequential errors for atypical patient phenotypes, and that clinician judgment must remain an indispensable adjunct to model-based decision support in such cases.
+
+\paragraph{Patient 60 --- Borderline False Positive}
+\textit{Patient Profile}: Male, 55 years old; HbA1c 9.3\%; no insulin use; hypertension present; no dyslipidemia, PAOD, or CKD . Predicted as Confirmed DPN at a probability of 0.5216, marginally exceeding the Model 0 classification threshold of 0.4266 (margin = 0.095).
+
+Patient 60 is a 55-year-old male classified by Model 0 as Confirmed DPN (probability = 0.5216) despite an unconfirmed clinical diagnosis.  The counterfactual heatmap (Figure~\ref{fig:localcf-m0-60}) revealed that glycated hemoglobin (HbA1c) was the single most decisive modifiable feature driving this patient's classification. Across 32 generated counterfactual instances (the largest counterfactual set produced by any patient in this analysis)  the predominant pathway to reclassification as Unconfirmed DPN consistently required a reduction in HbA1c, with proposed decrements ranging from -0.1 to -2.3 units. 
+
+% The volume and granularity of this counterfactual set are characteristic of Model 0's behavior in the vicinity of its decision boundary: the model trained on this fold has learned a decision surface that is highly sensitive to incremental HbA1c variation for patients with this specific profile. 
+
+Beyond glycemic control, a subset of counterfactuals (CF 9, CF 11–12, CF 15–16, CF 19–23, CF 28, CF 30, CF 32) proposed the introduction of comorbidities --- specifically dyslipidemia, CKD, or PAOD — as alternative or adjunctive reclassification pathways. The appearance of CKD as a proposed introduction in several of these counterfactuals is consistent with a pattern observed in other Model 0 cases, particularly Patient 85, suggesting that Model 0's training partition encoded a specific co-occurrence relationship between CKD and confirmed DPN classification that influences the geometry of its decision boundary. These counterfactuals — which suggest that a patient develop new diseases such as CKD or PAOD as a way to change the model's prediction — are not clinically useful, since no real intervention can or should induce a disease state in a patient. They are therefore labeled as non-actionable. One exception worth noting is CF 14, which proposed starting insulin therapy alongside a small reduction in HbA1c of −0.3. While this combination is closer to a real clinical scenario — since insulin initiation is a legitimate therapeutic decision — it cannot be considered a straightforward recommendation on its own, as the decision to start insulin depends on a broader clinical assessment beyond neuropathy risk alone. Overall, the counterfactual analysis for Patient 60 shows that the model's classification was not random or clinically unreasonable. The patient's elevated HbA1c was the main factor pushing the prediction toward confirmed DPN, and bringing it down through better diabetes management — such as medication adjustment, lifestyle modification, or closer glycemic monitoring — remains the most practical and meaningful way to potentially shift this patient's risk classification under Model Split 0.
+
+\paragraph{Patient 135 --- Confident False Positive}
+\textit{Patient Profile}: Female, 64 years old; HbA1c 6.7\%; no insulin use; hypertension present; dyslipidemia present; no PAOD or CKD. Predicted as Confirmed DPN at a notably high probability of 0.7971, substantially above the Model 0 threshold of 0.4266 (margin = 0.3705), despite an unconfirmed clinical diagnosis.
+
+Patient 135 represents a diagnostically important false positive case, distinguished from the borderline case of Patient 60 (also a Model 0 case) by its considerably higher predicted probability (0.7971) and wider decision margin (0.3705). This within-split contrast is instructive: both patients were evaluated under the same decision structure by the model, yet they produced markedly different counterfactual landscapes — Patient 60 generating 32 graduated, predominantly HbA1c-driven counterfactuals and Patient 135 generating 22 counterfactuals of greater complexity and required perturbation magnitude (sparsity mean:4.70; L1 mean: 11.09; L2 mean: 9.78 --- see Table~\ref{tab:localcf-listing}). This divergence reflects the significant difference in their decision margins: Patient 60's boundary-adjacent positioning allowed Model 0 to generate numerous granular reclassification pathways, while Patient 135's deeper positioning within the confirmed DPN region — despite sharing the same threshold — required substantially larger and more complex feature perturbations to traverse the decision surface. The model's high-confidence prediction of 0.7971 for Patient 135 suggests that this patient's feature profile aligns strongly with the confirmed DPN prototype learned by Model 0's training partition, a characterization that warrants close clinical scrutiny given the unconfirmed diagnosis. Notably, the patient's HbA1c of 6.7\% falls within a range considered near-target for many diabetes management guidelines, rendering this case atypical with respect to the model's high-confidence prediction.
+
+The most feasible pathways incorporating a potentially real therapeutic intervention is represented by those with moderate reduction in glycemic index as represented by, first, CF 11, CF 21, and CF 22, which require only moderate HbA1c reductions (-1.5 to -1.6) without altering the other features; second, CF 17, which require moderate HbA1c reduction of -1 and introducing insulin; and finally, CF 8,10 and 16 - which require moderate HbA1c reduction of -0.9 to -1 while addressing dyslipidemia and hypertension. Other counterfactuals suggested the introduction of comorbidities PAOD or CKD (CF 1-5, CF 7, CF 9, CF 14-17, CF 20). As previously explained, these suggestions are deemed unactionable. 
+
+Collectively, these findings indicate that Model 0 has positioned Patient 135 deep within its confirmed DPN classification region. From a pre-diagnostic screening standpoint, this high-confidence false positive may represent a clinically meaningful risk signal warranting longitudinal monitoring or early nerve conduction study referral, particularly given the pronounced model confidence despite apparently near-controlled glycemia.
+
+\paragraph{Patient 85 --- Confident False Positive}
+\textit{Patient Profile}: Female, 69 years old; HbA1c 8.8\%; no insulin use; hypertension present; dyslipidemia present; no PAOD or CKD. Predicted as Confirmed DPN at a probability of 0.7269, substantially exceeding the classification threshold of 0.4266 (margin = 0.3003), despite an unconfirmed clinical diagnosis. 
+
+Patient 85 represents a high-confidence false positive, with a predicted probability of 0.7269 placing this patient deep within the confirmed DPN classification region of the model's decision space. 
+% The wide decision margin of 0.3003 — combined with the patient's advanced age (69 years), moderately elevated HbA1c (8.8\%), hypertension, and dyslipidemia — indicates that the model has encoded a cumulative cardiometabolic and age-related neuropathic risk profile strongly consistent with its learned representation of confirmed DPN cases. 
+As with Patient 135, who presented a similarly high-confidence false positive under the same Model 0, the unconfirmed clinical diagnosis does not straightforwardly indicate a model error, but may instead reflect subclinical neuropathic involvement not yet captured by the diagnostic criteria applied.
+
+The counterfactual heatmap (Figure~\ref{fig:localcf-m0-85}) for Patient 85 is notably sparse, generating only three counterfactual instances — a structural characteristic consistent with the model's deep positioning of this patient within the confirmed DPN region. Critically, all three counterfactuals were entirely non-actionable, suggesting the introduction of CKD (CKD: 0→1).
+
+It is particularly striking that CKD introduction appeared in all three counterfactuals generated for this patient. In plain terms, the model could not find any realistic way to shift its prediction away from confirmed DPN without first imagining that this patient also had CKD — a condition he does not actually have. This pattern likely has one of two explanations. The first is that the model picked up a coincidental association in the training data, where patients without CKD happened to more frequently receive a confirmed DPN classification, causing the model to treat CKD absence as a subtle risk signal even though this relationship may not reflect a true biological mechanism. The second, more clinically interesting explanation, is that this association is real — meaning that within the patient population used to train the model, the specific combination of metabolic risk factors present in this patient genuinely tended to follow a different neuropathic risk course when CKD was also present, and the model learned to reflect this distinction in its predictions. Either way, because CKD introduction cannot be proposed as a clinical intervention, these counterfactuals remain non-actionable regardless of the underlying reason for their appearance.
+
+Other suggestions from the counterfactuals follow a more intuitive logic for shifting this patient's classification toward Unconfirmed DPN. CF 1 and CF 3 both imagined a scenario where the patient no longer had hypertension, combined with a modest reduction in HbA1c of −0.6 and −0.7 respectively — in other words, the model suggests that if this patient's blood pressure condition were resolved and his blood sugar brought slightly closer to target, the prediction would change. CF 2 took a different approach, proposing that starting insulin therapy alongside a similar HbA1c reduction of −0.7 could achieve the same shift — suggesting that transitioning to insulin as part of an intensified diabetes management plan, together with modest glycemic improvement, represents an alternative pathway that the model recognizes as meaningfully lowering the patient's neuropathic risk profile. 
+
+The low number of counterfactuals produced for Patient 85, together with the suggestions of modifications for other features show that high-confidence predictions in deeply positioned cases resist reclassification through any clinically feasible single-feature modification, underscoring the appropriateness of prioritizing such patients for urgent nerve conduction study referral within the proposed screening framework.
+
+\paragraph{Synthesis of Local Counterfactual Instance Analyses}
+
+Despite sharing a common classification threshold of 0.4266, the four Model 0 patients exhibited a remarkably wide range of predicted probabilities and decision margins, spanning from a large negative margin of −0.2016 (Patient 99, probability = 0.2249) to a large positive margin of 0.3705 (Patient 135, probability = 0.7971), with Patients 60 and 85 occupying intermediate positions of 0.095 (probability = 0.5216) and 0.3003 (probability = 0.7269) respectively. This wide intra-split dispersion in decision margins — covering nearly the full range of the model's predicted probability space — indicates that Model 0's decision surface is highly discriminating across a broad spectrum of metabolic and comorbidity profiles, positioning patients at vastly different distances from its threshold depending on the specific combination of features presented. This discriminative range is a favorable property of the model from a screening perspective, as it implies that the Model 0 threshold does not produce a dense clustering of cases near the boundary — which would indicate poor calibration — but rather a meaningful spread of confidence levels across the patient cohort.
+
+The clinical implications of this margin heterogeneity are direct and actionable. Patient 135, positioned furthest above the threshold with a margin of 0.3705, represents the highest-priority candidate for nerve conduction study referral among the four Model 0 cases, as the model's high-confidence prediction reflects a robust alignment between this patient's feature profile and Model 0's learned confirmed DPN prototype. Patient 85, with a margin of 0.3003, occupies a similarly high-priority referral position. Patient 60, with a narrow positive margin of 0.095, is appropriately considered a moderate-priority case warranting watchful waiting and glycemic reassessment, given that modest improvements in HbA1c could legitimately shift the classification. Patient 99, with a large negative margin of −0.2016, represents the inverse scenario: a patient whose feature profile the Model 0 positions far from its confirmed DPN region, yet who carries a confirmed clinical diagnosis — the most clinically consequential and methodologically important case in the Model 0 cohort.
+
+The collective behavior of Model 0 across its four analyzed cases carries several direct implications for the clinical deployment and continued development of this pre-diagnostic screening system. First, the Model 0 threshold of 0.4266 appears appropriately calibrated for high-sensitivity detection of confirmed DPN in patients with elevated comorbidity burden and moderate-to-high HbA1c — the dominant phenotype in its training partition — but may require threshold adjustment or ensemble weighting modification to improve sensitivity for younger, non-insulin-dependent confirmed DPN patients with moderate glycemic profiles. Second, the systematic appearance of CKD as a counterfactual pathway component across three of four Model 0 cases argues for an examination of CKD distribution and its relationship to DPN confirmation status within Model 0's training partition, with targeted data augmentation if a systematic imbalance is identified. Third, the decision margin values generated by Model 0 — spanning from a confident false negative to a highly confident false positive — suggest that this fold's outputs can meaningfully inform referral prioritization, with high-margin positive predictions (Patients 85 and 135) warranting urgent referral and narrow-margin positive predictions (Patient 60) supporting a monitored glycemic management pathway. Finally, the false negative case of Patient 99 serves as a specific and actionable quality indicator for Model 0, identifying a confirmed DPN phenotype for which this fold's representational capacity is demonstrably limited and for which ensemble-level classification — integrating predictions across all four splits rather than relying on any single fold — is particularly essential to maintain adequate screening sensitivity.
+
+\subsubsection{Aggregate-level Counterfactual Analysis}
+% =====================================================
+At this point we analyze counterfactuals for all models on the aggregate level. This allows us to see across all models what features are being targeted to change the models' decisions, allowing us to assess the importance of these features and their possible interactions as well as determine possible clinical implications. Table~\ref{tab:localcf-changed} shows the feature-level frequency of changes across all counterfactuals (97) generated by 10 instances from 4 models.
+
+% Global Importance Across Models
+% -------------------------------
+
+%  Local CF Change Features Across Models
+% ---------------------------------------
+\begin{table}[h]
+\footnotesize
+\centering
+\begin{tabular}{ccccccccc}
+\toprule
+Model & Patient ID & CF Count & INSULIN & HBA1C & HPN & PAOD & DSLPDMIA & CKD \\
+\midrule
+0 & 60 & 32 & 1 & 29 & 0 & 2 & 5 & 7 \\
+0 & 85 & 3 & 1 & 3 & 2 & 0 & 0 & 3 \\
+0 & 99 & 1 & 1 & 1 & 1 & 0 & 1 & 1 \\
+0 & 135 & 22 & 2 & 22 & 4 & 6 & 2 & 9 \\
+1 & 30 & 20 & 0 & 20 & 0 & 0 & 5 & 0 \\
+1 & 58 & 1 & 1 & 1 & 0 & 0 & 1 & 0 \\
+1 & 74 & 1 & 1 & 1 & 0 & 0 & 1 & 0 \\
+2 & 48 & 13 & 0 & 13 & 0 & 0 & 0 & 3 \\
+2 & 55 & 1 & 1 & 0 & 1 & 0 & 1 & 0 \\
+3 & 97 & 3 & 3 & 1 & 1 & 0 & 3 & 0 \\
+\midrule
+ & Totals & 97 & 11 & 91 & 9 & 8 & 19 & 23 \\
+\bottomrule
+\end{tabular}
+\caption{Feature-level frequency of changes across all 97 counterfactuals generated from four CatBoost models. Each cell reports the number of counterfactuals for a given patient–model pair in which the corresponding feature was altered. Column totals summarize aggregate feature modification frequency across all instances. HbA1c (HBA1C) was modified in 91 of 97 counterfactuals (93.8\%), establishing it as the overwhelmingly dominant counterfactual driver. Chronic Kidney Disease (CKD) was the second most frequently modified feature (23 instances, 23.7\%), followed by Dyslipidemia (DSLPDMIA; 19 instances, 19.6\%), and Insulin use (INSULIN; 11 instances, 11.3\%). Hypertension (HPN) and Peripheral Arterial Occlusive Disease (PAOD) contributed minimally (9 and 8 instances, respectively). The concentration of changes in HbA1c across nearly all instances—regardless of model or patient—underscores that glycemic optimization represents the single most impactful actionable intervention for modifying DPN risk classification in this cohort. 
+}
+\label{tab:localcf-changed}
+\end{table}
+
+% Don't include as this could lead to critique; 
+% Analysis from the local cf table is more meaningful
+% \begin{figure}
+% \centering
+% \includegraphics[width=0.6\textwidth]{figures2/counterfactuals/global_cf.png}
+% \caption{Global counterfactual feature importance across four independently trained CatBoost models (Models 0–3), derived from DiCE-generated counterfactuals on the hold-out test set of each cross-validation fold. Each cell represents the normalized proportion of counterfactuals in which that feature was altered to reverse the model's prediction, scaled from 0.0 (never changed) to 1.0 (changed in all counterfactuals). HbA1c (HBA1C) was the dominant feature across Models 0, 1, and 2 (importance scores: 0.95, 1.00, and 0.93, respectively), reflecting its central role in DPN risk modification. Model 3 exhibited a divergent pattern, with DSLPDMIA and INSULIN each reaching maximum importance (1.00), suggesting that this fold's data composition or decision boundary emphasized lipid and pharmacological factors over glycemic control alone. CKD showed moderate importance in Models 0 and 2 (0.34 and 0.21), while HPN and PAOD contributed minimally. The cross-model consistency of HbA1c reinforces its primacy as the most actionable counterfactual driver in DPN pre-diagnostic screening.}
+% \label{fig:globalcf}
+% \end{figure}
+
+% \paragraph{HbA1c as the Dominant Counterfactual Driver}
+HbA1c modification found to be the feature that was most changed across all models, (55 out of 58 for Model 0; 22 out of 22 for Model 1; and 13 out of 14 for Model 2; and 1 out of 3 for Model 3). In total, this is an overwhelming majority of 91 of the 97 total counterfactuals at a rate of 93.9\%. This means the glycemic index is deemed by the models as the most accessible path towards reclassification among all features identified as actionable.
+This finding is clinically coherent and well-supported in the literature: chronic hyperglycemia—indexed by HbA1c—drives the oxidative and metabolic mechanisms underlying peripheral nerve damage in diabetic patients, and tighter glycemic control has been demonstrated to reduce DPN incidence and progression \cite{callaghan2012,tesfaye2010}. The counterfactual analysis, thus, not only identifies HbA1c as the most important model feature, but operationalizes this importance as an actionable clinical recommendation: patients flagged as high-risk by the model may be redirected toward glycemic optimization before, or in lieu of, a costly Nerve Conduction Study referral.
+
+% Don-t include as it can be critiqued for lack of examples - Global counterfactual feature importance (Figure~\ref{fig:globalcf}) demonstrated a highly consistent pattern: HbA1c modification was necessary to reverse the DPN prediction in the overwhelming majority of counterfactuals across Models 0, 1, and 2 (importance scores: 0.95, 1.00, and 0.93, respectively). 
+
+Model 3 exhibited a divergence from this pattern, with DSLPDMIA and INSULIN each attaining maximum counterfactual importance (3 out of 3) while HbA1c's accounted for 1 out of 3. Consideration has, of course, to be taken that there are only 3 counterfactuals for this model and all of them coming from a patient with an elevated level of HbA1c (12.4\%). This suggests that for patients in whom HbA1c is at a high level — dyslipidemia management and insulin therapy optimization may constitute the primary levers for risk reclassification.
+
+% \paragraph{ Multifactorial Nature of Counterfactual Reversals}
+Despite HbA1c's dominant role, the mean sparsity values across all four models ranged from 3.32 to 4.19 (Table~\ref{tab:localcf-model-level}), indicating that counterfactual reversals required changes to approximately three to four of the six available actionable features on average. This implies that the models do not rely on a single feature threshold to classify DPN risk, but rather on the combinatorial interaction of multiple comorbid conditions—a pattern consistent with the known multifactorial pathogenesis of DPN \cite{feldman2019}. 
+
+CKD and dyslipidemia emerged as the second and third most frequently altered features (23 and 19 counterfactual instances, respectively (Table~\ref{tab:localcf-changed}), consistent with their established roles as peripheral neuropathy risk amplifiers through vascular and metabolic mechanisms \cite{jaiswal2017,callaghan2012}. 
+
+In terms of distance from the reference instance, Model 0 has the highest mean among the models (L1 mean = 4.17; L2 = 3.29).  The higher distance values may be an effect of higher sparsity but also of the decision space of this model which allowed for higher classification margins.  Model 2 produced the most
+parsimonious counterfactuals (L1 mean = 1.18; L2 mean = 0.82; sparsity mean = 3.32), suggesting that its decision boundary permits smaller, more targeted feature perturbations to achieve a prediction reversal.
+
+The integration of counterfactual analysis into this pre-diagnostic screening framework addresses a critical barrier to ML adoption in clinical settings: interpretability. Black-box predictions, however accurate, are unlikely to be acted upon by clinicians without a justification that aligns with their clinical reasoning \cite{rudin2019}. By grounding model explanations in actionable, modifiable features and framing them as "what-if" scenarios consistent with clinical intervention pathways, the counterfactual approach offers a practical bridge between statistical prediction and clinical decision-making. Notably, the approach does not require clinicians to understand the internal mechanics of the CatBoost model; instead, it presents outputs in the form familiar to clinical reasoning: "If this patient's HbA1c and dyslipidemia were better controlled, the model would not flag them for NCS referral."
+
+This has implications not only for individual patient management but for population-level screening program design, as the most frequently changed features across all counterfactuals—HbA1c, CKD status, and dyslipidemia—directly correspond to the targets of existing diabetes complication management guidelines \cite{ada2024}. Future work could explore whether counterfactual-informed clinical interventions in screened patients result in measurable changes in DPN incidence, providing prospective validation of the model's explanatory outputs.
+
 \section{Conclusion}\label{conclusion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Conclusions may be used to restate your hypothesis or research question, restate your major findings, explain the relevance and the added value of your work, highlight any limitations of your study, describe future directions for research and recommendations. 

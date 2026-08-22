@@ -38,65 +38,68 @@ Save the additional code you will make as module/postreports.py and save created
 The Discussion section of main.tex was written from an old and stale config and outputs of the pipeline.  The current outputs are those from  pipeline runs of `module/experiments/*.yml` (the configs
 `optreport.py`/`selreport.py`/`expreport.py`/`cfreports.py` actually read). 
 
-Rewrite the section with the follwing instructiosn:
+Rewrite the section with the follwing instructions:
 
 1. Update the numbers, references, figures, and tables based on the current configs and runs.
 
 2. Below are the updated sources for the figures and tables based on the most recent runs. Inform me if I missed mentioning a replacement for any figure or table.
 
-*Replacement for Table and Figures*
-tab:selection_metrics -> manuscript/references/postreport/selection/selection_metrics_summary.latex
-fig:auprc_heatmaps -> manuscript/references/selection/summaries/auprc_summary_table.png
-fig:auprc_violins -> manuscript/references/selection/violins/All/auprc_violin.png
-tab:catboost_metrics_first4 -> manuscript/references/hyperparameter_optimization/catboost_first_repeat_optimization_metrics.csv
-tab:rkfold -> manuscript/references/hyperparameter_optimization/optimization_metrics_ci.csv
-fig:catboost_auprc -> manuscript/references/explainability/catboost_pooled_auprc.png
-fig:feature_importances -> manuscript/references/explainability/catboost_all_splits_feature_importances.png
-fig:shap  ->manuscript/references/explainability/catboost_all_splits_shap.png
+	- Replacement for Table and Figures
+		- tab:selection_metrics -> manuscript/references/postreport/selection/selection_metrics_summary.latex
+		- fig:auprc_heatmaps -> manuscript/references/selection/summaries/auprc_summary_table.png
+		- fig:auprc_violins -> manuscript/references/selection/violins/All/auprc_violin.png
+		- tab:catboost_metrics_first4 -> manuscript/references/hyperparameter_optimization/catboost_first_repeat_optimization_metrics.csv
+		- tab:rkfold -> manuscript/references/hyperparameter_optimization/optimization_metrics_ci.csv
+		- fig:catboost_auprc -> manuscript/references/explainability/catboost_pooled_auprc.png
+		- fig:feature_importances -> manuscript/references/explainability/catboost_all_splits_feature_importances.png
+		- fig:shap  ->manuscript/references/explainability/catboost_all_splits_shap.png
 
-_Candidate Instances and Counterfactual Generation_
-tab:localcf-model-level -> manuscript/references/postreport/counterfactuals/ioi_summary_per_model.latex
-tab:localcf-listing -> manuscript/references/postreport/counterfactuals/cf_fulltable.latex
+	- Candidate Instances and Counterfactual Generation
+		- tab:localcf-model-level -> manuscript/references/postreport/counterfactuals/ioi_summary_per_model.latex
+		- tab:localcf-listing -> manuscript/references/postreport/counterfactuals/cf_fulltable.latex
 
-Analyze the following patients instead: 
-Patient 20 - Borderline False Positive -> folder: manuscript/references/counterfactuals/020
-Patient 40 - Borderline True Positive -> folder: manuscript/references/counterfactuals/040
-Patient 123 - Confident False Negative -> folder: manuscript/references/counterfactuals/123
+	- Analyze the following patients instead of the ones currently in main.tex
+		- Patient 20 - Borderline False Positive -> folder: manuscript/references/counterfactuals/02- 0
+		- Patient 40 - Borderline True Positive -> folder: manuscript/references/counterfactuals/040- 
+		- Patient 123 - Confident False Negative -> folder: manuscript/references/counterfactuals/123
 
-_Aggregate-level Counterfactual Analysis_
-tab:localcf-changed -> manuscript/references/postreport/counterfactuals/cf_changed_features.latex
-fig:globalcf -> manuscript/references/postreport/counterfactuals/global_cf_counts.png
+	- Aggregate-level Counterfactual Analysis
+		- tab:localcf-changed -> manuscript/references/postreport/counterfactuals/cf_changed_features.latex
+		- fig:globalcf -> manuscript/references/postreport/counterfactuals/global_cf_counts.png
 
 3. Keep in mind the following when you rewrite the section and provide arguments or explanations. If you think that an item is better reserved for the conclusion section and not in the discussion, please note it so I can plan for the conclusion section at a later time.
 
-*Provide Clear Framing/Storyline/Clinical Interpretation*
-- Clearly frame as decision-support research, not deployment-ready tool
-- Mention that it is probably the first study to systematically integrate counterfactual explanations for actionable DPN screening in a low-resource clinical setting
-- Clearly maintain that the counterfactuals is the main contribution
-   - clinical actionability
-   - avoid any claim of clinical readiness
+	- Provide Clear Framing/Storyline/Clinical Interpretation
+		- Clearly frame as decision-support research, not deployment-ready tool
+		- Mention that it is probably the first study to systematically integrate counterfactual explanations for actionable DPN screening in a low-resource clinical setting
+		- Clearly maintain that the counterfactuals is the main contribution
+		- clinical actionability
+		- avoid any claim of clinical readiness
 
-*CatBoost vs. Random Forest*
-- Defend the choice of Catboost vs. RandomForest for the later stages of the pipeline, 
-especially with respect to handling small, imbalanced data and producing counterfactuals
+	- CatBoost vs. Random Forest
+		- Defend the choice of Catboost vs. RandomForest for the later stages of the pipeline, especially with respect to handling small, imbalanced data and producing counterfactuals
 
-*Strong discussion on Clinical Actionability of Counterfactual Explanations*
-- strong discussion on  counterfactuals, especially on plausibility of generated counterfactuals
-- clarification of the DiCE genetic algorithm configuration and why only a few from the candidates produced usable counterfactuals
+	- Strong discussion on Clinical Actionability of Counterfactual Explanations
+		- strong discussion on  counterfactuals, especially on plausibility of generated counterfactuals
+		- clarification of the DiCE genetic algorithm configuration and why only a few from the candidates produced usable counterfactuals
 
-*Clearly acknowledge the following limitations*
-- The data comes from one clinic or source
-- Proof-of-concept decision support model
-- Deployment risks 
-- small dataset
-- there no external validation
-- possible selection bias 
-- lack of prospective testing
+	- Clearly acknowledge the following limitations
+		- The data comes from one clinic or source
+		- Proof-of-concept decision support model
+		- Deployment risks 
+		- small dataset
+		- there no external validation
+		- possible selection bias 
+		- lack of prospective testing
 
 4. Suggest a way of how clinicians could use this pipeline and
      create an illustration for it in a png and svg format and add these files in references/illustrations
 
 Make a plan for executing these tasks and ask me for comments.
+
+### Prompt for 
+Switch to the codereviewed_claude branch
+Execute all edits to the codereviewed_claude branch automatically without asking me for confirmation, unless something is not clear
 
 
 ## Conclusion, Recommendation, Abstract

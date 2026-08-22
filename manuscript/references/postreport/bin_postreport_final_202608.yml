@@ -1,0 +1,26 @@
+experiment:
+  summary: >
+    Post-hoc consolidation of selection and counterfactuals outputs into the
+    additional tables/figures needed for the manuscript Discussion section
+    (binary, final_202608 pipeline run).
+  classification_type: binary
+  stage: postreport
+  tag: final_202608
+  verbosity: 0
+
+# Which selection-stage run to summarize, and which of its feature sets
+# (selreport.py writes one benchmarking joblib per feature set; 'All' is the
+# feature set actually used for the manuscript's model-selection table).
+selection:
+  tag: final_202608
+  feature_set: All
+  metrics: [auprc, roc-auc, sensitivity, specificity, accuracy, precision, youden, f1]
+
+# Which counterfactuals-stage run to summarize.
+counterfactuals:
+  model:
+    code: catboost
+    name: CatBoost
+  tag: final_202608
+  nsplits: 4
+  actionable_features: INSULIN,HBA1C,HPN,PAOD,DSLPDMIA,CKD

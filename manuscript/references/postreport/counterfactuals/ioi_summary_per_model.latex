@@ -1,0 +1,10 @@
+\begin{tabular}{rrrrrrrr}
+\toprule
+Model & Candidates & Misclassified & Borderline & Instances with CF & Sparsity Mean & L1 Mean & L2 Mean \\
+\midrule
+0 & 19 & 14 & 5 & 4 & 2.52 & 2.47 & 1.62 \\
+1 & 13 & 11 & 2 & 1 & 2.40 & 3.27 & 2.20 \\
+2 & 12 & 9 & 3 & 0 & NaN & NaN & NaN \\
+3 & 17 & 8 & 9 & 3 & 2.05 & 2.80 & 2.01 \\
+\bottomrule
+\end{tabular}

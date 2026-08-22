@@ -27,6 +27,13 @@ You may find these files helpful: `nested_cv_optimization.md` and `nested_cv_opt
 Assess the feasibility of this request and make a plan for executing these tasks. Confirm with me first before executing
 
 ## Results and Discussion
+
+*Creation of Additional Table and Figures *
+Currently the discussion section of main.tex contains results from a previous run and needs to be updated. 
+I will give clearer instructions later how the tables and figures will be replaced from the latest run. For now, I will ask you to create some additional tables and figures.  
+Save the additional code you will make as module/postreports.py and save created tables and figures in   module/experiments/binary/postreport (following the structure of other configs). You may create a bin_postreport_final_202608.yml if you think its necessary. Later on, I will ask you to also copy the outputs of this script to the manuscript/references/postreport folder - I will tell you when to do it.
+
+
 The Discussion section of main.tex was written from a stale config and outputs of the pipeline. 
 The current outputs are those from  pipeline runs of `module/experiments/*.yml` (the configs
 `optreport.py`/`selreport.py`/`expreport.py`/`cfreports.py` actually read). 
@@ -78,7 +85,7 @@ Make a plan for executing these tasks.
 Make a plan for executing these tasks and confirm with me first before executing 
 
 
-## Quotation Sourcing
+## Citation Sourcing
 Prompt 1
 Rename the articles in references/rrl/articles to "<year-published> <author> - <title>.pdf"
 Download their bibtex file from Google Scholar and store in `references/rrl/bibtex.bib`

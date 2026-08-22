@@ -58,7 +58,7 @@ if stage == "eda":
     output_subdir = config["reporting"]["output_subdir"]
     src_rel = Path(classification_type) / output_subdir
     dst_rel = Path(output_subdir)
-elif stage == "selection":
+elif stage in ("selection", "postreport"):
     src_rel = Path(classification_type) / stage / tag
     dst_rel = Path(stage)
 else:

@@ -28,41 +28,61 @@ Assess the feasibility of this request and make a plan for executing these tasks
 
 ## Results and Discussion
 
-*Creation of Additional Table and Figures *
+### Creation of Additional Table and Figures
 Currently the discussion section of main.tex contains results from a previous run and needs to be updated. 
 I will give clearer instructions later how the tables and figures will be replaced from the latest run. For now, I will ask you to create some additional tables and figures.  
 Save the additional code you will make as module/postreports.py and save created tables and figures in   module/experiments/binary/postreport (following the structure of other configs). You may create a bin_postreport_final_202608.yml if you think its necessary. Later on, I will ask you to also copy the outputs of this script to the manuscript/references/postreport folder - I will tell you when to do it.
 
+### Edit for main.tex
 
-The Discussion section of main.tex was written from a stale config and outputs of the pipeline. 
-The current outputs are those from  pipeline runs of `module/experiments/*.yml` (the configs
+The Discussion section of main.tex was written from an old and stale config and outputs of the pipeline.  The current outputs are those from  pipeline runs of `module/experiments/*.yml` (the configs
 `optreport.py`/`selreport.py`/`expreport.py`/`cfreports.py` actually read). 
 
-Rewrite the section based on the current configs and outputs of the runs from those configs.
+Rewrite the section with the follwing instructiosn:
 
-Below are the udpated sources for the figures and tables
-- manuscript/references/hyperparameter_optimization/optimization_metrics_ci.csv 
-selection_metrics - manuscript/references/selection/summaries/auprc_summary_table_mean.png
-- manuscript/references/selection/violins/All/auprc_violin.png
-- manuscript/references/explainability/catboost_all_splits_auprc.png
-- manuscript/references/explainability/catboost_all_splits_feature_importances.png
-- manuscript/references/explainability/catboost_all_splits_shap.png
-- manuscript/references/explainability/catboost_pooled_auprc.png
-- manuscript/references/explainability/catboost_pooled_calibration.png
-- manuscript/references/explainability/catboost_pooled_dca.png
+1. Update the numbers, references, figures, and tables based on the current configs and runs.
+
+2. Below are the updated sources for the figures and tables based on the most recent runs. Inform me if I missed mentioning a replacement for any figure or table.
+
+*Replacement for Table and Figures*
+tab:selection_metrics -> manuscript/references/postreport/selection/selection_metrics_summary.latex
+fig:auprc_heatmaps -> manuscript/references/selection/summaries/auprc_summary_table.png
+fig:auprc_violins -> manuscript/references/selection/violins/All/auprc_violin.png
+tab:catboost_metrics_first4 -> manuscript/references/hyperparameter_optimization/catboost_first_repeat_optimization_metrics.csv
+tab:rkfold -> manuscript/references/hyperparameter_optimization/optimization_metrics_ci.csv
+fig:catboost_auprc -> manuscript/references/explainability/catboost_pooled_auprc.png
+fig:feature_importances -> manuscript/references/explainability/catboost_all_splits_feature_importances.png
+fig:shap  ->manuscript/references/explainability/catboost_all_splits_shap.png
+
+_Candidate Instances and Counterfactual Generation_
+tab:localcf-model-level -> manuscript/references/postreport/counterfactuals/ioi_summary_per_model.latex
+tab:localcf-listing -> manuscript/references/postreport/counterfactuals/cf_fulltable.latex
+
+Analyze the following patients instead: 
+Patient 20 - Borderline False Positive -> folder: manuscript/references/counterfactuals/020
+Patient 40 - Borderline True Positive -> folder: manuscript/references/counterfactuals/040
+Patient 123 - Confident False Negative -> folder: manuscript/references/counterfactuals/123
+
+_Aggregate-level Counterfactual Analysis_
+tab:localcf-changed -> manuscript/references/postreport/counterfactuals/cf_changed_features.latex
+fig:globalcf -> manuscript/references/postreport/counterfactuals/global_cf_counts.png
+
+3. Keep in mind the following when you rewrite the section and provide arguments or explanations. If you think that an item is better reserved for the conclusion section and not in the discussion, please note it so I can plan for the conclusion section at a later time.
 
 *Provide Clear Framing/Storyline/Clinical Interpretation*
 - Clearly frame as decision-support research, not deployment-ready tool
 - Mention that it is probably the first study to systematically integrate counterfactual explanations for actionable DPN screening in a low-resource clinical setting
 - Clearly maintain that the counterfactuals is the main contribution
-   - clinical actionability (HbA1c, CKD, dyslipidemia)
+   - clinical actionability
    - avoid any claim of clinical readiness
+
+*CatBoost vs. Random Forest*
+- Defend the choice of Catboost vs. RandomForest for the later stages of the pipeline, 
+especially with respect to handling small, imbalanced data and producing counterfactuals
 
 *Strong discussion on Clinical Actionability of Counterfactual Explanations*
 - strong discussion on  counterfactuals, especially on plausibility of generated counterfactuals
-- include an illustration on how clinicians could use this model. 
-	- create an illustration for it in png and svg format and add in references/illustrations
-- clarification of the DiCE genetic algorithm configuration and why only 10 of 53 candidates produced usable counterfactuals
+- clarification of the DiCE genetic algorithm configuration and why only a few from the candidates produced usable counterfactuals
 
 *Clearly acknowledge the following limitations*
 - The data comes from one clinic or source
@@ -73,7 +93,10 @@ selection_metrics - manuscript/references/selection/summaries/auprc_summary_tabl
 - possible selection bias 
 - lack of prospective testing
 
-Make a plan for executing these tasks.
+4. Suggest a way of how clinicians could use this pipeline and
+     create an illustration for it in a png and svg format and add these files in references/illustrations
+
+Make a plan for executing these tasks and ask me for comments.
 
 
 ## Conclusion, Recommendation, Abstract

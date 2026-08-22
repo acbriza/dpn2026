@@ -24,9 +24,25 @@ You may find these files helpful: `nested_cv_optimization.md` and `nested_cv_opt
 - manuscript/references/explainability/catboost_pooled_calibration.png
 - manuscript/references/explainability/catboost_pooled_dca.png
 
-Make a plan for executing these tasks and confirm with me first before executing 
+Assess the feasibility of this request and make a plan for executing these tasks. Confirm with me first before executing
 
 ## Results and Discussion
+The Discussion section of main.tex was written from a stale config and outputs of the pipeline. 
+The current outputs are those from  pipeline runs of `module/experiments/*.yml` (the configs
+`optreport.py`/`selreport.py`/`expreport.py`/`cfreports.py` actually read). 
+
+Rewrite the section based on the current configs and outputs of the runs from those configs.
+
+Below are the udpated sources for the figures and tables
+- manuscript/references/hyperparameter_optimization/optimization_metrics_ci.csv 
+selection_metrics - manuscript/references/selection/summaries/auprc_summary_table_mean.png
+- manuscript/references/selection/violins/All/auprc_violin.png
+- manuscript/references/explainability/catboost_all_splits_auprc.png
+- manuscript/references/explainability/catboost_all_splits_feature_importances.png
+- manuscript/references/explainability/catboost_all_splits_shap.png
+- manuscript/references/explainability/catboost_pooled_auprc.png
+- manuscript/references/explainability/catboost_pooled_calibration.png
+- manuscript/references/explainability/catboost_pooled_dca.png
 
 *Provide Clear Framing/Storyline/Clinical Interpretation*
 - Clearly frame as decision-support research, not deployment-ready tool
@@ -50,7 +66,7 @@ Make a plan for executing these tasks and confirm with me first before executing
 - possible selection bias 
 - lack of prospective testing
 
-Make a plan for executing these tasks and confirm with me first before executing 
+Make a plan for executing these tasks.
 
 
 ## Conclusion, Recommendation, Abstract
@@ -63,24 +79,29 @@ Make a plan for executing these tasks and confirm with me first before executing
 
 
 ## Quotation Sourcing
-The file `references/quotables/quotables.md` contains a list of claims that I am considering to include in the manuscript. 
-Some of them already indicate a possible source (author, year). Determine the actual sources for them. 
-The others are claims I want to include in the discussion and wish to strengthen by citing studies that support them.
-In your search, give priority to sources coming from `BMC Medical Informatics and Decision Making`, since that is my target journal.
+Prompt 1
+Rename the articles in references/rrl/articles to "<year-published> <author> - <title>.pdf"
+Download their bibtex file from Google Scholar and store in `references/rrl/bibtex.bib`
 
-Whenever possible, download the actual document (pdf preferred) and store them in `manuscript/rrl` with the format `year_author_title.pdf`. 
-Note that some claims may be present in the same document or research. Thus, check first the downloaded documents to keep the number of downloaded documents to a minimum.
-Only 1 source is required per claim.
+The file `references/quotables/quotables.md` contains a list of claims that I am considering to include in the manuscript. 
+Some of them already indicate a possible source (author, year). The others are claims I want to include in the discussion and wish to strengthen by citing studies that support them. Determine the actual or possible sources for the claims.
+
+First check the files in `references/rrl/articles`
+If the claim is not in any of those articles
+Search sources coming from `BMC Medical Informatics and Decision Making` since that is my target journal.
+Lastly, search from reputable journals and conference proceedings. 
+
+If the claim is accurate and its source is not in any of the articles in `references/rrl/articles`, try to download its source (pdf preferred) and store it in `manuscript/rrl` with the format "<year-published> <author> - <title>.pdf".  
 
 Finally, make a summary in markdown format. 
 It should have the following information: 
 - the claim
-- verdict (e.g. accurate, unsupported, contrary)
+- validation (e.g. accurate, unsupported, contrary)
 - snippet from the document that supports validates claim (if accurate) OR the corrected interpretation (if not accurate)
 - source document (if found, and hyperlinked to actual document if downloaded) and page 
-- bibtex entry from Google Scholar
+If the claim is accurate, Download (or create) the source's bibtex file from Google Scholar and store in `references/rrl/bibtex.bib`
 
-Make a plan for executing these tasks and confirm with me first before executing 
+Assess the feasibility of this request and make a plan for executing these tasks. Confirm with me first before executing 
 
 *Follow up prompt*
 - create a git branch called codereviewed_methods and switch to it.  All changes in this plan will be committed to this branch

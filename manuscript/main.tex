@@ -681,12 +681,6 @@ The parameters used for generating local counterfactuals via $generate\_counterf
     \label{tab:local_cf}
 \end{table}
 
-\subsubsection{Sufficiency and Necessity Analysis}
-%=================================================
-\label{sec:sufficiencynecessity}
-
-Beyond the diverse counterfactual sets of Table~\ref{tab:local_cf}, two single-feature checks were run for each targeted instance to characterise the role of individual actionable features, rather than only sets of them. \textit{Sufficiency} asks whether varying one feature alone, with every other feature held fixed, is enough to flip the predicted class: DiCE is asked for one counterfactual (\texttt{total\_CFs=1}) with \texttt{features\_to\_vary} restricted to that single feature; if a valid counterfactual is returned within the iteration budget, that feature is sufficient on its own for that patient. \textit{Necessity} asks the complementary question -- whether a feature must change at all: DiCE is asked to vary every \textit{other} actionable feature, with the feature under test held fixed, across \texttt{nrepeats=5} random seeds and up to \texttt{total\_CFs=3} counterfactuals per seed; if no valid counterfactual is found across all 5 seeds, the held-fixed feature is deemed necessary, because the desired class could not be reached without it. Neither check is expected to succeed for every candidate instance -- the search is not guaranteed to converge within its iteration budget even when a valid counterfactual exists -- and the Discussion reports how many of the candidate instances yielded a usable result under this procedure.
-
 
 \section{Discussion}\label{discussion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

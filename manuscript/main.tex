@@ -265,130 +265,130 @@ This study was approved by the local Institutional Ethics Review Board and all s
 
 % Table of Features, Codes, Description % =======================================
 \begin{table}[!ht]
-\centering
-\footnotesize
-\caption{\textbf{Clinical variable codes.} Variable codes used throughout this manuscript, organized by feature group, with a plain-language description of each. Nerve conduction study (NCS) variables are reported bilaterally and are shown as mirrored left/right code pairs sharing one description.}
-\label{tab:clinical_data}
-\begin{tabular}{lll}
-\toprule
-\multicolumn{3}{l}{\textbf{A. Variables used in modeling}} \\
-\midrule
-\textbf{Code} & \multicolumn{2}{l}{\textbf{Description}} \\
-\midrule
-\addlinespace
-\multicolumn{3}{l}{\textit{Profile}} \\
-SEX & \multicolumn{2}{l}{Patient's sex (M or F)} \\
-AGE & \multicolumn{2}{l}{Patient's age} \\
-SUBJ & \multicolumn{2}{l}{Other symptoms} \\
-DM\_DUR & \multicolumn{2}{l}{Diabetes Mellitus duration (years)} \\
-INSULIN & \multicolumn{2}{l}{Patient is taking insulin treatments} \\
-HBA1C & \multicolumn{2}{l}{Hemoglobin A1c} \\
-\addlinespace
-\multicolumn{3}{l}{\textit{Comorbidity}} \\
-HPN & \multicolumn{2}{l}{Hypertension} \\
-PAOD & \multicolumn{2}{l}{Peripheral Arterial Occlusive Disease} \\
-DSLPDMIA & \multicolumn{2}{l}{Dyslipidemia} \\
-CKD & \multicolumn{2}{l}{Chronic Kidney Disease} \\
-GBS & \multicolumn{2}{l}{Guillain-Barre Syndrome} \\
-\addlinespace
-\multicolumn{3}{l}{\textit{Neurological examination}} \\
-DEC\_VS & \multicolumn{2}{l}{Decreased Vibration Sensation} \\
-DEC\_PPS & \multicolumn{2}{l}{Decreased Pinprick Sensation} \\
-DEC\_LTS & \multicolumn{2}{l}{Decreased Light Touch Sensation} \\
-DEC\_AR & \multicolumn{2}{l}{Decreased Ankle Reflex} \\
-\addlinespace
-\multicolumn{3}{l}{\textit{MNSI}} \\
-MNSI & \multicolumn{2}{l}{Michigan Neuropathy Screening Instrument} \\
-\addlinespace
-\multicolumn{3}{l}{\textit{Sudoscan}} \\
-FEET\_MEAN\_ESC & \multicolumn{2}{l}{Feet Mean Electrochemical Skin Conductance} \\
-FEET\_PCT\_ASYM & \multicolumn{2}{l}{Feet Percentage of Asymmetry (\%)} \\
-HAND\_MEAN\_ESC & \multicolumn{2}{l}{Hands Mean Electrochemical Skin Conductance} \\
-HAND\_PCT\_ASYM & \multicolumn{2}{l}{Hands Percentage of Asymmetry (\%)} \\
-NS & \multicolumn{2}{l}{Neuropathy Score} \\
-CAS & \multicolumn{2}{l}{Cardiac Autonomic Neuropathy Score (\%)} \\
-\midrule
-\multicolumn{3}{l}{\textbf{B. Variables not used in modeling}} \\
-\midrule
-\textbf{Code (L)} & \textbf{Code (R)} & \textbf{Description} \\
-\midrule
-\addlinespace
-\multicolumn{3}{l}{\textit{Nerve Conduction Study}} \\
-SSA\_L & SSA\_R & Sural Sap Nerve Sensory Amplitude (Uv) \\
-SSC\_L & SSC\_R & Sural Nerve Sensory Conduction (m/s) \\
-SPSA\_L & SPSA\_R & Superficial Peroneal Nerve Sensory Amplitude (Uv) \\
-SPSC\_L & SPSC\_R & Superficial Peroneal Sensory Conductivity Velocity (m/s) \\
-MCV\_L & MCV\_R & Posterior Tibial Nerve Conduction Velocity \\
-DL\_L & DL\_R & Posterior Tibial Nerve Distal Latency \\
-CMAPANK\_L & CMAPANK\_R & Ankle Compound Muscle Action Potential \\
-CMAPKNE\_L & CMAPKNE\_R & Knee Compound Muscle Action Potential \\
-FWAVE\_L & FWAVE\_R & F-wave Latency \\
-\bottomrule
-\end{tabular}
-\begin{flushleft}\footnotesize
-The Profile group captures patient demographic and metabolic baseline characteristics, including sex, age, diabetes mellitus duration, insulin use, and HbA1c. The Comorbidity group encodes the presence or absence of five concurrent conditions: hypertension (HPN), peripheral arterial occlusive disease (PAOD), dyslipidemia (DSLPDMIA), chronic kidney disease (CKD), and Guillain-Barré syndrome (GBS). The Neurological examination group contains findings from a standard neurological examination assessing vibration, pinprick, light touch, and ankle reflex responses. The MNSI group contains the score from the Michigan Neuropathy Screening Instrument, a validated clinical tool for peripheral neuropathy screening. The Sudoscan group comprises measurements of electrochemical skin conductance and asymmetry for both the hands and feet, along with a composite Neuropathy Score and a Cardiac Autonomic Neuropathy Score. The Nerve Conduction Study (NCS) group contains electrophysiological measurements of sensory amplitude, conduction velocity, distal latency, and F-wave latency across bilateral lower limb nerves; these variables served as the diagnostic reference for DPN classification but were excluded from all predictive modeling, as the study objective is to enable pre-diagnostic screening in settings where NCS is unavailable or inaccessible.
-\end{flushleft}
+    \centering
+    \footnotesize
+    \caption{\textbf{Clinical variable codes.} Variable codes used throughout this manuscript, organized by feature group, with a plain-language description of each. Nerve conduction study (NCS) variables are reported bilaterally and are shown as mirrored left/right code pairs sharing one description.}
+    \label{tab:clinical_data}
+    \begin{tabular}{lll}
+        \toprule
+        \multicolumn{3}{l}{\textbf{A. Variables used in modeling}} \\
+        \midrule
+        \textbf{Code} & \multicolumn{2}{l}{\textbf{Description}} \\
+        \midrule
+        \addlinespace
+        \multicolumn{3}{l}{\textit{Profile}} \\
+        SEX & \multicolumn{2}{l}{Patient's sex (M or F)} \\
+        AGE & \multicolumn{2}{l}{Patient's age} \\
+        SUBJ & \multicolumn{2}{l}{Other symptoms} \\
+        DM\_DUR & \multicolumn{2}{l}{Diabetes Mellitus duration (years)} \\
+        INSULIN & \multicolumn{2}{l}{Patient is taking insulin treatments} \\
+        HBA1C & \multicolumn{2}{l}{Hemoglobin A1c} \\
+        \addlinespace
+        \multicolumn{3}{l}{\textit{Comorbidity}} \\
+        HPN & \multicolumn{2}{l}{Hypertension} \\
+        PAOD & \multicolumn{2}{l}{Peripheral Arterial Occlusive Disease} \\
+        DSLPDMIA & \multicolumn{2}{l}{Dyslipidemia} \\
+        CKD & \multicolumn{2}{l}{Chronic Kidney Disease} \\
+        GBS & \multicolumn{2}{l}{Guillain-Barre Syndrome} \\
+        \addlinespace
+        \multicolumn{3}{l}{\textit{Neurological examination}} \\
+        DEC\_VS & \multicolumn{2}{l}{Decreased Vibration Sensation} \\
+        DEC\_PPS & \multicolumn{2}{l}{Decreased Pinprick Sensation} \\
+        DEC\_LTS & \multicolumn{2}{l}{Decreased Light Touch Sensation} \\
+        DEC\_AR & \multicolumn{2}{l}{Decreased Ankle Reflex} \\
+        \addlinespace
+        \multicolumn{3}{l}{\textit{MNSI}} \\
+        MNSI & \multicolumn{2}{l}{Michigan Neuropathy Screening Instrument} \\
+        \addlinespace
+        \multicolumn{3}{l}{\textit{Sudoscan}} \\
+        FEET\_MEAN\_ESC & \multicolumn{2}{l}{Feet Mean Electrochemical Skin Conductance} \\
+        FEET\_PCT\_ASYM & \multicolumn{2}{l}{Feet Percentage of Asymmetry (\%)} \\
+        HAND\_MEAN\_ESC & \multicolumn{2}{l}{Hands Mean Electrochemical Skin Conductance} \\
+        HAND\_PCT\_ASYM & \multicolumn{2}{l}{Hands Percentage of Asymmetry (\%)} \\
+        NS & \multicolumn{2}{l}{Neuropathy Score} \\
+        CAS & \multicolumn{2}{l}{Cardiac Autonomic Neuropathy Score (\%)} \\
+        \midrule
+        \multicolumn{3}{l}{\textbf{B. Variables not used in modeling}} \\
+        \midrule
+        \textbf{Code (L)} & \textbf{Code (R)} & \textbf{Description} \\
+        \midrule
+        \addlinespace
+        \multicolumn{3}{l}{\textit{Nerve Conduction Study}} \\
+        SSA\_L & SSA\_R & Sural Sap Nerve Sensory Amplitude (Uv) \\
+        SSC\_L & SSC\_R & Sural Nerve Sensory Conduction (m/s) \\
+        SPSA\_L & SPSA\_R & Superficial Peroneal Nerve Sensory Amplitude (Uv) \\
+        SPSC\_L & SPSC\_R & Superficial Peroneal Sensory Conductivity Velocity (m/s) \\
+        MCV\_L & MCV\_R & Posterior Tibial Nerve Conduction Velocity \\
+        DL\_L & DL\_R & Posterior Tibial Nerve Distal Latency \\
+        CMAPANK\_L & CMAPANK\_R & Ankle Compound Muscle Action Potential \\
+        CMAPKNE\_L & CMAPKNE\_R & Knee Compound Muscle Action Potential \\
+        FWAVE\_L & FWAVE\_R & F-wave Latency \\
+        \bottomrule
+    \end{tabular}
+    \begin{flushleft}\footnotesize
+        The Profile group captures patient demographic and metabolic baseline characteristics, including sex, age, diabetes mellitus duration, insulin use, and HbA1c. The Comorbidity group encodes the presence or absence of five concurrent conditions: hypertension (HPN), peripheral arterial occlusive disease (PAOD), dyslipidemia (DSLPDMIA), chronic kidney disease (CKD), and Guillain-Barré syndrome (GBS). The Neurological examination group contains findings from a standard neurological examination assessing vibration, pinprick, light touch, and ankle reflex responses. The MNSI group contains the score from the Michigan Neuropathy Screening Instrument, a validated clinical tool for peripheral neuropathy screening. The Sudoscan group comprises measurements of electrochemical skin conductance and asymmetry for both the hands and feet, along with a composite Neuropathy Score and a Cardiac Autonomic Neuropathy Score. The Nerve Conduction Study (NCS) group contains electrophysiological measurements of sensory amplitude, conduction velocity, distal latency, and F-wave latency across bilateral lower limb nerves; these variables served as the diagnostic reference for DPN classification but were excluded from all predictive modeling, as the study objective is to enable pre-diagnostic screening in settings where NCS is unavailable or inaccessible.
+    \end{flushleft}
 \end{table}
 
 Table~\ref{tab:cohort} reports the baseline characteristics of the 187 analysed patients for each of the 22 candidate predictors, stratified by Confirmed and Unconfirmed DPN status, together with each variable's univariable effect size (AUC for continuous features, odds ratio for binary features) and Benjamini--Hochberg-corrected significance. The four neurological examination signs and diabetes mellitus duration showed the strongest univariable associations with confirmed DPN, while comorbidities other than hypertension were weakly and inconsistently associated with the outcome. The full per-patient distributions underlying these summary statistics are shown for the continuous and binary predictors in Figures~\ref{fig:s1} and~\ref{fig:s2} (Appendix), respectively; the provenance and completeness of the underlying data are detailed in Table~\ref{tab:s1_provenance} (Appendix).
 
 % Table 1 -- Cohort characteristics by DPN status % =======================================
 \begin{table}[!ht]
-\centering
-\footnotesize
-\caption{\textbf{Characteristics of the analysed cohort, by diabetic peripheral neuropathy status.} Values are shown for all 187 analysed patients and separately for the 57 Unconfirmed and 130 Confirmed patients, for each of the 22 candidate predictors available to the models.}
-\label{tab:cohort}
-\setlength{\tabcolsep}{1pt}
-\tiny
-\begin{tabular}{lcccccc}
-\toprule
-\textbf{Characteristic} & \textbf{Overall} (n=187) & \textbf{Unconfirmed} (n=57) & \textbf{Confirmed} (n=130) & \textbf{Effect size (95\% CI)} & \textbf{p} & \textbf{q} \\
-\midrule
-\addlinespace
-\multicolumn{7}{l}{\textit{Profile}} \\
-SEX, male  & 62 (33.2) & 15 (26.3) & 47 (36.2) & OR 1.59 (0.80--3.16) & 0.188 & 0.230 \\
-AGE, years  & 59 [50--66] & 52 [39--63] & 61 [53--67] & AUC 0.66 (0.57--0.74) & $<$0.001 & 0.001 \\
-SUBJ, yes  & 160 (85.6) & 41 (71.9) & 119 (91.5) & OR 4.22 (1.81--9.84) & $<$0.001 & 0.001 \\
-DM\_DUR, years  & 5 [2--10] & 2 [1--6] & 7 [3--12] & AUC 0.68 (0.59--0.76) & $<$0.001 & $<$0.001 \\
-INSULIN, yes $\diamond$ & 78 (41.7) & 17 (29.8) & 61 (46.9) & OR 2.08 (1.07--4.04) & 0.029 & 0.046 \\
-HBA1C, \% $\diamond$ & 7.5 [6.4--9.8] & 7.2 [6.4--8.8] & 7.6 [6.4--10.3] & AUC 0.55 (0.46--0.63) & 0.327 & 0.379 \\
-\addlinespace
-\multicolumn{7}{l}{\textit{Comorbidity}} \\
-HPN, yes $\diamond$ & 112 (59.9) & 33 (57.9) & 79 (60.8) & OR 1.13 (0.60--2.12) & 0.712 & 0.712 \\
-PAOD, yes $\diamond$ & 8 (4.3) & 1 (1.8) & 7 (5.4) & OR 3.19 (0.38--26.52) & 0.438 & 0.482 \\
-DSLPDMIA, yes $\diamond$ & 97 (51.9) & 24 (42.1) & 73 (56.2) & OR 1.76 (0.94--3.31) & 0.077 & 0.106 \\
-CKD, yes $\diamond$ & 37 (19.8) & 7 (12.3) & 30 (23.1) & OR 2.14 (0.88--5.22) & 0.088 & 0.114 \\
-GBS, yes  & 2 (1.1) & 1 (1.8) & 1 (0.8) & OR 0.43 (0.03--7.06) & 0.518 & 0.543 \\
-\addlinespace
-\multicolumn{7}{l}{\textit{Neurological examination}} \\
-DEC\_VS, yes  & 96 (51.3) & 11 (19.3) & 85 (65.4) & OR 7.90 (3.73--16.73) & $<$0.001 & $<$0.001 \\
-DEC\_PPS, yes  & 92 (49.2) & 15 (26.3) & 77 (59.2) & OR 4.07 (2.05--8.07) & $<$0.001 & $<$0.001 \\
-DEC\_LTS, yes  & 90 (48.1) & 17 (29.8) & 73 (56.2) & OR 3.01 (1.55--5.86) & $<$0.001 & 0.002 \\
-DEC\_AR, yes  & 94 (50.3) & 9 (15.8) & 85 (65.4) & OR 10.07 (4.53--22.38) & $<$0.001 & $<$0.001 \\
-\addlinespace
-\multicolumn{7}{l}{\textit{MNSI}} \\
-MNSI, score  & 5 [3--7] & 4 [2--6] & 6 [4--8] & AUC 0.67 (0.58--0.76) & $<$0.001 & $<$0.001 \\
-\addlinespace
-\multicolumn{7}{l}{\textit{Sudoscan}} \\
-FEET\_MEAN\_ESC, uS  & 53 [38--65] & 60 [48--71] & 48 [32--59] & AUC 0.32 (0.25--0.40) & $<$0.001 & $<$0.001 \\
-FEET\_PCT\_ASYM, \%  & 5 [2--11] & 3 [1--6] & 6 [3--12] & AUC 0.65 (0.56--0.73) & $<$0.001 & 0.002 \\
-HAND\_MEAN\_ESC, uS  & 58 [44--72] & 63 [51--75] & 56 [41--70] & AUC 0.39 (0.30--0.47) & 0.013 & 0.022 \\
-HAND\_PCT\_ASYM, \%  & 9 [4--14] & 6 [4--11] & 10 [4--17] & AUC 0.59 (0.50--0.67) & 0.061 & 0.089 \\
-NS, score  & 53 [46--64] & 61 [52--77] & 51 [44--58] & AUC 0.28 (0.20--0.36) & $<$0.001 & $<$0.001 \\
-CAS, \%  & 30 [25--35] & 28 [18--33] & 31 [27--35] & AUC 0.64 (0.54--0.72) & 0.003 & 0.006 \\
-\bottomrule
-\end{tabular}
-\begin{flushleft}\footnotesize Continuous variables are median [interquartile range] and were compared with the Mann--Whitney U test; binary variables are n (\%) of the stated level and were compared with the chi-square test, or Fisher's exact test where any expected cell count was below 5. Effect size is the directional area under the receiver operating characteristic curve (AUC) for continuous variables and the odds ratio (OR) for binary variables; an AUC above 0.5 indicates higher values in the Confirmed group and an AUC below 0.5 indicates lower values. AUC confidence intervals are stratified percentile bootstrap intervals (2000 resamples). q denotes the Benjamini--Hochberg false discovery rate across the 22 candidate predictors. $\diamond$ marks the features the counterfactual engine is permitted to vary.\end{flushleft}
+    \centering
+    \footnotesize
+    \caption{\textbf{Characteristics of the analysed cohort, by diabetic peripheral neuropathy status.} Values are shown for all 187 analysed patients and separately for the 57 Unconfirmed and 130 Confirmed patients, for each of the 22 candidate predictors available to the models.}
+    \label{tab:cohort}
+    \setlength{\tabcolsep}{1pt}
+    \tiny
+    \begin{tabular}{lcccccc}
+        \toprule
+        \textbf{Characteristic} & \textbf{Overall} (n=187) & \textbf{Unconfirmed} (n=57) & \textbf{Confirmed} (n=130) & \textbf{Effect size (95\% CI)} & \textbf{p} & \textbf{q} \\
+        \midrule
+        \addlinespace
+        \multicolumn{7}{l}{\textit{Profile}} \\
+        SEX, male  & 62 (33.2) & 15 (26.3) & 47 (36.2) & OR 1.59 (0.80--3.16) & 0.188 & 0.230 \\
+        AGE, years  & 59 [50--66] & 52 [39--63] & 61 [53--67] & AUC 0.66 (0.57--0.74) & $<$0.001 & 0.001 \\
+        SUBJ, yes  & 160 (85.6) & 41 (71.9) & 119 (91.5) & OR 4.22 (1.81--9.84) & $<$0.001 & 0.001 \\
+        DM\_DUR, years  & 5 [2--10] & 2 [1--6] & 7 [3--12] & AUC 0.68 (0.59--0.76) & $<$0.001 & $<$0.001 \\
+        INSULIN, yes $\diamond$ & 78 (41.7) & 17 (29.8) & 61 (46.9) & OR 2.08 (1.07--4.04) & 0.029 & 0.046 \\
+        HBA1C, \% $\diamond$ & 7.5 [6.4--9.8] & 7.2 [6.4--8.8] & 7.6 [6.4--10.3] & AUC 0.55 (0.46--0.63) & 0.327 & 0.379 \\
+        \addlinespace
+        \multicolumn{7}{l}{\textit{Comorbidity}} \\
+        HPN, yes $\diamond$ & 112 (59.9) & 33 (57.9) & 79 (60.8) & OR 1.13 (0.60--2.12) & 0.712 & 0.712 \\
+        PAOD, yes $\diamond$ & 8 (4.3) & 1 (1.8) & 7 (5.4) & OR 3.19 (0.38--26.52) & 0.438 & 0.482 \\
+        DSLPDMIA, yes $\diamond$ & 97 (51.9) & 24 (42.1) & 73 (56.2) & OR 1.76 (0.94--3.31) & 0.077 & 0.106 \\
+        CKD, yes $\diamond$ & 37 (19.8) & 7 (12.3) & 30 (23.1) & OR 2.14 (0.88--5.22) & 0.088 & 0.114 \\
+        GBS, yes  & 2 (1.1) & 1 (1.8) & 1 (0.8) & OR 0.43 (0.03--7.06) & 0.518 & 0.543 \\
+        \addlinespace
+        \multicolumn{7}{l}{\textit{Neurological examination}} \\
+        DEC\_VS, yes  & 96 (51.3) & 11 (19.3) & 85 (65.4) & OR 7.90 (3.73--16.73) & $<$0.001 & $<$0.001 \\
+        DEC\_PPS, yes  & 92 (49.2) & 15 (26.3) & 77 (59.2) & OR 4.07 (2.05--8.07) & $<$0.001 & $<$0.001 \\
+        DEC\_LTS, yes  & 90 (48.1) & 17 (29.8) & 73 (56.2) & OR 3.01 (1.55--5.86) & $<$0.001 & 0.002 \\
+        DEC\_AR, yes  & 94 (50.3) & 9 (15.8) & 85 (65.4) & OR 10.07 (4.53--22.38) & $<$0.001 & $<$0.001 \\
+        \addlinespace
+        \multicolumn{7}{l}{\textit{MNSI}} \\
+        MNSI, score  & 5 [3--7] & 4 [2--6] & 6 [4--8] & AUC 0.67 (0.58--0.76) & $<$0.001 & $<$0.001 \\
+        \addlinespace
+        \multicolumn{7}{l}{\textit{Sudoscan}} \\
+        FEET\_MEAN\_ESC, uS  & 53 [38--65] & 60 [48--71] & 48 [32--59] & AUC 0.32 (0.25--0.40) & $<$0.001 & $<$0.001 \\
+        FEET\_PCT\_ASYM, \%  & 5 [2--11] & 3 [1--6] & 6 [3--12] & AUC 0.65 (0.56--0.73) & $<$0.001 & 0.002 \\
+        HAND\_MEAN\_ESC, uS  & 58 [44--72] & 63 [51--75] & 56 [41--70] & AUC 0.39 (0.30--0.47) & 0.013 & 0.022 \\
+        HAND\_PCT\_ASYM, \%  & 9 [4--14] & 6 [4--11] & 10 [4--17] & AUC 0.59 (0.50--0.67) & 0.061 & 0.089 \\
+        NS, score  & 53 [46--64] & 61 [52--77] & 51 [44--58] & AUC 0.28 (0.20--0.36) & $<$0.001 & $<$0.001 \\
+        CAS, \%  & 30 [25--35] & 28 [18--33] & 31 [27--35] & AUC 0.64 (0.54--0.72) & 0.003 & 0.006 \\
+        \bottomrule
+    \end{tabular}
+    \begin{flushleft}\footnotesize Continuous variables are median [interquartile range] and were compared with the Mann--Whitney U test; binary variables are n (\%) of the stated level and were compared with the chi-square test, or Fisher's exact test where any expected cell count was below 5. Effect size is the directional area under the receiver operating characteristic curve (AUC) for continuous variables and the odds ratio (OR) for binary variables; an AUC above 0.5 indicates higher values in the Confirmed group and an AUC below 0.5 indicates lower values. AUC confidence intervals are stratified percentile bootstrap intervals (2000 resamples). q denotes the Benjamini--Hochberg false discovery rate across the 22 candidate predictors. $\diamond$ marks the features the counterfactual engine is permitted to vary.\end{flushleft}
 \end{table}
 
 Figure~\ref{fig:univariable_discrimination} places these per-feature associations on a single discrimination scale, ranking every candidate predictor by its univariable area under the receiver operating characteristic curve (AUC) and marking the discrimination achieved by the tuned multivariable CatBoost model (AUC 0.799) for comparison. No single feature approaches the multivariable model's performance -- the strongest, decreased ankle reflex (DEC\_AR), reaches an AUC of only 0.748 -- and the six counterfactual-actionable features cluster close to the no-discrimination line, indicating that any single modifiable variable carries little predictive signal on its own (distributions for these six features are shown in Figure~\ref{fig:s4}, Appendix). Redundancy among the candidate predictors, including the strong negative correlation between age and the Sudoscan neuropathy score, is examined in Figure~\ref{fig:s3} (Appendix).
 
 % Figure 2 -- Univariable discrimination % =======================================
 \begin{figure}[!ht]
-\centering
-\includegraphics[width=0.65\textwidth]{references/eda/fig2_univariable_discrimination.pdf}
-\caption{Univariable discrimination of each candidate predictor. Each row shows the area under the receiver operating characteristic curve obtained when a single feature is used alone to separate Confirmed from Unconfirmed patients, with a stratified percentile bootstrap 95\% confidence interval based on 2000 resamples; features are ordered by discrimination strength. A value of 0.5, marked by the dashed line, indicates no discrimination, while values below 0.5 indicate features whose values are lower among Confirmed patients (GBS, HAND\_MEAN\_ESC, FEET\_MEAN\_ESC, NS). Marker colour denotes the clinical domain and diamonds denote the 6 features the counterfactual engine is permitted to vary; circles denote the remaining candidate predictors. Regardless of shape, a filled marker denotes a feature reaching a Benjamini--Hochberg false discovery rate below 0.05, while an open marker denotes one that does not. The dotted line marks the discrimination achieved by the tuned CatBoost model (0.799), placing the multivariable result on the same scale as its inputs: the strongest individual feature, DEC\_AR, already reaches 0.748, so the modelling gain over a single bedside measurement is modest. The actionable features span 0.514 to 0.585 and cluster at the no-discrimination line, with only INSULIN reaching q $<$ 0.05. Counterfactual explanations in this study are therefore constrained to move the features carrying the least marginal signal, which is the expected origin of the large feature displacements those explanations require.}
-\label{fig:univariable_discrimination}
+    \centering
+    \includegraphics[width=0.65\textwidth]{references/eda/fig2_univariable_discrimination.pdf}
+    \caption{Univariable discrimination of each candidate predictor. Each row shows the area under the receiver operating characteristic curve obtained when a single feature is used alone to separate Confirmed from Unconfirmed patients, with a stratified percentile bootstrap 95\% confidence interval based on 2000 resamples; features are ordered by discrimination strength. A value of 0.5, marked by the dashed line, indicates no discrimination, while values below 0.5 indicate features whose values are lower among Confirmed patients (GBS, HAND\_MEAN\_ESC, FEET\_MEAN\_ESC, NS). Marker colour denotes the clinical domain and diamonds denote the 6 features the counterfactual engine is permitted to vary; circles denote the remaining candidate predictors. Regardless of shape, a filled marker denotes a feature reaching a Benjamini--Hochberg false discovery rate below 0.05, while an open marker denotes one that does not. The dotted line marks the discrimination achieved by the tuned CatBoost model (0.799), placing the multivariable result on the same scale as its inputs: the strongest individual feature, DEC\_AR, already reaches 0.748, so the modelling gain over a single bedside measurement is modest. The actionable features span 0.514 to 0.585 and cluster at the no-discrimination line, with only INSULIN reaching q $<$ 0.05. Counterfactual explanations in this study are therefore constrained to move the features carrying the least marginal signal, which is the expected origin of the large feature displacements those explanations require.}
+    \label{fig:univariable_discrimination}
 \end{figure}
 
 
@@ -456,28 +456,28 @@ In addition, multicollinearity among the 22 candidate predictors was addressed u
 % Feature Selection
 %=======================================
 \begin{table}[h!]
-\centering
-\small
-\begin{tabular}{ll}
-\toprule
-Feature Set & Code  \\
-\midrule
-All features (full feature set) &  All   \\
-No collinear features  &  NoCol\\
-No Clinical Profile features  &  NoProf\\
-No Comorbidities features & NoCom \\
-No Neurological Examination features & NoNeuro \\
-No Michigan Neuropathy Screening Instrument feature & NoMSI  \\
-No Sudoscan features & NoSudo \\
-Sudoscan features only & Sudo \\
-Sudoscan and Clinical Profile features only & SudoProf \\
-Sudoscan and Comorbidities features only & SudoCom \\
-Sudoscan and Neurological Examination features only & SudoNeuro \\
-Sudoscan and MNSI features only & SudoMnsi \\
-\bottomrule
-\end{tabular}
-\caption{Feature sets examined during the baseline model evaluation phase. Twelve distinct feature sets were constructed to systematically assess the contribution of each clinical feature group — Clinical Profile, Comorbidities, Neurological Examination, MNSI, and Sudoscan — both individually and in combination. The "All" set serves as the full-feature reference, while ablation sets (e.g., NoCol, NoProf, NoCom) isolate the effect of removing one feature group at a time. Additive sets anchored on Sudoscan (e.g., SudoProf, SudoCom, SudoNeuro, SudoMnsi) were additionally constructed given Sudoscan's established role in peripheral neuropathy screening, allowing assessment of its complementary value when paired with other feature groups.}
-\label{tab:feature_sets}
+    \centering
+    \small
+    \begin{tabular}{ll}
+        \toprule
+        Feature Set & Code  \\
+        \midrule
+        All features (full feature set) &  All   \\
+        No collinear features  &  NoCol\\
+        No Clinical Profile features  &  NoProf\\
+        No Comorbidities features & NoCom \\
+        No Neurological Examination features & NoNeuro \\
+        No Michigan Neuropathy Screening Instrument feature & NoMSI  \\
+        No Sudoscan features & NoSudo \\
+        Sudoscan features only & Sudo \\
+        Sudoscan and Clinical Profile features only & SudoProf \\
+        Sudoscan and Comorbidities features only & SudoCom \\
+        Sudoscan and Neurological Examination features only & SudoNeuro \\
+        Sudoscan and MNSI features only & SudoMnsi \\
+        \bottomrule
+    \end{tabular}
+    \caption{Feature sets examined during the baseline model evaluation phase. Twelve distinct feature sets were constructed to systematically assess the contribution of each clinical feature group — Clinical Profile, Comorbidities, Neurological Examination, MNSI, and Sudoscan — both individually and in combination. The "All" set serves as the full-feature reference, while ablation sets (e.g., NoCol, NoProf, NoCom) isolate the effect of removing one feature group at a time. Additive sets anchored on Sudoscan (e.g., SudoProf, SudoCom, SudoNeuro, SudoMnsi) were additionally constructed given Sudoscan's established role in peripheral neuropathy screening, allowing assessment of its complementary value when paired with other feature groups.}
+    \label{tab:feature_sets}
 \end{table}
 
 \subsubsection{Performance Metrics}
@@ -553,34 +553,34 @@ Table~\ref{tab:cf_features} shows the feature set and their suitability for coun
 % Table of Counterfactual Features
 % =======================================
 \begin{table}[h!]
-\centering
-\footnotesize
-\begin{tabular}{p{0.1\linewidth} p{0.25\linewidth} p{0.1\linewidth} p{0.35\linewidth}}
-\toprule
-\textbf{Group} &  \textbf{Feature(s)} & \textbf{Suitable?} & \textbf{Reason} \\
-\midrule
-Profile      & Patient's sex (M or F) & No & Cannot be changed \\
-             & Patient's age & No & Cannot be changed \\
-             & Other symptoms & No & Too vague to have an intervention \\
-             & Diabetes Mellitus duration & No & Cannot be reversed \\
-             & Patient is on insulin  & Yes & Treatment can be started, stopped, or changed \\
-             & Hemoglobin A1c & Yes & Modifiable through lifestyle, diet, and medication \\
-\midrule
-Commorbidity & Hypertension & Yes & Manageable through antihypertensives and lifestyle \\
-             & Peripheral Arterial Occulsive Disease & Conditional & Partially treatable (revascularization, lifestyle) but not fully reversible \\
-             & Dyslipidemia & Yes & Modifiable through statins, diet, exercise\\
-             & Chronic Kidney Disease & Conditional & Partially modifiable (nephroprotective interventions) but not reversible \\
-             & Guillain-Barre Syndrome & No & Acute/post-infectious, not a modifiable \\
-\midrule
-Neurology \newline Examination & All  & No &  These are measurements of an examination direct intervention for which is difficult to define. \\
-\midrule
-MNSI            & Michigan Neuropathy \newline  Screening Instrument & No & This is measurement of an examination direct intervention for which is difficult to define.   \\
-\midrule
-Sudoscan & All & No &  These are measurements of a procedure direct intervention for which is difficult to define.\\
-\bottomrule
-\end{tabular}
-\caption{Actionability classification of input features for counterfactual explanation generation. Each feature was evaluated along three criteria: clinical modifiability, reversibility, and intervention feasibility. Features rated Suitable are both modifiable and clinically actionable (e.g., HbA1c via diet or medication; insulin use via prescription change). Features rated Conditional are partially manageable but not fully reversible (e.g., Chronic Kidney Disease through nephroprotective interventions; Peripheral Arterial Occlusive Disease through revascularization). Features rated Unsuitable are either immutable (sex, age, diabetes duration), too vague for targeted intervention (other symptoms), or reflective of examination or procedural measurements rather than modifiable patient states (neurological examination findings, MNSI score, Sudoscan readings). Only Suitable and Conditional features were included in counterfactual generation to ensure that all generated counterfactual scenarios correspond to clinically meaningful and potentially achievable patient states.}
-\label{tab:cf_features}
+    \centering
+    \footnotesize
+    \begin{tabular}{p{0.1\linewidth} p{0.25\linewidth} p{0.1\linewidth} p{0.35\linewidth}}
+        \toprule
+        \textbf{Group} &  \textbf{Feature(s)} & \textbf{Suitable?} & \textbf{Reason} \\
+        \midrule
+        Profile      & Patient's sex (M or F) & No & Cannot be changed \\
+                     & Patient's age & No & Cannot be changed \\
+                     & Other symptoms & No & Too vague to have an intervention \\
+                     & Diabetes Mellitus duration & No & Cannot be reversed \\
+                     & Patient is on insulin  & Yes & Treatment can be started, stopped, or changed \\
+                     & Hemoglobin A1c & Yes & Modifiable through lifestyle, diet, and medication \\
+        \midrule
+        Commorbidity & Hypertension & Yes & Manageable through antihypertensives and lifestyle \\
+                     & Peripheral Arterial Occulsive Disease & Conditional & Partially treatable (revascularization, lifestyle) but not fully reversible \\
+                     & Dyslipidemia & Yes & Modifiable through statins, diet, exercise\\
+                     & Chronic Kidney Disease & Conditional & Partially modifiable (nephroprotective interventions) but not reversible \\
+                     & Guillain-Barre Syndrome & No & Acute/post-infectious, not a modifiable \\
+        \midrule
+        Neurology \newline Examination & All  & No &  These are measurements of an examination direct intervention for which is difficult to define. \\
+        \midrule
+        MNSI            & Michigan Neuropathy \newline  Screening Instrument & No & This is measurement of an examination direct intervention for which is difficult to define.   \\
+        \midrule
+        Sudoscan & All & No &  These are measurements of a procedure direct intervention for which is difficult to define.\\
+        \bottomrule
+    \end{tabular}
+    \caption{Actionability classification of input features for counterfactual explanation generation. Each feature was evaluated along three criteria: clinical modifiability, reversibility, and intervention feasibility. Features rated Suitable are both modifiable and clinically actionable (e.g., HbA1c via diet or medication; insulin use via prescription change). Features rated Conditional are partially manageable but not fully reversible (e.g., Chronic Kidney Disease through nephroprotective interventions; Peripheral Arterial Occlusive Disease through revascularization). Features rated Unsuitable are either immutable (sex, age, diabetes duration), too vague for targeted intervention (other symptoms), or reflective of examination or procedural measurements rather than modifiable patient states (neurological examination findings, MNSI score, Sudoscan readings). Only Suitable and Conditional features were included in counterfactual generation to ensure that all generated counterfactual scenarios correspond to clinically meaningful and potentially achievable patient states.}
+    \label{tab:cf_features}
 \end{table}
 
 \subsubsection{General Setup}
@@ -611,28 +611,28 @@ where $x_{min}$ and $x_{max}$ denote the observed minimum and maximum values, re
 % DICE General Configuration
 % =======================================
 \begin{table}[h!]
-\centering
-\small
-\begin{tabular}{lll}
-\toprule
-Component & Parameter & Value / Description \\
-% \multirow{3}{*}{Data (dice\_ml.Data)}
-\midrule
-Data (dice\_ml.Data) & dataframe & that fold's own held-out test set \\
-& continuous\_features & continuous features as defined in Table~\ref{tab:clinical_data}-A \\
-& categorical\_features & binary categorical features as defined in Table~\ref{tab:clinical_data}-A \\
-& permitted\_range & global permitted range as defined in the section \textit{General Setup}\\
-\midrule
-% \multirow{3}{*}{Model (dice\_ml.Model)}
-Model (dice\_ml.Model) & model & that fold's trained CatBoost model, wrapped under that fold's own tuned threshold \\
-& backend & sklearn \\
-& model\_type & classifier \\
-\midrule
-DiCE object(dice\_ml.Dice)  & method & genetic \\
-\bottomrule
-\end{tabular}
-\caption{Configuration parameters used to initialize the DiCE (Diverse Counterfactual Explanations) framework for post-hoc model interpretability, instantiated once per fold model. Three core objects were instantiated: the Data object (dice\_ml.Data), which supplies that fold's held-out test set as DiCE's background data alongside the continuous and binary categorical input features and their globally permitted ranges; the Model object (dice\_ml.Model), which wraps that fold's trained CatBoost classifier operating under that fold's own tuned decision threshold (Section~\ref{sec:hpo}); and the DiCE object (dice\_ml.Dice), which executes counterfactual generation using a genetic algorithm. Together, these components enable the generation of actionable counterfactual explanations that identify the minimal feature changes required to alter a patient's predicted DPN classification.}
-\label{tab:dice_setup}
+    \centering
+    \small
+    \begin{tabular}{lll}
+        \toprule
+        Component & Parameter & Value / Description \\
+        % \multirow{3}{*}{Data (dice\_ml.Data)}
+        \midrule
+        Data (dice\_ml.Data) & dataframe & that fold's own held-out test set \\
+        & continuous\_features & continuous features as defined in Table~\ref{tab:clinical_data}-A \\
+        & categorical\_features & binary categorical features as defined in Table~\ref{tab:clinical_data}-A \\
+        & permitted\_range & global permitted range as defined in the section \textit{General Setup}\\
+        \midrule
+        % \multirow{3}{*}{Model (dice\_ml.Model)}
+        Model (dice\_ml.Model) & model & that fold's trained CatBoost model, wrapped under that fold's own tuned threshold \\
+        & backend & sklearn \\
+        & model\_type & classifier \\
+        \midrule
+        DiCE object(dice\_ml.Dice)  & method & genetic \\
+        \bottomrule
+    \end{tabular}
+    \caption{Configuration parameters used to initialize the DiCE (Diverse Counterfactual Explanations) framework for post-hoc model interpretability, instantiated once per fold model. Three core objects were instantiated: the Data object (dice\_ml.Data), which supplies that fold's held-out test set as DiCE's background data alongside the continuous and binary categorical input features and their globally permitted ranges; the Model object (dice\_ml.Model), which wraps that fold's trained CatBoost classifier operating under that fold's own tuned decision threshold (Section~\ref{sec:hpo}); and the DiCE object (dice\_ml.Dice), which executes counterfactual generation using a genetic algorithm. Together, these components enable the generation of actionable counterfactual explanations that identify the minimal feature changes required to alter a patient's predicted DPN classification.}
+    \label{tab:dice_setup}
 \end{table}
 
 \subsubsection{Local Counterfactual Analysis}
@@ -657,28 +657,28 @@ where, as for the global range, $\sigma$ is each feature's standard deviation ov
 The parameters used for generating local counterfactuals via $generate\_counterfactuals$ are summarized in Table~\ref{tab:local_cf}. The selected parameters balance proximity, diversity, and sparsity, ensuring that generated counterfactuals are close to the original instances, sufficiently varied, and involve minimal feature changes. This results in actionable and interpretable explanations suitable for clinical applications.
 
 \begin{table}[h!]
-\centering
-\small
-\begin{tabular}{ll}
-\hline
-\textbf{Parameter} & \textbf{Value / Description} \\
-\hline
-instances & Selected misclassified and borderline instances \\
-total\_CFs & 20 \\
-desired\_class & opposite \\
-permitted\_range & local permitted range \\
-features\_to\_vary & all features except those marked unsuitable in Table~\ref{tab:cf_features} \\
-stopping\_threshold & that fold's own tuned threshold from hyperparameter optimization \\
-posthoc\_sparsity\_algorithm & binary \\
-posthoc\_sparsity\_param & 0.05 \\
-proximity\_weight & 0.5 \\
-diversity\_weight & 1.0 \\
-categorical\_penalty & 0.1 \\
-algorithm & DiverseCF \\
-\hline
-\end{tabular}
-\caption{Parameters passed to the $generate\_counterfactuals$ function for local counterfactual generation. For each selected misclassified or borderline instance, up to 20 counterfactuals targeting the opposite class were generated, with feature variations constrained to locally permitted ranges. A relatively high \texttt{diversity\_weight} was used deliberately: because only 6 features are eligible to vary (Table~\ref{tab:cf_features}), the search is pushed to explore genuinely different combinations of those 6 features rather than converging on 20 near-duplicates of the same edit.}
-\label{tab:local_cf}
+    \centering
+    \small
+    \begin{tabular}{ll}
+        \hline
+        \textbf{Parameter} & \textbf{Value / Description} \\
+        \hline
+        instances & Selected misclassified and borderline instances \\
+        total\_CFs & 20 \\
+        desired\_class & opposite \\
+        permitted\_range & local permitted range \\
+        features\_to\_vary & all features except those marked unsuitable in Table~\ref{tab:cf_features} \\
+        stopping\_threshold & that fold's own tuned threshold from hyperparameter optimization \\
+        posthoc\_sparsity\_algorithm & binary \\
+        posthoc\_sparsity\_param & 0.05 \\
+        proximity\_weight & 0.5 \\
+        diversity\_weight & 1.0 \\
+        categorical\_penalty & 0.1 \\
+        algorithm & DiverseCF \\
+        \hline
+    \end{tabular}
+    \caption{Parameters passed to the $generate\_counterfactuals$ function for local counterfactual generation. For each selected misclassified or borderline instance, up to 20 counterfactuals targeting the opposite class were generated, with feature variations constrained to locally permitted ranges. A relatively high \texttt{diversity\_weight} was used deliberately: because only 6 features are eligible to vary (Table~\ref{tab:cf_features}), the search is pushed to explore genuinely different combinations of those 6 features rather than converging on 20 near-duplicates of the same edit.}
+    \label{tab:local_cf}
 \end{table}
 
 \subsubsection{Sufficiency and Necessity Analysis}
@@ -748,32 +748,32 @@ In short, the two models are statistically indistinguishable on this baseline ta
 % selection Stage - All Metrics Table
 % -----------------------------------
 \begin{sidewaystable}
-\centering
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lllllllll}
-\toprule
-Algorithm & AUPRC & ROC-AUC & Sensitivity & Specificity & Accuracy & Precision & Youden Index & F1 Score \\
-\midrule
-Random Forest & 0.892 $\pm$ 0.039 & 0.809 $\pm$ 0.062 & 0.916 $\pm$ 0.058 & 0.529 $\pm$ 0.125 & 0.798 $\pm$ 0.048 & 0.818 $\pm$ 0.038 & 0.446 $\pm$ 0.124 & 0.863 $\pm$ 0.034 \\
-CatBoost & 0.889 $\pm$ 0.044 & 0.803 $\pm$ 0.068 & 0.913 $\pm$ 0.062 & 0.512 $\pm$ 0.117 & 0.791 $\pm$ 0.052 & 0.811 $\pm$ 0.036 & 0.425 $\pm$ 0.125 & 0.858 $\pm$ 0.038 \\
-Extra Trees & 0.885 $\pm$ 0.042 & 0.790 $\pm$ 0.065 & 0.884 $\pm$ 0.061 & 0.499 $\pm$ 0.126 & 0.767 $\pm$ 0.048 & 0.803 $\pm$ 0.037 & 0.383 $\pm$ 0.123 & 0.840 $\pm$ 0.035 \\
-Naive Bayes & 0.884 $\pm$ 0.052 & 0.804 $\pm$ 0.070 & 0.684 $\pm$ 0.352 & 0.628 $\pm$ 0.271 & 0.666 $\pm$ 0.197 & 0.769 $\pm$ 0.162 & 0.312 $\pm$ 0.251 & 0.673 $\pm$ 0.310 \\
-Logistic Regression & 0.880 $\pm$ 0.054 & 0.787 $\pm$ 0.076 & 0.872 $\pm$ 0.071 & 0.531 $\pm$ 0.117 & 0.768 $\pm$ 0.056 & 0.810 $\pm$ 0.038 & 0.403 $\pm$ 0.128 & 0.838 $\pm$ 0.043 \\
-RBF SVM & 0.878 $\pm$ 0.055 & 0.797 $\pm$ 0.072 & 0.938 $\pm$ 0.049 & 0.453 $\pm$ 0.129 & 0.790 $\pm$ 0.054 & 0.798 $\pm$ 0.041 & 0.390 $\pm$ 0.141 & 0.861 $\pm$ 0.036 \\
-LDA & 0.878 $\pm$ 0.059 & 0.788 $\pm$ 0.081 & 0.847 $\pm$ 0.083 & 0.577 $\pm$ 0.112 & 0.765 $\pm$ 0.065 & 0.821 $\pm$ 0.040 & 0.424 $\pm$ 0.136 & 0.832 $\pm$ 0.052 \\
-Linear SVM & 0.869 $\pm$ 0.056 & 0.771 $\pm$ 0.081 & 0.858 $\pm$ 0.072 & 0.520 $\pm$ 0.115 & 0.755 $\pm$ 0.063 & 0.804 $\pm$ 0.040 & 0.378 $\pm$ 0.141 & 0.829 $\pm$ 0.047 \\
-XGBoost & 0.864 $\pm$ 0.038 & 0.763 $\pm$ 0.063 & 0.859 $\pm$ 0.065 & 0.526 $\pm$ 0.118 & 0.757 $\pm$ 0.058 & 0.806 $\pm$ 0.040 & 0.384 $\pm$ 0.137 & 0.830 $\pm$ 0.043 \\
-Gradient Boosting & 0.860 $\pm$ 0.042 & 0.755 $\pm$ 0.067 & 0.871 $\pm$ 0.058 & 0.503 $\pm$ 0.125 & 0.759 $\pm$ 0.050 & 0.802 $\pm$ 0.041 & 0.374 $\pm$ 0.127 & 0.833 $\pm$ 0.036 \\
-LightGBM & 0.851 $\pm$ 0.042 & 0.751 $\pm$ 0.065 & 0.862 $\pm$ 0.066 & 0.517 $\pm$ 0.112 & 0.757 $\pm$ 0.058 & 0.804 $\pm$ 0.038 & 0.380 $\pm$ 0.132 & 0.831 $\pm$ 0.043 \\
-kNN & 0.843 $\pm$ 0.043 & 0.751 $\pm$ 0.064 & 0.849 $\pm$ 0.069 & 0.463 $\pm$ 0.121 & 0.731 $\pm$ 0.058 & 0.784 $\pm$ 0.040 & 0.311 $\pm$ 0.134 & 0.814 $\pm$ 0.044 \\
-SGDClassifier & 0.839 $\pm$ 0.054 & 0.722 $\pm$ 0.091 & 0.723 $\pm$ 0.300 & 0.503 $\pm$ 0.329 & 0.657 $\pm$ 0.134 & 0.795 $\pm$ 0.081 & 0.226 $\pm$ 0.178 & 0.705 $\pm$ 0.211 \\
-Decision Tree & 0.769 $\pm$ 0.042 & 0.649 $\pm$ 0.073 & 0.775 $\pm$ 0.073 & 0.522 $\pm$ 0.145 & 0.698 $\pm$ 0.059 & 0.790 $\pm$ 0.051 & 0.297 $\pm$ 0.146 & 0.780 $\pm$ 0.046 \\
-Naive & 0.695 $\pm$ 0.009 & 0.500 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.000 $\pm$ 0.000 & 0.695 $\pm$ 0.009 & 0.695 $\pm$ 0.009 & 0.000 $\pm$ 0.000 & 0.820 $\pm$ 0.006 \\
-\bottomrule
-\end{tabular}
-\caption{Aggregate performance metrics (mean $\pm$ std) for all 14 classification algorithms plus a naive majority-class baseline, evaluated on the full feature set under 10-repeat × 4-fold stratified cross-validation (40 total runs; n = 187). Random Forest attains the highest mean AUPRC (0.892), narrowly ahead of CatBoost (0.889) and Extra Trees (0.885) --- differences well within one standard deviation of each other. CatBoost and Random Forest occupy a similar sensitivity/specificity operating point (0.913/0.512 and 0.916/0.529, respectively). RBF SVM attains the highest sensitivity (0.938) at the cost of the lowest specificity among top models (0.453). The naive classifier --- predicting the majority class throughout --- achieves perfect sensitivity and zero specificity, representing an uninformative lower bound equal to the empirical class prevalence (0.695). No threshold optimization or hyperparameter tuning was applied at this stage; all models used default parameters to provide an unbiased baseline for subsequent model selection.}
-\label{tab:selection_metrics}
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabular}{lllllllll}
+        \toprule
+        Algorithm & AUPRC & ROC-AUC & Sensitivity & Specificity & Accuracy & Precision & Youden Index & F1 Score \\
+        \midrule
+        Random Forest & 0.892 $\pm$ 0.039 & 0.809 $\pm$ 0.062 & 0.916 $\pm$ 0.058 & 0.529 $\pm$ 0.125 & 0.798 $\pm$ 0.048 & 0.818 $\pm$ 0.038 & 0.446 $\pm$ 0.124 & 0.863 $\pm$ 0.034 \\
+        CatBoost & 0.889 $\pm$ 0.044 & 0.803 $\pm$ 0.068 & 0.913 $\pm$ 0.062 & 0.512 $\pm$ 0.117 & 0.791 $\pm$ 0.052 & 0.811 $\pm$ 0.036 & 0.425 $\pm$ 0.125 & 0.858 $\pm$ 0.038 \\
+        Extra Trees & 0.885 $\pm$ 0.042 & 0.790 $\pm$ 0.065 & 0.884 $\pm$ 0.061 & 0.499 $\pm$ 0.126 & 0.767 $\pm$ 0.048 & 0.803 $\pm$ 0.037 & 0.383 $\pm$ 0.123 & 0.840 $\pm$ 0.035 \\
+        Naive Bayes & 0.884 $\pm$ 0.052 & 0.804 $\pm$ 0.070 & 0.684 $\pm$ 0.352 & 0.628 $\pm$ 0.271 & 0.666 $\pm$ 0.197 & 0.769 $\pm$ 0.162 & 0.312 $\pm$ 0.251 & 0.673 $\pm$ 0.310 \\
+        Logistic Regression & 0.880 $\pm$ 0.054 & 0.787 $\pm$ 0.076 & 0.872 $\pm$ 0.071 & 0.531 $\pm$ 0.117 & 0.768 $\pm$ 0.056 & 0.810 $\pm$ 0.038 & 0.403 $\pm$ 0.128 & 0.838 $\pm$ 0.043 \\
+        RBF SVM & 0.878 $\pm$ 0.055 & 0.797 $\pm$ 0.072 & 0.938 $\pm$ 0.049 & 0.453 $\pm$ 0.129 & 0.790 $\pm$ 0.054 & 0.798 $\pm$ 0.041 & 0.390 $\pm$ 0.141 & 0.861 $\pm$ 0.036 \\
+        LDA & 0.878 $\pm$ 0.059 & 0.788 $\pm$ 0.081 & 0.847 $\pm$ 0.083 & 0.577 $\pm$ 0.112 & 0.765 $\pm$ 0.065 & 0.821 $\pm$ 0.040 & 0.424 $\pm$ 0.136 & 0.832 $\pm$ 0.052 \\
+        Linear SVM & 0.869 $\pm$ 0.056 & 0.771 $\pm$ 0.081 & 0.858 $\pm$ 0.072 & 0.520 $\pm$ 0.115 & 0.755 $\pm$ 0.063 & 0.804 $\pm$ 0.040 & 0.378 $\pm$ 0.141 & 0.829 $\pm$ 0.047 \\
+        XGBoost & 0.864 $\pm$ 0.038 & 0.763 $\pm$ 0.063 & 0.859 $\pm$ 0.065 & 0.526 $\pm$ 0.118 & 0.757 $\pm$ 0.058 & 0.806 $\pm$ 0.040 & 0.384 $\pm$ 0.137 & 0.830 $\pm$ 0.043 \\
+        Gradient Boosting & 0.860 $\pm$ 0.042 & 0.755 $\pm$ 0.067 & 0.871 $\pm$ 0.058 & 0.503 $\pm$ 0.125 & 0.759 $\pm$ 0.050 & 0.802 $\pm$ 0.041 & 0.374 $\pm$ 0.127 & 0.833 $\pm$ 0.036 \\
+        LightGBM & 0.851 $\pm$ 0.042 & 0.751 $\pm$ 0.065 & 0.862 $\pm$ 0.066 & 0.517 $\pm$ 0.112 & 0.757 $\pm$ 0.058 & 0.804 $\pm$ 0.038 & 0.380 $\pm$ 0.132 & 0.831 $\pm$ 0.043 \\
+        kNN & 0.843 $\pm$ 0.043 & 0.751 $\pm$ 0.064 & 0.849 $\pm$ 0.069 & 0.463 $\pm$ 0.121 & 0.731 $\pm$ 0.058 & 0.784 $\pm$ 0.040 & 0.311 $\pm$ 0.134 & 0.814 $\pm$ 0.044 \\
+        SGDClassifier & 0.839 $\pm$ 0.054 & 0.722 $\pm$ 0.091 & 0.723 $\pm$ 0.300 & 0.503 $\pm$ 0.329 & 0.657 $\pm$ 0.134 & 0.795 $\pm$ 0.081 & 0.226 $\pm$ 0.178 & 0.705 $\pm$ 0.211 \\
+        Decision Tree & 0.769 $\pm$ 0.042 & 0.649 $\pm$ 0.073 & 0.775 $\pm$ 0.073 & 0.522 $\pm$ 0.145 & 0.698 $\pm$ 0.059 & 0.790 $\pm$ 0.051 & 0.297 $\pm$ 0.146 & 0.780 $\pm$ 0.046 \\
+        Naive & 0.695 $\pm$ 0.009 & 0.500 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.000 $\pm$ 0.000 & 0.695 $\pm$ 0.009 & 0.695 $\pm$ 0.009 & 0.000 $\pm$ 0.000 & 0.820 $\pm$ 0.006 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Aggregate performance metrics (mean $\pm$ std) for all 14 classification algorithms plus a naive majority-class baseline, evaluated on the full feature set under 10-repeat × 4-fold stratified cross-validation (40 total runs; n = 187). Random Forest attains the highest mean AUPRC (0.892), narrowly ahead of CatBoost (0.889) and Extra Trees (0.885) --- differences well within one standard deviation of each other. CatBoost and Random Forest occupy a similar sensitivity/specificity operating point (0.913/0.512 and 0.916/0.529, respectively). RBF SVM attains the highest sensitivity (0.938) at the cost of the lowest specificity among top models (0.453). The naive classifier --- predicting the majority class throughout --- achieves perfect sensitivity and zero specificity, representing an uninformative lower bound equal to the empirical class prevalence (0.695). No threshold optimization or hyperparameter tuning was applied at this stage; all models used default parameters to provide an unbiased baseline for subsequent model selection.}
+    \label{tab:selection_metrics}
 \end{sidewaystable}
 
 % AURPRC HEATMAPS
@@ -804,28 +804,28 @@ This subsection discusses the results of the nested cross-validation hyperparame
 % CatBoost Repeated k-fold Performance Metrics for 40 Total Runs
 %---------------------------------------------------------------
 \begin{table}[t]
-\centering
-\footnotesize
-\begin{tabular}{llrrrr}
-\toprule
-&  & Mean & STD & CI Lower & CI Upper \\
-\midrule
-Parameter & Threshold & 0.481 & 0.042 & 0.468 & 0.494 \\
-\midrule
-Metrics &  AUPRC & 0.886 & 0.049 & 0.871 & 0.902 \\
-& ROC-AUC & 0.799 & 0.073 & 0.776 & 0.821 \\
-& Sensitivity & 0.886 & 0.083 & 0.861 & 0.912 \\
-& Specificity & 0.527 & 0.141 & 0.483 & 0.571 \\
-& Accuracy & 0.777 & 0.060 & 0.758 & 0.795 \\
-& Precision & 0.813 & 0.044 & 0.799 & 0.826 \\
-& F1-score & 0.845 & 0.046 & 0.831 & 0.860 \\
-& Youden Index & 0.413 & 0.138 & 0.370 & 0.456 \\
-\bottomrule
-\end{tabular}
+    \centering
+    \footnotesize
+    \begin{tabular}{llrrrr}
+        \toprule
+        &  & Mean & STD & CI Lower & CI Upper \\
+        \midrule
+        Parameter & Threshold & 0.481 & 0.042 & 0.468 & 0.494 \\
+        \midrule
+        Metrics &  AUPRC & 0.886 & 0.049 & 0.871 & 0.902 \\
+        & ROC-AUC & 0.799 & 0.073 & 0.776 & 0.821 \\
+        & Sensitivity & 0.886 & 0.083 & 0.861 & 0.912 \\
+        & Specificity & 0.527 & 0.141 & 0.483 & 0.571 \\
+        & Accuracy & 0.777 & 0.060 & 0.758 & 0.795 \\
+        & Precision & 0.813 & 0.044 & 0.799 & 0.826 \\
+        & F1-score & 0.845 & 0.046 & 0.831 & 0.860 \\
+        & Youden Index & 0.413 & 0.138 & 0.370 & 0.456 \\
+        \bottomrule
+    \end{tabular}
 
 
-\caption{Aggregate performance metrics for the CatBoost model evaluated under repeated stratified k-fold cross-validation (10 repeats × 4 folds; 40 total evaluation runs; n = 187). Metrics are summarized as the mean, standard deviation (STD), and 95\% confidence interval bounds (CI Lower, CI Upper) across all runs. The Youden Index (sensitivity + specificity - 1) is reported as a threshold-independent summary of overall discriminative balance \cite{youden1950index}. This repeated cross-validation scheme was performed to obtain statistically stable, bias-reduced estimates of out-of-sample performance that are less sensitive to any particular random partition of the dataset. The optimized decision threshold is reported separately from performance metrics, as it represents the operating parameter selected per fold during Bayesian optimization rather than an outcome of model discrimination.}
-\label{tab:optimization_metrics_40repeats}
+    \caption{Aggregate performance metrics for the CatBoost model evaluated under repeated stratified k-fold cross-validation (10 repeats × 4 folds; 40 total evaluation runs; n = 187). Metrics are summarized as the mean, standard deviation (STD), and 95\% confidence interval bounds (CI Lower, CI Upper) across all runs. The Youden Index (sensitivity + specificity - 1) is reported as a threshold-independent summary of overall discriminative balance \cite{youden1950index}. This repeated cross-validation scheme was performed to obtain statistically stable, bias-reduced estimates of out-of-sample performance that are less sensitive to any particular random partition of the dataset. The optimized decision threshold is reported separately from performance metrics, as it represents the operating parameter selected per fold during Bayesian optimization rather than an outcome of model discrimination.}
+    \label{tab:optimization_metrics_40repeats}
 \end{table}
 
 Before examining the four individually-tuned fold models used throughout the remainder of this study (Table~\ref{tab:catboost_metrics_firstrepeat}, next), we first establish CatBoost's overall performance across the pipeline's 4-fold structure at the level of the whole repeated cross-validation scheme: 10 independent repetitions of the 4-fold split, yielding 40 total evaluation runs, with aggregate estimates presented in Table~\ref{tab:optimization_metrics_40repeats}. This overall view is the appropriate starting point precisely because any single partitioning of a modest-sized dataset carries some risk of being unrepresentative of the underlying data distribution \cite{kim2009estimating}; establishing that the pipeline's performance is stable across 40 independent partitions, before selecting any one specific set of fold models to analyze in detail, avoids drawing conclusions from what could otherwise be a fold-specific artifact. As with the selection stage (Section~\ref{sec:models}), these 40 runs represent one modeling pipeline evaluated repeatedly, not 40 separately trained studies.
@@ -849,40 +849,40 @@ We use the first of the ten repeats (fixed by \texttt{random\_state=42}, Section
 % CatBoost Performance Metrics First 4 Models During the First Repeat of 10 Repeats
 %--------------------------------------------%-------------------------------------
 \begin{table}[t]
-\centering
-\footnotesize
-\begin{tabular}{llcccccc}
-\toprule
-& & Model 0 & Model 1 & Model 2 & Model 3 & Mean & Std\\
-\midrule
-Parameter &  threshold & 0.499 & 0.500 & 0.483 & 0.492 & 0.493 & 0.008 \\
-\midrule
-Catboost Parameters & depth & 9.000 & 4.000 & 10.000 & 10.000 & 8.250 & 2.872 \\
-& learning\_rate & 0.016 & 0.017 & 0.020 & 0.003 & 0.014 & 0.007 \\
-& l2\_leaf\_reg & 8.290 & 2.845 & 3.860 & 3.370 & 4.591 & 2.500 \\
-& scale\_pos\_weight & 0.784 & 0.898 & 0.954 & 0.633 & 0.817 & 0.142 \\
-\midrule
-Metrics & AUPRC & 0.901 & 0.892 & 0.837 & 0.941 & 0.893 & 0.043 \\
-& ROC-AUC & 0.781 & 0.758 & 0.781 & 0.877 & 0.799 & 0.053 \\
-& Sensitivity & 0.727 & 0.939 & 0.906 & 0.906 & 0.870 & 0.096 \\
-& Specificity & 0.643 & 0.357 & 0.600 & 0.643 & 0.561 & 0.137 \\
-& F1 Score & 0.774 & 0.849 & 0.866 & 0.879 & 0.842 & 0.047 \\
-& Youden Index & 0.370 & 0.297 & 0.506 & 0.549 & 0.431 & 0.117 \\
-& Precision & 0.828 & 0.775 & 0.829 & 0.853 & 0.821 & 0.033 \\
-& Accuracy & 0.702 & 0.766 & 0.809 & 0.826 & 0.776 & 0.055 \\
-\bottomrule
-\end{tabular}
-\caption{Best parameters and performance metrics of 4 CatBoost models independently trained and tested over 4 data splits. Optimized hyperparameters and classification performance metrics for four independently trained and evaluated CatBoost models across a 4-fold stratified cross-validation scheme. Each model was tuned using Bayesian optimization targeting the Area Under the Precision-Recall Curve (AUPRC). Threshold, tree depth, learning rate, L2 leaf regularization, and positive class scale weight were optimized per fold. Performance metrics are reported for the held-out test partition of each fold, together constituting evaluation across the entire dataset.}
-\label{tab:catboost_metrics_firstrepeat}
+    \centering
+    \footnotesize
+    \begin{tabular}{llcccccc}
+        \toprule
+        & & Model 0 & Model 1 & Model 2 & Model 3 & Mean & Std\\
+        \midrule
+        Parameter &  threshold & 0.499 & 0.500 & 0.483 & 0.492 & 0.493 & 0.008 \\
+        \midrule
+        Catboost Parameters & depth & 9.000 & 4.000 & 10.000 & 10.000 & 8.250 & 2.872 \\
+        & learning\_rate & 0.016 & 0.017 & 0.020 & 0.003 & 0.014 & 0.007 \\
+        & l2\_leaf\_reg & 8.290 & 2.845 & 3.860 & 3.370 & 4.591 & 2.500 \\
+        & scale\_pos\_weight & 0.784 & 0.898 & 0.954 & 0.633 & 0.817 & 0.142 \\
+        \midrule
+        Metrics & AUPRC & 0.901 & 0.892 & 0.837 & 0.941 & 0.893 & 0.043 \\
+        & ROC-AUC & 0.781 & 0.758 & 0.781 & 0.877 & 0.799 & 0.053 \\
+        & Sensitivity & 0.727 & 0.939 & 0.906 & 0.906 & 0.870 & 0.096 \\
+        & Specificity & 0.643 & 0.357 & 0.600 & 0.643 & 0.561 & 0.137 \\
+        & F1 Score & 0.774 & 0.849 & 0.866 & 0.879 & 0.842 & 0.047 \\
+        & Youden Index & 0.370 & 0.297 & 0.506 & 0.549 & 0.431 & 0.117 \\
+        & Precision & 0.828 & 0.775 & 0.829 & 0.853 & 0.821 & 0.033 \\
+        & Accuracy & 0.702 & 0.766 & 0.809 & 0.826 & 0.776 & 0.055 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Best parameters and performance metrics of 4 CatBoost models independently trained and tested over 4 data splits. Optimized hyperparameters and classification performance metrics for four independently trained and evaluated CatBoost models across a 4-fold stratified cross-validation scheme. Each model was tuned using Bayesian optimization targeting the Area Under the Precision-Recall Curve (AUPRC). Threshold, tree depth, learning rate, L2 leaf regularization, and positive class scale weight were optimized per fold. Performance metrics are reported for the held-out test partition of each fold, together constituting evaluation across the entire dataset.}
+    \label{tab:catboost_metrics_firstrepeat}
 \end{table}
 
 % CATBOOST AUPRC
 %------------------------------
 \begin{figure*}[h]
-\centering
-\includegraphics[width=0.6\textwidth]{references/explainability/catboost_pooled_auprc.png}
-\caption{Pooled Precision-Recall (PR) curve for the CatBoost model, built by concatenating the held-out predictions of all four independently trained fold models (Models 0--3) into a single set and computing one curve, with a 95\% confidence interval band from bootstrap resampling. The pooled AUPRC is 0.858 (95\% CI: 0.795--0.916); the mean $\pm$ std of the four individual per-fold AUPRC values (Table~\ref{tab:catboost_metrics_firstrepeat}) is 0.893 $\pm$ 0.043. These are two different, complementary statistics --- the pooled curve reflects performance as if the four folds' held-out predictions were one evaluation set, while the mean-of-folds reflects the average of four independent per-fold evaluations --- and their numeric difference should not be read as a discrepancy in the underlying models. The dashed line denotes the no-skill baseline (prevalence = 0.70, i.e. 130/187), which the CatBoost curve exceeds across the recall range, indicating discriminative performance well above chance for identifying patients who should be referred for Nerve Conduction Study (NCS).}
-\label{fig:catboost_auprc}
+    \centering
+    \includegraphics[width=0.6\textwidth]{references/explainability/catboost_pooled_auprc.png}
+    \caption{Pooled Precision-Recall (PR) curve for the CatBoost model, built by concatenating the held-out predictions of all four independently trained fold models (Models 0--3) into a single set and computing one curve, with a 95\% confidence interval band from bootstrap resampling. The pooled AUPRC is 0.858 (95\% CI: 0.795--0.916); the mean $\pm$ std of the four individual per-fold AUPRC values (Table~\ref{tab:catboost_metrics_firstrepeat}) is 0.893 $\pm$ 0.043. These are two different, complementary statistics --- the pooled curve reflects performance as if the four folds' held-out predictions were one evaluation set, while the mean-of-folds reflects the average of four independent per-fold evaluations --- and their numeric difference should not be read as a discrepancy in the underlying models. The dashed line denotes the no-skill baseline (prevalence = 0.70, i.e. 130/187), which the CatBoost curve exceeds across the recall range, indicating discriminative performance well above chance for identifying patients who should be referred for Nerve Conduction Study (NCS).}
+    \label{fig:catboost_auprc}
 \end{figure*}
 
 Table \ref{tab:catboost_metrics_firstrepeat} shows the best parameters and performance metrics for the four models, together with their mean and standard deviation. Mean specificity (0.561) and F1 (0.842) are modest improvements over the baseline unoptimized CatBoost model (0.512 and 0.858, see Table~\ref{tab:selection_metrics}), while mean sensitivity (0.870) is slightly below the unoptimized baseline (0.913) --- a direct consequence of per-fold Bayesian threshold optimization trading some sensitivity for a better-balanced operating point rather than maximizing recall alone. For a pre-diagnostic screening instrument intended to triage patients toward the more resource-intensive and often geographically inaccessible Nerve Conduction Study (NCS), the clinical priority remains high sensitivity, so this trade-off is examined further at the pipeline level in the repeated cross-validation analysis above.
@@ -902,22 +902,22 @@ Figure \ref{fig:catboost_auprc} shows the pooled Precision-Recall curve built fr
 % Feature Importances
 % ---------------------
 \begin{figure}
-\centering
-\includegraphics[width=0.85\textwidth]{references/explainability/catboost_all_splits_feature_importances.png}
-\caption{
-CatBoost-derived feature importance scores for the 22 input features across all four independently trained models (Models 0–3). Features are color-coded by clinical domain group: Sudoscan-derived electrochemical skin conductance parameters (orange), patient demographic and clinical profile variables (blue), comorbidity indicators (green), clinical neurological examination findings (red/pink), and the Michigan Neuropathy Screening Instrument (MNSI) subscores (purple). Importance scores reflect the mean absolute contribution of each feature to reducing prediction loss across all trees in the ensemble. Features are ranked by their average importance across folds.}
-\label{fig:feature_importances}
+    \centering
+    \includegraphics[width=0.85\textwidth]{references/explainability/catboost_all_splits_feature_importances.png}
+    \caption{
+    CatBoost-derived feature importance scores for the 22 input features across all four independently trained models (Models 0–3). Features are color-coded by clinical domain group: Sudoscan-derived electrochemical skin conductance parameters (orange), patient demographic and clinical profile variables (blue), comorbidity indicators (green), clinical neurological examination findings (red/pink), and the Michigan Neuropathy Screening Instrument (MNSI) subscores (purple). Importance scores reflect the mean absolute contribution of each feature to reducing prediction loss across all trees in the ensemble. Features are ranked by their average importance across folds.}
+    \label{fig:feature_importances}
 \end{figure}
 
 % SHAP
 %------------------------------
 \begin{figure}
-\centering
-\includegraphics[width=0.85\textwidth]{references/explainability/catboost_all_splits_shap.png}
-\caption{
- Heatmap of mean absolute SHAP (SHapley Additive exPlanations) values for each of the 22 input features across the four independently trained CatBoost models (Models 0–3). Each cell represents the mean absolute SHAP value for that feature in the corresponding model, reflecting the average magnitude of that feature's contribution to individual predictions. Feature color coding follows the same clinical domain groupings as Figure \ref{fig:feature_importances}. Higher SHAP values indicate greater average influence on the model output regardless of direction. Features are ordered by their average mean absolute SHAP value across folds.
- }
-\label{fig:shap}
+    \centering
+    \includegraphics[width=0.85\textwidth]{references/explainability/catboost_all_splits_shap.png}
+    \caption{
+     Heatmap of mean absolute SHAP (SHapley Additive exPlanations) values for each of the 22 input features across the four independently trained CatBoost models (Models 0–3). Each cell represents the mean absolute SHAP value for that feature in the corresponding model, reflecting the average magnitude of that feature's contribution to individual predictions. Feature color coding follows the same clinical domain groupings as Figure \ref{fig:feature_importances}. Higher SHAP values indicate greater average influence on the model output regardless of direction. Features are ordered by their average mean absolute SHAP value across folds.
+     }
+    \label{fig:shap}
 \end{figure}
 
 Across all four folds, CatBoost feature importances (Figure~\ref{fig:feature_importances}) and SHAP-based explanations (Figure~\ref{fig:shap}) converged on a consistent set of clinically meaningful predictors, reinforcing the model's interpretability and lending biological plausibility to its decision logic --- a critical consideration for clinical acceptance of machine learning tools \cite{rudin2019}.
@@ -938,45 +938,45 @@ To move beyond predictive accuracy and toward clinical utility, this study emplo
 % Local CF Summary Across Models
 % -------------------------------
 \begin{table}[h]
-\footnotesize
-\centering
-\begin{tabular}{rrrrrrrr}
-\toprule
-Model & Candidates & Misclassified & Borderline & Instances with CF & Sparsity Mean & L1 Mean & L2 Mean \\
-\midrule
-0 & 19 & 14 & 5 & 4 & 2.52 & 2.47 & 1.62 \\
-1 & 13 & 11 & 2 & 1 & 2.40 & 3.27 & 2.20 \\
-2 & 12 & 9 & 3 & 0 & --- & --- & --- \\
-3 & 17 & 8 & 9 & 3 & 2.05 & 2.80 & 2.01 \\
-\bottomrule
-\end{tabular}
-\caption{Aggregate summary of local counterfactual generation across four CatBoost models trained on cross-validation folds. Candidates denotes the number of test-set patients selected for counterfactual analysis based on being either misclassified or borderline (prediction probability within 0.08 of the fold's decision threshold). Misclassified indicates the subset with incorrect predictions, while Borderline indicates low-confidence predictions (whether predictions were correct or not; a patient can be both). Instances with CF reports how many candidate patients successfully yielded at least one valid counterfactual within the generation budget. Sparsity Mean reflects the average number of features altered per counterfactual; L1 and L2 means quantify the magnitude of feature changes using Manhattan and Euclidean distances, respectively, both computed only over the six actionable features. Model 2 produced 12 candidates but zero successful counterfactual instances (Section~\ref{sec:cf-plausibility} discusses why the DiCE genetic search can fail to converge for an entire fold's candidate pool). Across the three models that did yield counterfactuals, sparsity means cluster tightly (2.05--2.52 out of 6 actionable features), indicating that a prediction reversal typically requires changing only two to three actionable features, not the majority of the actionable set.
-}
-\label{tab:localcf-model-level}
+    \footnotesize
+    \centering
+    \begin{tabular}{rrrrrrrr}
+        \toprule
+        Model & Candidates & Misclassified & Borderline & Instances with CF & Sparsity Mean & L1 Mean & L2 Mean \\
+        \midrule
+        0 & 19 & 14 & 5 & 4 & 2.52 & 2.47 & 1.62 \\
+        1 & 13 & 11 & 2 & 1 & 2.40 & 3.27 & 2.20 \\
+        2 & 12 & 9 & 3 & 0 & --- & --- & --- \\
+        3 & 17 & 8 & 9 & 3 & 2.05 & 2.80 & 2.01 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Aggregate summary of local counterfactual generation across four CatBoost models trained on cross-validation folds. Candidates denotes the number of test-set patients selected for counterfactual analysis based on being either misclassified or borderline (prediction probability within 0.08 of the fold's decision threshold). Misclassified indicates the subset with incorrect predictions, while Borderline indicates low-confidence predictions (whether predictions were correct or not; a patient can be both). Instances with CF reports how many candidate patients successfully yielded at least one valid counterfactual within the generation budget. Sparsity Mean reflects the average number of features altered per counterfactual; L1 and L2 means quantify the magnitude of feature changes using Manhattan and Euclidean distances, respectively, both computed only over the six actionable features. Model 2 produced 12 candidates but zero successful counterfactual instances (Section~\ref{sec:cf-plausibility} discusses why the DiCE genetic search can fail to converge for an entire fold's candidate pool). Across the three models that did yield counterfactuals, sparsity means cluster tightly (2.05--2.52 out of 6 actionable features), indicating that a prediction reversal typically requires changing only two to three actionable features, not the majority of the actionable set.
+    }
+    \label{tab:localcf-model-level}
 \end{table}
 
 % Local CF Details Across Models
 % -------------------------------
 \begin{table}[h]
-\footnotesize
-\centering
-\begin{tabular}{rrrrlrrrr}
-\toprule
-Model & Patient Code & Probability & Margin & Outcome & CF Count & Sparsity Mean & L1 Mean & L2 Mean \\
-\midrule
-0 & 29 & 0.54 & 0.05 & True Positive & 18 & 2.89 & 2.88 & 1.87 \\
-0 & 40 & 0.51 & 0.01 & True Positive & 25 & 2.16 & 2.21 & 1.54 \\
-0 & 76 & 0.56 & 0.06 & True Positive & 22 & 2.64 & 2.76 & 1.72 \\
-0 & 125 & 0.53 & 0.03 & False Positive & 16 & 2.38 & 2.03 & 1.36 \\
-1 & 123 & 0.27 & 0.23 & False Negative & 25 & 2.40 & 3.27 & 2.20 \\
-3 & 20 & 0.50 & 0.01 & False Positive & 23 & 1.74 & 2.05 & 1.59 \\
-3 & 23 & 0.56 & 0.07 & True Positive & 22 & 2.68 & 3.51 & 2.21 \\
-3 & 172 & 0.57 & 0.07 & True Positive & 15 & 1.73 & 2.84 & 2.23 \\
-\bottomrule
-\end{tabular}
-\caption{Instance-level counterfactual statistics for the 8 candidate patients (of 61 total candidates, Table~\ref{tab:localcf-model-level}) for which counterfactuals were successfully generated. The model column indicates which fold's held-out test set the patient belonged to. The remaining columns report the model's predicted probability for the patient, the margin (absolute distance from that fold's own decision threshold), prediction outcome, the number of valid counterfactuals produced (CF Count), and the mean sparsity, L1 (Manhattan), and L2 (Euclidean) distances of those counterfactuals over the six actionable features. All eight patients sit close to their fold's decision threshold (margin $\le$ 0.07), consistent with the fact that candidates were selected specifically for being borderline or misclassified. Counterfactuals were generated for both misclassified (False Positive, False Negative) and correctly classified borderline (True Positive) cases, providing explanatory value for model uncertainty regardless of prediction correctness; the True Positive borderline cases are clinically relevant in their own right, as they represent patients correctly identified as high-risk but with low model confidence, for whom counterfactual scenarios can guide preventive clinical decisions. Patients 20, 40, and 123 (bold in the discussion below) are examined individually in Section~\ref{sec:instance-level-cf}.
-}
-\label{tab:localcf-listing}
+    \footnotesize
+    \centering
+    \begin{tabular}{rrrrlrrrr}
+        \toprule
+        Model & Patient Code & Probability & Margin & Outcome & CF Count & Sparsity Mean & L1 Mean & L2 Mean \\
+        \midrule
+        0 & 29 & 0.54 & 0.05 & True Positive & 18 & 2.89 & 2.88 & 1.87 \\
+        0 & 40 & 0.51 & 0.01 & True Positive & 25 & 2.16 & 2.21 & 1.54 \\
+        0 & 76 & 0.56 & 0.06 & True Positive & 22 & 2.64 & 2.76 & 1.72 \\
+        0 & 125 & 0.53 & 0.03 & False Positive & 16 & 2.38 & 2.03 & 1.36 \\
+        1 & 123 & 0.27 & 0.23 & False Negative & 25 & 2.40 & 3.27 & 2.20 \\
+        3 & 20 & 0.50 & 0.01 & False Positive & 23 & 1.74 & 2.05 & 1.59 \\
+        3 & 23 & 0.56 & 0.07 & True Positive & 22 & 2.68 & 3.51 & 2.21 \\
+        3 & 172 & 0.57 & 0.07 & True Positive & 15 & 1.73 & 2.84 & 2.23 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Instance-level counterfactual statistics for the 8 candidate patients (of 61 total candidates, Table~\ref{tab:localcf-model-level}) for which counterfactuals were successfully generated. The model column indicates which fold's held-out test set the patient belonged to. The remaining columns report the model's predicted probability for the patient, the margin (absolute distance from that fold's own decision threshold), prediction outcome, the number of valid counterfactuals produced (CF Count), and the mean sparsity, L1 (Manhattan), and L2 (Euclidean) distances of those counterfactuals over the six actionable features. All eight patients sit close to their fold's decision threshold (margin $\le$ 0.07), consistent with the fact that candidates were selected specifically for being borderline or misclassified. Counterfactuals were generated for both misclassified (False Positive, False Negative) and correctly classified borderline (True Positive) cases, providing explanatory value for model uncertainty regardless of prediction correctness; the True Positive borderline cases are clinically relevant in their own right, as they represent patients correctly identified as high-risk but with low model confidence, for whom counterfactual scenarios can guide preventive clinical decisions. Patients 20, 40, and 123 (bold in the discussion below) are examined individually in Section~\ref{sec:instance-level-cf}.
+    }
+    \label{tab:localcf-listing}
 \end{table}
 
 
@@ -997,24 +997,24 @@ This low yield is a direct, documented consequence of how DiCE's genetic search 
 In this section we examine three of the eight successful instances individually, chosen to span the three clinically distinct scenarios a screening tool can produce: a borderline false positive, a borderline true positive, and a confident false negative. Unlike the model's decision threshold or feature importances, these are patient-specific, so we deliberately draw the three cases from three different fold models (3, 0, and 1 respectively) rather than confining the discussion to a single fold. Feature-change heatmaps for these instances are shown in Figures~\ref{fig:localcf-020}--\ref{fig:localcf-123}. The remaining five successful instances (Patients 29, 76, 125, 23, 172; Table~\ref{tab:localcf-listing}) are covered only at the aggregate level in Section~\ref{sec:aggregate-cf} below.
 
 \begin{figure}[p]
-\centering
-\includegraphics[width=0.97\textwidth]{references/counterfactuals/020/catboost_split3_local_cf_patient020.png}
-\caption{Counterfactuals for Patient 20 (Model 3)}
-\label{fig:localcf-020}
+    \centering
+    \includegraphics[width=0.97\textwidth]{references/counterfactuals/020/catboost_split3_local_cf_patient020.png}
+    \caption{Counterfactuals for Patient 20 (Model 3)}
+    \label{fig:localcf-020}
 \end{figure}
 
 \begin{figure}[p]
-\centering
-\includegraphics[width=0.97\textwidth]{references/counterfactuals/040/catboost_split0_local_cf_patient040.png}
-\caption{Counterfactuals for Patient 40 (Model 0)}
-\label{fig:localcf-040}
+    \centering
+    \includegraphics[width=0.97\textwidth]{references/counterfactuals/040/catboost_split0_local_cf_patient040.png}
+    \caption{Counterfactuals for Patient 40 (Model 0)}
+    \label{fig:localcf-040}
 \end{figure}
 
 \begin{figure}[p]
-\centering
-\includegraphics[width=0.97\textwidth]{references/counterfactuals/123/catboost_split1_local_cf_patient123.png}
-\caption{Counterfactuals for Patient 123 (Model 1)}
-\label{fig:localcf-123}
+    \centering
+    \includegraphics[width=0.97\textwidth]{references/counterfactuals/123/catboost_split1_local_cf_patient123.png}
+    \caption{Counterfactuals for Patient 123 (Model 1)}
+    \label{fig:localcf-123}
 \end{figure}
 
 \paragraph{Patient 20 --- Borderline False Positive (Model 3)}
@@ -1048,35 +1048,35 @@ At this point we analyze counterfactuals for all models on the aggregate level. 
 %  Local CF Change Features Across Models
 % ---------------------------------------
 \begin{table}[h]
-\footnotesize
-\centering
-\begin{tabular}{llrrrrrrr}
-\toprule
-Model & Patient Code & CF Count & INSULIN & HBA1C & HPN & PAOD & DSLPDMIA & CKD \\
-\midrule
-0 & 29 & 18 & 17 & 17 & 5 & 2 & 10 & 1 \\
-0 & 40 & 25 & 18 & 24 & 4 & 6 & 0 & 2 \\
-0 & 76 & 22 & 8 & 13 & 8 & 2 & 20 & 7 \\
-0 & 125 & 16 & 0 & 15 & 8 & 3 & 11 & 1 \\
-1 & 123 & 25 & 7 & 24 & 15 & 11 & 2 & 1 \\
-3 & 20 & 23 & 11 & 16 & 2 & 1 & 7 & 3 \\
-3 & 23 & 22 & 20 & 21 & 5 & 3 & 6 & 4 \\
-3 & 172 & 15 & 0 & 14 & 2 & 4 & 3 & 3 \\
-\midrule
- & Total & 166 & 81 & 144 & 49 & 32 & 59 & 22 \\
-\bottomrule
-\end{tabular}
-\caption{Feature-level frequency of changes across all 166 counterfactuals generated by the 8 successful candidate instances (Table~\ref{tab:localcf-listing}). Each cell reports the number of counterfactuals for a given patient in which the corresponding feature was altered. HbA1c was modified in 144 of 166 counterfactuals (86.7\%), the single most frequently changed feature, but --- unlike the earlier run this Discussion previously reported --- it is no longer the overwhelming majority driver: insulin (81 instances, 48.8\%) and dyslipidemia (59 instances, 35.5\%) are now substantial secondary levers, followed by hypertension (49, 29.5\%), PAOD (32, 19.3\%), and CKD (22, 13.3\%). The pattern is patient-specific rather than uniform: Patient 40's counterfactuals never touch dyslipidemia, Patient 76's touch it in 20 of 22, and Patient 172's never touch insulin, indicating that different patients' misclassifications are corrected through different combinations of the six actionable features.}
-\label{tab:localcf-changed}
+    \footnotesize
+    \centering
+    \begin{tabular}{llrrrrrrr}
+        \toprule
+        Model & Patient Code & CF Count & INSULIN & HBA1C & HPN & PAOD & DSLPDMIA & CKD \\
+        \midrule
+        0 & 29 & 18 & 17 & 17 & 5 & 2 & 10 & 1 \\
+        0 & 40 & 25 & 18 & 24 & 4 & 6 & 0 & 2 \\
+        0 & 76 & 22 & 8 & 13 & 8 & 2 & 20 & 7 \\
+        0 & 125 & 16 & 0 & 15 & 8 & 3 & 11 & 1 \\
+        1 & 123 & 25 & 7 & 24 & 15 & 11 & 2 & 1 \\
+        3 & 20 & 23 & 11 & 16 & 2 & 1 & 7 & 3 \\
+        3 & 23 & 22 & 20 & 21 & 5 & 3 & 6 & 4 \\
+        3 & 172 & 15 & 0 & 14 & 2 & 4 & 3 & 3 \\
+        \midrule
+         & Total & 166 & 81 & 144 & 49 & 32 & 59 & 22 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Feature-level frequency of changes across all 166 counterfactuals generated by the 8 successful candidate instances (Table~\ref{tab:localcf-listing}). Each cell reports the number of counterfactuals for a given patient in which the corresponding feature was altered. HbA1c was modified in 144 of 166 counterfactuals (86.7\%), the single most frequently changed feature, but --- unlike the earlier run this Discussion previously reported --- it is no longer the overwhelming majority driver: insulin (81 instances, 48.8\%) and dyslipidemia (59 instances, 35.5\%) are now substantial secondary levers, followed by hypertension (49, 29.5\%), PAOD (32, 19.3\%), and CKD (22, 13.3\%). The pattern is patient-specific rather than uniform: Patient 40's counterfactuals never touch dyslipidemia, Patient 76's touch it in 20 of 22, and Patient 172's never touch insulin, indicating that different patients' misclassifications are corrected through different combinations of the six actionable features.}
+    \label{tab:localcf-changed}
 \end{table}
 
 % Global counterfactual feature-change counts, by model
 % -------------------------------------------------------
 \begin{figure}
-\centering
-\includegraphics[width=0.6\textwidth]{references/postreport/counterfactuals/global_cf_counts.png}
-\caption{Counts of counterfactual feature changes, broken down by feature and by the model (fold) that produced them. Models 0 and 3 both show HbA1c as the most frequently changed feature (69 and 51 changes respectively), with insulin and dyslipidemia as substantial secondary contributors in Model 0 (43 and 41) and insulin the clear second driver in Model 3 (31). Model 1 --- contributing only Patient 123's 25 counterfactuals --- shows a markedly different pattern, with hypertension (15) and PAOD (11) changed more often than insulin (7), reflecting that single patient's specific profile rather than a general property of that fold. Model 2 is absent because it produced zero successful counterfactuals (Section~\ref{sec:cf-plausibility}). We include this per-model breakdown, rather than omitting it, precisely because the differences between models are informative: they show that the "most actionable feature" answer is not fixed across the pipeline but depends on which patients happen to need correcting in a given fold, which is itself a caveat readers should weigh against any single-number summary of counterfactual feature importance.}
-\label{fig:globalcf}
+    \centering
+    \includegraphics[width=0.6\textwidth]{references/postreport/counterfactuals/global_cf_counts.png}
+    \caption{Counts of counterfactual feature changes, broken down by feature and by the model (fold) that produced them. Models 0 and 3 both show HbA1c as the most frequently changed feature (69 and 51 changes respectively), with insulin and dyslipidemia as substantial secondary contributors in Model 0 (43 and 41) and insulin the clear second driver in Model 3 (31). Model 1 --- contributing only Patient 123's 25 counterfactuals --- shows a markedly different pattern, with hypertension (15) and PAOD (11) changed more often than insulin (7), reflecting that single patient's specific profile rather than a general property of that fold. Model 2 is absent because it produced zero successful counterfactuals (Section~\ref{sec:cf-plausibility}). We include this per-model breakdown, rather than omitting it, precisely because the differences between models are informative: they show that the "most actionable feature" answer is not fixed across the pipeline but depends on which patients happen to need correcting in a given fold, which is itself a caveat readers should weigh against any single-number summary of counterfactual feature importance.}
+    \label{fig:globalcf}
 \end{figure}
 
 HbA1c modification remains the single most frequently proposed change across the aggregate counterfactual set (144 of 166, 86.7\%), but the pattern is now more genuinely multifactorial than the previous run of this pipeline suggested: insulin (81, 48.8\%) and dyslipidemia (59, 35.5\%) are substantial secondary levers, not minor contributors. This is clinically coherent and well-supported in the literature: chronic hyperglycemia --- indexed by HbA1c --- drives the oxidative and metabolic mechanisms underlying peripheral nerve damage in diabetic patients, and tighter glycemic control has been demonstrated to reduce DPN incidence and progression \cite{callaghan2012,tesfaye2010}. The counterfactual analysis, thus, not only identifies HbA1c as the most frequently implicated actionable feature, but operationalizes this importance as a concrete clinical recommendation: patients flagged as high-risk by the model may be redirected toward glycemic optimization, insulin therapy review, and dyslipidemia management, in roughly that order of frequency, before or alongside a Nerve Conduction Study referral.
@@ -1098,10 +1098,10 @@ The case studies and aggregate patterns above suggest a concrete, low-burden way
 We emphasize, as throughout this Discussion, that this workflow is a proposal for how the pipeline's outputs could support clinical decision-making, not a validated clinical protocol: the risk score and the counterfactual are decision-support inputs, and the referral or treatment decision remains the clinician's.
 
 \begin{figure}[h]
-\centering
-\includegraphics[width=0.95\textwidth]{references/illustrations/clinician_workflow.png}
-\caption{Proposed clinician workflow combining the CatBoost risk score with DiCE counterfactual review. Steps 1--2 require only routinely collected clinical data and no Nerve Conduction Study. Step 3 (outlined in purple) is reviewed only for flagged or borderline patients and requires clinician judgment to separate actionable suggestions (e.g., glycemic control) from suggestions that are not real interventions (e.g., introducing a comorbidity). Step 4 routes high-confidence flags toward NCS referral and borderline, actionable flags toward risk-factor management and re-screening. The callout at the bottom restates this study's decision-support framing and proof-of-concept status (Section~\ref{sec:limitations}).}
-\label{fig:clinician_workflow}
+    \centering
+    \includegraphics[width=0.95\textwidth]{references/illustrations/clinician_workflow.png}
+    \caption{Proposed clinician workflow combining the CatBoost risk score with DiCE counterfactual review. Steps 1--2 require only routinely collected clinical data and no Nerve Conduction Study. Step 3 (outlined in purple) is reviewed only for flagged or borderline patients and requires clinician judgment to separate actionable suggestions (e.g., glycemic control) from suggestions that are not real interventions (e.g., introducing a comorbidity). Step 4 routes high-confidence flags toward NCS referral and borderline, actionable flags toward risk-factor management and re-screening. The callout at the bottom restates this study's decision-support framing and proof-of-concept status (Section~\ref{sec:limitations}).}
+    \label{fig:clinician_workflow}
 \end{figure}
 
 \subsection{Limitations}
@@ -1188,133 +1188,133 @@ of the six counterfactual-actionable features discussed alongside Figure~\ref{fi
 
 % ===================== Figure S1 =====================
 \begin{figure}[!ht]
-\centering
-\includegraphics[width=\textwidth]{references/eda/s1_continuous_rainclouds.pdf}
-\caption{\textbf{Distribution of the continuous candidate predictors by outcome group.}
-Each panel shows, for one of the 10 continuous features in the modelling set, the kernel
-density of the values (right), a box plot of the median and interquartile range (centre) and
-the individual patient observations (left), separately for the 57 Unconfirmed and 130 Confirmed
-patients. Panels are ordered by univariable discrimination and annotated with the area under
-the receiver operating characteristic curve and the Benjamini--Hochberg q-value reported in
-Table~\ref{tab:cohort}. Showing the raw observations alongside the summaries makes the degree
-of overlap between the groups visible: even for the best-separating features the two
-distributions overlap substantially, which is consistent with the moderate specificity of the
-fitted models and with the wide range of predicted probabilities near the decision threshold
-that motivated the selection of borderline cases for counterfactual analysis.}
-\label{fig:s1}
+    \centering
+    \includegraphics[width=\textwidth]{references/eda/s1_continuous_rainclouds.pdf}
+    \caption{\textbf{Distribution of the continuous candidate predictors by outcome group.}
+    Each panel shows, for one of the 10 continuous features in the modelling set, the kernel
+    density of the values (right), a box plot of the median and interquartile range (centre) and
+    the individual patient observations (left), separately for the 57 Unconfirmed and 130 Confirmed
+    patients. Panels are ordered by univariable discrimination and annotated with the area under
+    the receiver operating characteristic curve and the Benjamini--Hochberg q-value reported in
+    Table~\ref{tab:cohort}. Showing the raw observations alongside the summaries makes the degree
+    of overlap between the groups visible: even for the best-separating features the two
+    distributions overlap substantially, which is consistent with the moderate specificity of the
+    fitted models and with the wide range of predicted probabilities near the decision threshold
+    that motivated the selection of borderline cases for counterfactual analysis.}
+    \label{fig:s1}
 \end{figure}
 
 \clearpage
 
 % ===================== Figure S2 =====================
 \begin{figure}[!ht]
-\centering
-\includegraphics[width=\textwidth]{references/eda/s2_categorical_features.pdf}
-\caption{\textbf{Binary candidate predictors and their association with confirmed
-diabetic peripheral neuropathy.} \textbf{a} Prevalence of each of the 12 binary features in the
-Unconfirmed and Confirmed groups, with Wilson 95\% confidence intervals, which remain valid for
-the rare comorbidities where normal-approximation intervals do not. \textbf{b} Odds ratios for
-the same features on a logarithmic scale, with Wald confidence intervals and a
-Haldane--Anscombe correction applied where a cell count was zero; the dashed line marks the
-null value of 1. Filled markers denote a Benjamini--Hochberg q-value below 0.05 and diamonds
-denote the features available to the counterfactual engine. The neurological examination signs
-(DEC\_LTS, DEC\_PPS, DEC\_VS, DEC\_AR) show the strongest and most consistent associations,
-whereas the comorbidities cluster tightly around the null with wide intervals reflecting their
-low prevalence, most extremely for GBS and PAOD. This pattern explains why the comorbidity
-ablation had little effect on model performance despite comorbidities forming the majority of
-the modifiable feature set.}
-\label{fig:s2}
+    \centering
+    \includegraphics[width=\textwidth]{references/eda/s2_categorical_features.pdf}
+    \caption{\textbf{Binary candidate predictors and their association with confirmed
+    diabetic peripheral neuropathy.} \textbf{a} Prevalence of each of the 12 binary features in the
+    Unconfirmed and Confirmed groups, with Wilson 95\% confidence intervals, which remain valid for
+    the rare comorbidities where normal-approximation intervals do not. \textbf{b} Odds ratios for
+    the same features on a logarithmic scale, with Wald confidence intervals and a
+    Haldane--Anscombe correction applied where a cell count was zero; the dashed line marks the
+    null value of 1. Filled markers denote a Benjamini--Hochberg q-value below 0.05 and diamonds
+    denote the features available to the counterfactual engine. The neurological examination signs
+    (DEC\_LTS, DEC\_PPS, DEC\_VS, DEC\_AR) show the strongest and most consistent associations,
+    whereas the comorbidities cluster tightly around the null with wide intervals reflecting their
+    low prevalence, most extremely for GBS and PAOD. This pattern explains why the comorbidity
+    ablation had little effect on model performance despite comorbidities forming the majority of
+    the modifiable feature set.}
+    \label{fig:s2}
 \end{figure}
 
 \clearpage
 
 % ===================== Figure S3 =====================
 \begin{figure}[!ht]
-\centering
-\includegraphics[width=0.85\textwidth]{references/eda/s3_redundancy.pdf}
-\caption{\textbf{Redundancy among the candidate predictors.} \textbf{a} Spearman
-correlation matrix of the 22 modelling features, ordered by hierarchical clustering on
-correlation distance so that mutually redundant features appear adjacent; tick label colours
-denote the clinical domain. \textbf{b} The most strongly correlated pair, AGE and NS
-(rho = -0.88). The Sudoscan neuropathy score is age-adjusted by construction, so the two
-variables carry overlapping but not identical information. \textbf{c} Variance inflation
-factors, with the threshold of 5 used for the collinearity-pruned feature set marked by the
-dashed line. Exactly 2 features exceed that threshold (NS = 10.5, AGE = 7.2), and both belong
-to the pair shown in panel b. Removing them therefore discards two of the more informative
-predictors rather than redundant noise, which accounts for the collinearity-pruned feature set
-performing no better than the full set in the ablation experiments.}
-\label{fig:s3}
+    \centering
+    \includegraphics[width=0.85\textwidth]{references/eda/s3_redundancy.pdf}
+    \caption{\textbf{Redundancy among the candidate predictors.} \textbf{a} Spearman
+    correlation matrix of the 22 modelling features, ordered by hierarchical clustering on
+    correlation distance so that mutually redundant features appear adjacent; tick label colours
+    denote the clinical domain. \textbf{b} The most strongly correlated pair, AGE and NS
+    (rho = -0.88). The Sudoscan neuropathy score is age-adjusted by construction, so the two
+    variables carry overlapping but not identical information. \textbf{c} Variance inflation
+    factors, with the threshold of 5 used for the collinearity-pruned feature set marked by the
+    dashed line. Exactly 2 features exceed that threshold (NS = 10.5, AGE = 7.2), and both belong
+    to the pair shown in panel b. Removing them therefore discards two of the more informative
+    predictors rather than redundant noise, which accounts for the collinearity-pruned feature set
+    performing no better than the full set in the ablation experiments.}
+    \label{fig:s3}
 \end{figure}
 
 \clearpage
 
 % ===================== Table S1 =====================
 \begin{table}[!ht]
-\centering
-\footnotesize
-\caption{\textbf{Data provenance and completeness.} Every alteration applied between
-the source spreadsheet and the analysed dataset.}
-\label{tab:s1_provenance}
-\begin{tabular}{llc}
-\toprule
-\textbf{Item} & \textbf{Change applied} & \textbf{Cells / records} \\
-\midrule
-\addlinespace
-\multicolumn{3}{l}{\textit{Value recoding}} \\
-SPSA\_L & \textit{NR} $\rightarrow$ 0 & 53 \\
-SPSA\_R & \textit{NR} $\rightarrow$ 0 & 53 \\
-SPSC\_L & \textit{NR} $\rightarrow$ 0 & 53 \\
-SPSC\_R & \textit{NR} $\rightarrow$ 0 & 53 \\
-SSA\_L & \textit{NR} $\rightarrow$ 0 & 35 \\
-SSA\_R & \textit{NR} $\rightarrow$ 0 & 35 \\
-SSC\_L & \textit{NR} $\rightarrow$ 0 & 35 \\
-SSC\_R & \textit{NR} $\rightarrow$ 0 & 35 \\
-DM\_DUR & \textit{<1} $\rightarrow$ 1 & 11 \\
-FWAVE\_R & \textit{NR} $\rightarrow$ 0 & 7 \\
-FWAVE\_L & \textit{NR} $\rightarrow$ 0 & 3 \\
-CMAPANK\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
-CMAPANK\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
-CMAPKNE\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
-CMAPKNE\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
-DL\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
-DL\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
-MCV\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
-MCV\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
-DM\_DUR & \textit{>10} $\rightarrow$ 11 & 1 \\
-FWAVE\_L & \textit{NO F WAVE} $\rightarrow$ 0 & 1 \\
-FWAVE\_R & \textit{NO F WAVE} $\rightarrow$ 0 & 1 \\
-\textit{all binary features} & \textit{Y}/\textit{M} $\rightarrow$ 1, \textit{N}/\textit{F} $\rightarrow$ 0 & deterministic \\
-\addlinespace
-\multicolumn{3}{l}{\textit{Excluded records}} \\
-Patient 36 & missing: NS, CAS & 1 \\
-Patient 46 & missing: DM\_DUR, HBA1C & 1 \\
-Patient 173 & missing: NS & 1 \\
-\bottomrule
-\end{tabular}
-\begin{flushleft}\footnotesize Generated from the audit trail written by the data loader, so
-the table cannot drift from the data actually analysed.\end{flushleft}
+    \centering
+    \footnotesize
+    \caption{\textbf{Data provenance and completeness.} Every alteration applied between
+    the source spreadsheet and the analysed dataset.}
+    \label{tab:s1_provenance}
+    \begin{tabular}{llc}
+        \toprule
+        \textbf{Item} & \textbf{Change applied} & \textbf{Cells / records} \\
+        \midrule
+        \addlinespace
+        \multicolumn{3}{l}{\textit{Value recoding}} \\
+        SPSA\_L & \textit{NR} $\rightarrow$ 0 & 53 \\
+        SPSA\_R & \textit{NR} $\rightarrow$ 0 & 53 \\
+        SPSC\_L & \textit{NR} $\rightarrow$ 0 & 53 \\
+        SPSC\_R & \textit{NR} $\rightarrow$ 0 & 53 \\
+        SSA\_L & \textit{NR} $\rightarrow$ 0 & 35 \\
+        SSA\_R & \textit{NR} $\rightarrow$ 0 & 35 \\
+        SSC\_L & \textit{NR} $\rightarrow$ 0 & 35 \\
+        SSC\_R & \textit{NR} $\rightarrow$ 0 & 35 \\
+        DM\_DUR & \textit{<1} $\rightarrow$ 1 & 11 \\
+        FWAVE\_R & \textit{NR} $\rightarrow$ 0 & 7 \\
+        FWAVE\_L & \textit{NR} $\rightarrow$ 0 & 3 \\
+        CMAPANK\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
+        CMAPANK\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
+        CMAPKNE\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
+        CMAPKNE\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
+        DL\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
+        DL\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
+        MCV\_L & \textit{NR} $\rightarrow$ 0 & 2 \\
+        MCV\_R & \textit{NR} $\rightarrow$ 0 & 2 \\
+        DM\_DUR & \textit{>10} $\rightarrow$ 11 & 1 \\
+        FWAVE\_L & \textit{NO F WAVE} $\rightarrow$ 0 & 1 \\
+        FWAVE\_R & \textit{NO F WAVE} $\rightarrow$ 0 & 1 \\
+        \textit{all binary features} & \textit{Y}/\textit{M} $\rightarrow$ 1, \textit{N}/\textit{F} $\rightarrow$ 0 & deterministic \\
+        \addlinespace
+        \multicolumn{3}{l}{\textit{Excluded records}} \\
+        Patient 36 & missing: NS, CAS & 1 \\
+        Patient 46 & missing: DM\_DUR, HBA1C & 1 \\
+        Patient 173 & missing: NS & 1 \\
+        \bottomrule
+    \end{tabular}
+    \begin{flushleft}\footnotesize Generated from the audit trail written by the data loader, so
+        the table cannot drift from the data actually analysed.\end{flushleft}
 \end{table}
 
 \clearpage
 
 % ===================== Figure S4 =====================
 \begin{figure}[!ht]
-\centering
-\includegraphics[width=\textwidth]{references/eda/s5_actionable_features.pdf}
-\caption{\textbf{The counterfactual-actionable features.} Distribution by outcome
-group of the 6 features that the counterfactual engine is permitted to vary, comprising the
-modifiable treatment and comorbidity variables; continuous features are shown as density, box
-and raw-observation displays and binary features as prevalence with Wilson 95\% confidence
-intervals. Each panel is annotated with the univariable area under the receiver operating
-characteristic curve and the Benjamini--Hochberg q-value from Table~\ref{tab:cohort}. The
-distributions overlap almost completely: discrimination ranges from 0.514 to 0.585, and only
-INSULIN (q = 0.046) reaches a false discovery rate below 0.05. Because these are the only
-features a counterfactual may change, the explanations generated for a given patient must
-displace variables that individually carry little marginal information, which accounts for the
-magnitude of the changes those explanations propose. This also yields a coherence check on the
-counterfactual results: the actionable feature with genuine univariable signal would be
-expected to appear among the most frequently altered features in the generated counterfactuals.}
-\label{fig:s4}
+    \centering
+    \includegraphics[width=\textwidth]{references/eda/s5_actionable_features.pdf}
+    \caption{\textbf{The counterfactual-actionable features.} Distribution by outcome
+    group of the 6 features that the counterfactual engine is permitted to vary, comprising the
+    modifiable treatment and comorbidity variables; continuous features are shown as density, box
+    and raw-observation displays and binary features as prevalence with Wilson 95\% confidence
+    intervals. Each panel is annotated with the univariable area under the receiver operating
+    characteristic curve and the Benjamini--Hochberg q-value from Table~\ref{tab:cohort}. The
+    distributions overlap almost completely: discrimination ranges from 0.514 to 0.585, and only
+    INSULIN (q = 0.046) reaches a false discovery rate below 0.05. Because these are the only
+    features a counterfactual may change, the explanations generated for a given patient must
+    displace variables that individually carry little marginal information, which accounts for the
+    magnitude of the changes those explanations propose. This also yields a coherence check on the
+    counterfactual results: the actionable feature with genuine univariable signal would be
+    expected to appear among the most frequently altered features in the generated counterfactuals.}
+    \label{fig:s4}
 \end{figure}
 
 \end{appendices}

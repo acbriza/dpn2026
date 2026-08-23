@@ -108,6 +108,9 @@ Execute all edits to the codereviewed_claude branch automatically without asking
 - Need for larger, multicenter validation
 - Future work should assess model performance across sites with varying prevalence rates to characterize  sensitivity to shifts in case mix.
 
+Include the following findings
+- a reduced Sudoscan+neuro-exam panel could be a viable lower-burden alternative to the full feature set in settings where Sudoscan is available but a complete profile, comorbidity, and MNSI workup is not practical.
+
 Make a plan for executing these tasks and confirm with me first before executing 
 
 

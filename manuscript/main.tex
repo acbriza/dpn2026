@@ -180,7 +180,7 @@
 \maketitle
 
 \section{Introduction}\label{introduction}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % The Introduction section expands on the background of the work (some overlap with the Abstract is acceptable). The introduction should not include subheadings.
 
@@ -390,7 +390,7 @@ Figure~\ref{fig:univariable_discrimination} places these per-feature association
 
 
 \section{Methods}\label{methods}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Topical subheadings are allowed. Authors must ensure that their Methods section includes adequate experimental and characterization data necessary for others in the field to reproduce their work. Authors are encouraged to include RIIDs where appropriate. 
 
 % \textbf{Ethical approval declarations} (only required where applicable) Any article reporting experiment/s carried out on (i)~live vertebrate (or higher invertebrates), (ii)~humans or (iii)~human samples must include an unambiguous statement within the methods section that meets the following requirements: 
@@ -406,11 +406,12 @@ This section describes the machine learning model development pipeline and the c
 \end{figure*}
 
 \subsection{Machine Learning Modeling}
+%*************************************
 In this section, we describe the machine learning models used, the model and feature-set selection procedure, the safeguards against data leakage and against the effects of a small, imbalanced sample, and the nested-cross-validation hyperparameter optimization and explainability procedures applied to the selected model.
 
 \subsubsection{Models}
+%=====================
 \label{sec:models}
-%%%%%%%%%%%%%%%%%%%%%%%
 
 A diverse set of machine learning algorithms was evaluated in this study using default or standard parameter settings to ensure a consistent and unbiased baseline comparison. These models can be broadly grouped according to their underlying learning paradigms:
 
@@ -435,6 +436,7 @@ A Naive classifier that predicts the majority class was included as a baseline t
 Overall, this diverse selection of models allows for a comprehensive evaluation across linear, nonlinear, probabilistic, and ensemble-based learning paradigms, each with distinct strengths in terms of interpretability, flexibility, robustness, and predictive power.
 
 \subsubsection{Model and Feature Set Selection}
+%==============================================
 \label{sec:modelselection}
 
 Given the relatively limited number of unconfirmed cases in the dataset, a robust evaluation strategy was used to generate reliable performance estimates for the model-selection step. Fourteen algorithms (Section~\ref{sec:models}) were benchmarked with default/standard hyperparameters under a repeated stratified k-fold cross-validation scheme -- 4 folds $\times$ 10 repetitions, for 40 validation runs per model -- against each of twelve feature sets (Table~\ref{tab:feature_sets}), giving $14 \times 12 \times 40$ scored runs in total. Stratification ensures that each fold preserves the class distribution of the dataset, which is particularly important given 57 Unconfirmed patients; repetition reduces the variance of the resulting performance estimate by averaging results across multiple random partitions.
@@ -474,11 +476,13 @@ Sudoscan and MNSI features only & SudoMnsi \\
 \end{table}
 
 \subsubsection{Performance Metrics}
+%==================================
 For each of the 40 validation runs, nine metrics were recorded: accuracy, precision, sensitivity (recall), specificity, the Youden index, F1, F2, ROC-AUC, and AUPRC. Sensitivity and specificity jointly express the clinical trade-off of a pre-diagnostic screening tool, while AUPRC -- the metric used to rank models and feature sets (Section~\ref{sec:modelselection}) -- was prioritised over ROC-AUC because, at a 69.5\%/30.5\% class split, ROC-AUC can look favourable even when precision on the minority (Unconfirmed) class is poor, whereas AUPRC is sensitive to exactly that failure mode.
 
 To further investigate the predictive value of specific diagnostic modalities, models were also trained exclusively on nerve conduction study (NCS) features and Sudoscan features, respectively. This allows for a focused evaluation of their standalone predictive capabilities and their potential role in clinical decision support.
 
 \subsubsection{Preventing Data Leakage}
+%======================================
 \label{sec:leakage}
 
 Every stage of the pipeline enforces a strict separation between the data used to fit or tune a model and the data used to evaluate it, so that reported performance is not optimistically biased:
@@ -493,6 +497,7 @@ Every stage of the pipeline enforces a strict separation between the data used t
 This separation is what licenses treating outer-test performance, and the SHAP/feature-importance/discrimination/calibration diagnostics computed downstream of it, as out-of-sample estimates rather than measurements of how well the model fits data it has already seen.
 
 \subsubsection{Handling Class Imbalance and a Small Sample Size}
+%===============================================================
 \label{sec:classimbalance}
 
 The analysed cohort is small by machine-learning standards (187 patients, 22 candidate predictors) and imbalanced (130 Confirmed vs.\ 57 Unconfirmed, 69.5\%/30.5\%). Two complementary strategies address this, and a third common strategy -- synthetic minority oversampling -- was deliberately not used.
@@ -502,6 +507,7 @@ Repeated stratified cross-validation (Sections~\ref{sec:modelselection} and~\ref
 Class imbalance itself is handled inside the model rather than by resampling the data. CatBoost's \texttt{scale\_pos\_weight} -- which reweights the contribution of each class to the training loss -- was included as a fourth tuned hyperparameter (searched over 0.3--1.0, alongside \texttt{depth}, \texttt{learning\_rate}, and \texttt{l2\_leaf\_reg}; Section~\ref{sec:hpo}), so every outer fold learns the class weighting that is best for its own training data. The Synthetic Minority Oversampling Technique (SMOTE) was deliberately not used: with only 57 Unconfirmed patients across 22 features, SMOTE's nearest-neighbour interpolation would synthesise clinically fabricated patients in a feature space that is already sparse, and, unless resampling were repeated correctly inside every one of the 400 selection folds and 40 optimization folds, risks leaking synthetic neighbours of test-fold patients into the corresponding training fold. Reweighting the loss via \texttt{scale\_pos\_weight} avoids both failure modes: it never fabricates a patient, and it cannot leak across folds because it changes how existing training examples are weighted, not which examples exist. Keeping every training example a real, observed patient also matters downstream: the counterfactual permitted ranges (Section~\ref{sec:generalsetup}) are calculated from the observed distribution of each feature, so a model trained only on real patients keeps that distribution -- and the counterfactuals anchored to it -- clinically interpretable.
 
 \subsubsection{Hyperparameter Optimization}
+%==========================================
 \label{sec:hpo}
 
 CatBoost, selected on the full feature set as described in Section~\ref{sec:modelselection}, was carried forward to nested cross-validation hyperparameter optimization (Figure~\ref{fig:nested_cv}). An \textit{outer} \texttt{RepeatedStratifiedKFold} loop -- $k=4$ folds $\times$ 10 repeats, 40 outer iterations, \texttt{random\_state=42} -- provides the training/test partitions over which final performance is reported; nested inside every one of those 40 outer iterations, an \textit{inner} \texttt{StratifiedKFold} loop ($k=3$) partitions that iteration's outer-training set only, and is used exclusively for hyperparameter search. These two loops serve different purposes and operate on different data, which is the mechanism described in Section~\ref{sec:leakage}.
@@ -521,6 +527,7 @@ After the search, the winning trial's parameters were refit once on the full out
 \textit{One modeling pipeline, evaluated by cross-validation.} It bears stating explicitly, because it is easy to misread otherwise: the procedure above is \textit{one} modeling pipeline -- one algorithm (CatBoost), one hyperparameter-search procedure -- evaluated by 4-fold cross-validation repeated 10 times, not four, or forty, separate studies. Its primary performance claim is the single pooled mean $\pm$ 95\% CI over the 40 outer iterations described above. The models and splits of the \textit{first} of those 10 repeats are additionally persisted to disk (its four outer-fold refits, their training/test partitions, tuned hyperparameters, and thresholds) for reuse, without refitting, by the Explainability and Counterfactual Generation stages below. Consequently, when those later sections refer to ``the four models'' or ``model~0'' through ``model~3'', this denotes the four outer-fold refits of that single retained repeat of the one nested-CV procedure above -- not four independently designed experiments, and not a claim that any one of the four is individually authoritative. Their agreement or disagreement (e.g.\ in feature importance or SHAP ranking) is itself evidence about the stability of the one pipeline, not a comparison between competing pipelines.
 
 \subsubsection{Explainability Analysis}
+%======================================
 \label{sec:explainability}
 
 Post-hoc interpretability was assessed on the four persisted outer-fold models from the first cross-validation repeat. Each of the four is retrained from its stored outer-training partition using its own tuned hyperparameters (\texttt{best\_params}) from Section~\ref{sec:hpo} -- the same fold-specific configuration that Section~\ref{sec:hpo} selected, not a single shared configuration.
@@ -530,10 +537,11 @@ Two complementary views are reported. \textit{Per-fold} (``all splits'') diagnos
 Because the four fold models come from independent per-fold hyperparameter searches (Section~\ref{sec:hpo}), each has its own predicted-probability scale (e.g.\ scale\_pos\_weight differs by fold), and pooling raw scores across those four scales does not behave like evaluating one fixed model. This has a specific, documented, and opposite-signed effect on the two families of pooled diagnostics, which the Discussion presents but does not re-derive: pooled AUROC and AUPRC are systematically \textit{more conservative} than the fold-wise mean, because ranking probabilities across incomparable scales degrades discrimination; pooled calibration is systematically \textit{more optimistic} than the fold-wise mean ECE, because folds that over-predict and folds that under-predict partially cancel once pooled. The pooled calibration curve therefore characterises a four-model mixture that is never deployed as such, and should be read alongside the fold-wise mean $\pm$ std rather than in place of it; Brier score is unaffected, being a per-observation average.
 
 \subsection{Counterfactual Generation}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%*************************************
 To provide interpretable insights into the predictions of the trained machine learning models, counterfactual explanations were generated using the DiCE (Diverse Counterfactual Explanations) framework \cite{mothilal2020explaining}. DiCE is well-suited for this study due to its model-agnostic capability, enabling its application across a wide range of classifiers, including complex ensemble models. Furthermore, it supports diversity-aware counterfactual generation, allowing the identification of multiple plausible feature modifications that can alter model predictions—an important requirement in clinical decision support. Its ability to incorporate feature constraints (e.g., permitted ranges and immutable variables) ensures that generated counterfactuals remain realistic and clinically meaningful.
 
 \subsubsection{Feature Suitability as Counterfactuals}
+%=====================================================
 Table~\ref{tab:cf_features} shows the feature set and their suitability for counterfactual analysis. We note that nerve conduction studies and Sudoscan features are marked as \textit{conditional} counterfactuals. These are biomarker outcomes of neuropathy. While these are not directly actionable inputs, they can be treated as counterfactuals that answer "what must change". Intervention is left to the physician. 
 
 % =======================================
@@ -571,6 +579,7 @@ Sudoscan & All & No &  These are measurements of a procedure direct intervention
 \end{table}
 
 \subsubsection{General Setup}
+%============================
 \label{sec:generalsetup}
 Counterfactuals are generated separately for each of the four persisted fold models (Section~\ref{sec:hpo}), each wrapped with \textit{that fold's own} tuned decision threshold rather than a threshold shared across folds -- consistent with Section~\ref{sec:hpo}'s point that these are four fold-specific configurations of one pipeline, not four independent choices. Figure~\ref{fig:counterfactual_generation} summarises the end-to-end procedure described in this subsection and the two that follow.
 
@@ -622,6 +631,7 @@ DiCE object(dice\_ml.Dice)  & method & genetic \\
 \end{table}
 
 \subsubsection{Local Counterfactual Analysis}
+%============================================
 We describe here how instances were chosen for counterfactual generation and how the permitted range was computed for each instance.
 
 \textit{Targeted Instance Selection}.
@@ -638,6 +648,7 @@ For each selected instance, an instance-specific permitted range was defined for
 where, as for the global range, $\sigma$ is each feature's standard deviation over the whole cohort; the interval is centred on the patient's own observed value rather than the cohort mean, so a proposed change is scaled to a magnitude already seen in the cohort but anchored to where this particular patient starts from.
 
 \subsubsection{Local Counterfactual Generation Parameters}
+%=========================================================
 The parameters used for generating local counterfactuals via $generate\_counterfactuals$ are summarized in Table~\ref{tab:local_cf}. The selected parameters balance proximity, diversity, and sparsity, ensuring that generated counterfactuals are close to the original instances, sufficiently varied, and involve minimal feature changes. This results in actionable and interpretable explanations suitable for clinical applications.
 
 \begin{table}[h!]
@@ -666,6 +677,7 @@ algorithm & DiverseCF \\
 \end{table}
 
 \subsubsection{Sufficiency and Necessity Analysis}
+%=================================================
 \label{sec:sufficiencynecessity}
 
 Beyond the diverse counterfactual sets of Table~\ref{tab:local_cf}, two single-feature checks were run for each targeted instance to characterise the role of individual actionable features, rather than only sets of them. \textit{Sufficiency} asks whether varying one feature alone, with every other feature held fixed, is enough to flip the predicted class: DiCE is asked for one counterfactual (\texttt{total\_CFs=1}) with \texttt{features\_to\_vary} restricted to that single feature; if a valid counterfactual is returned within the iteration budget, that feature is sufficient on its own for that patient. \textit{Necessity} asks the complementary question -- whether a feature must change at all: DiCE is asked to vary every \textit{other} actionable feature, with the feature under test held fixed, across \texttt{nrepeats=5} random seeds and up to \texttt{total\_CFs=3} counterfactuals per seed; if no valid counterfactual is found across all 5 seeds, the held-fixed feature is deemed necessary, because the desired class could not be reached without it. Neither check is expected to succeed for every candidate instance -- the search is not guaranteed to converge within its iteration budget even when a valid counterfactual exists -- and the Discussion reports how many of the candidate instances yielded a usable result under this procedure.
@@ -679,12 +691,15 @@ In this section, we discuss the performance of the machine learning models evalu
 To be explicit about scope, this study is a proof-of-concept investigation into whether counterfactual explanations can make a machine-learning-based DPN screening model actionable for clinicians, not a validated or deployment-ready clinical instrument. To our knowledge, it is among the first studies to systematically integrate counterfactual explanations into a pre-diagnostic DPN screening pipeline intended for low-resource clinical settings where nerve conduction studies are costly or geographically inaccessible; the counterfactual analysis, rather than the underlying classifier's raw discriminative performance, is the primary contribution of this work. %% TODO-CITE: verify "among the first" claim against the literature review during the Claims Review pass.
 
 \subsection{Feature Set and Model Selection}
+%*******************************************
 
 \subsubsection{Baseline Model Evaluation: Rationale and Metric Selection}
+%========================================================================
 The primary objective of this baseline evaluation was to identify the most promising classification algorithm for subsequent optimization as a machine learning-based pre-diagnostic screening tool for Diabetic Peripheral Neuropathy (DPN). Fourteen algorithms spanning diverse learning paradigms, together with a naive majority-class baseline, were assessed using default hyperparameters and repeated stratified k-fold cross-validation (10 repeats × 4 folds; 40 total runs) to obtain stable, low-variance performance estimates without data leakage.
 Given the inherent class imbalance in this dataset --- 130 DPN-confirmed patients versus 57 unconfirmed cases (69.5\%/30.5\%) --- AUPRC was chosen as the primary ranking metric in preference to ROC-AUC. This decision is well-supported in the methodological literature: ROC-AUC can present an overly optimistic picture of classifier performance under class imbalance because it incorporates the true negative rate, which inflates when the negative class is underrepresented. AUPRC, by contrast, focuses exclusively on the precision-recall trade-off and is therefore more sensitive to performance differences among classifiers on the minority class \cite{saito2015precision, davis2006relationship}. The naive baseline --- which predicts the majority class uniformly --- achieved an AUPRC of 0.695 (essentially the empirical prevalence) across all feature sets and conditions, despite attaining perfect sensitivity (1.0) and an accuracy of 69.5\%, illustrating precisely why accuracy and sensitivity alone are insufficient evaluation criteria in imbalanced screening tasks.
 
 \subsubsection{Model Performance and Selection}
+%==============================================
 Across all 40 runs on the full feature set, ensemble tree-based methods consistently outperformed other model families (Table~\ref{tab:selection_metrics}). Random Forest attained the highest mean AUPRC (0.892 $\pm$ 0.039), narrowly ahead of CatBoost (0.889 $\pm$ 0.044) and Extra Trees (0.885 $\pm$ 0.042); the three are statistically indistinguishable, with all three means falling well within one standard deviation of one another. Naive Bayes (0.884), Logistic Regression (0.880), RBF SVM (0.878), and LDA (0.878) followed closely behind, underscoring that the full feature set carries strong, model-agnostic signal for DPN status rather than favoring any single learning paradigm.
 
 From a clinical deployment standpoint, the balance between sensitivity and specificity is of critical importance in pre-diagnostic screening. A tool intended to triage patients toward the more costly and less accessible Nerve Conduction Study (NCS) must prioritize minimizing false negatives (i.e., maintaining high sensitivity) to avoid denying care to patients who truly have DPN.
@@ -692,6 +707,7 @@ From a clinical deployment standpoint, the balance between sensitivity and speci
 Under this clinical framing, Random Forest and CatBoost occupy essentially the same operating point: sensitivity of 0.916 and 0.913, and specificity of 0.529 and 0.512, respectively. RBF SVM achieved the highest sensitivity overall (0.938), but at the cost of the lowest specificity among the top models (0.453). Because Random Forest's raw AUPRC edge over CatBoost here is well within sampling noise, the choice between the two --- carried forward through the remainder of this pipeline --- cannot rest on this table alone; Section~\ref{sec:catboost_vs_rf} below makes the case for CatBoost on grounds that matter downstream rather than on this baseline ranking.
 
 \subsubsection{Feature Set Analysis}
+%===================================
 The heatmap of average AUPRC across feature sets (Figure~\ref{fig:auprc_heatmaps}) reveals several findings with direct clinical relevance. First, the top models (Random Forest, CatBoost, Extra Trees) are remarkably robust to the removal of most feature groups: ablating Clinical Profile (NoProf), Comorbidities (NoCom), or MNSI (NoMsi) produced negligible or no AUPRC change for these models (all within 0.01 of the full-feature-set value). This robustness implies that no single feature group is singularly indispensable, and that redundancy across the feature space is substantial. The exception is Neurological Examination features (NoNeuro), whose removal produced the largest drop observed for any ablation among the top models (Random Forest and CatBoost both fall to 0.86), suggesting these bedside signs are the least redundant predictors in the set.
 
 The Sudoscan-only feature set (Sudo) understandably lowered performance for every model (Random Forest 0.82, CatBoost 0.83), while the additive Sudoscan-anchored feature sets (SudoProf, SudoCom, SudoNeuro, SudoMnsi) demonstrated modest but inconsistent improvements over Sudoscan-only, suggesting diminishing returns from adding other feature groups once Sudoscan data are available. One exception worth noting is that the SudoNeuro combination (Sudoscan with Neurological Examination findings) recovered to within 0.01 of full-feature-set performance for both top models (0.89 Random Forest, 0.90 CatBoost), indicating that simple bedside neurological signs --- vibration sensation, pinprick, light touch, and ankle reflex --- may complement electrochemical skin conductance data in a synergistic manner that benefits less flexible classifiers, and that a reduced Sudoscan+neuro-exam panel could be a viable lower-burden alternative to the full feature set in settings where Sudoscan is available but a complete profile, comorbidity, and MNSI workup is not practical.
@@ -699,17 +715,21 @@ The Sudoscan-only feature set (Sudo) understandably lowered performance for ever
 We note that since these metrics are based on default hyperparameters, a more complete picture of feature importance will be explored during the hyperparameter optimization and explainability analysis that follow.
 
 \subsubsection{Reproducibility and Stability of Estimates}
+%=========================================================
 The use of 10-repeat × 4-fold stratified cross-validation was chosen deliberately to obtain stable performance estimates given the modest sample size (n = 187). With a single k-fold split, estimates can exhibit high variance due to the stochastic partitioning of a small dataset \cite{kim2009estimating}.
 
 Repeated cross-validation substantially reduces this variance, and the violin plot distributions (Figure~\ref{fig:auprc_violins}) confirm that the top models maintain elevated, largely overlapping AUPRC distributions. Random Forest shows the highest median and a comparatively tight interquartile range; CatBoost's median and box are close behind, but with a longer lower tail reaching toward 0.75, indicating an occasional weaker fold rather than a systematically less stable ranking. This is a relevant nuance for the CatBoost-versus-Random-Forest discussion below: the two are close on central tendency but CatBoost is marginally more variable at this stage. The absence of hyperparameter tuning or threshold optimization in this phase is also intentional: these results represent genuine baseline performance, ensuring that the subsequent model selection and optimization pipeline is not confounded by information leakage from the full dataset.
 
 \subsubsection{Study Limitations at the Baseline Evaluation Stage}
+%=================================================================
 Several limitations must be acknowledged at this stage. The dataset is relatively small (n = 187), and though repeated stratified cross-validation mitigates instability, external validation on an independent cohort remains necessary before clinical deployment. The class imbalance, while modest compared to many medical screening contexts, may still influence threshold-dependent metrics (sensitivity, specificity, accuracy) reported here, all of which used the default 0.5 probability threshold --- a suboptimal choice for screening applications. Threshold calibration and optimization are addressed in the subsequent modeling phase.
 
 \subsubsection{Selected Feature Set and Model}
+%=============================================
 Despite Random Forest's narrow edge in raw AUPRC, CatBoost was selected as the model to carry forward into hyperparameter optimization and counterfactual generation, on the strength of a comparable sensitivity/specificity operating point at this stage combined with the methodological considerations detailed in Section~\ref{sec:catboost_vs_rf}. The full feature set was retained as the training data for all subsequent stages, since it consistently achieved high performance across multiple methods and the feature-set ablations discussed above showed no clinically compelling reason to discard any feature group at this point in the pipeline.
 
 \subsubsection{CatBoost versus Random Forest: Methodological Justification}
+%==========================================================================
 \label{sec:catboost_vs_rf}
 Because Table~\ref{tab:selection_metrics} does not, by itself, favor CatBoost over Random Forest, the justification for carrying CatBoost --- rather than Random Forest --- through hyperparameter optimization, explainability analysis, and counterfactual generation rests on two considerations that this baseline table cannot capture.
 
@@ -769,10 +789,11 @@ Naive & 0.695 $\pm$ 0.009 & 0.500 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.000 $\pm$ 
 \end{figure*}
 
 \subsection{CatBoost Model Training and Optimization}
+%****************************************************
 This subsection discusses the results of the nested cross-validation hyperparameter optimization procedure for CatBoost on the full feature set, whose design --- the outer 4-fold $\times$ 10-repeat scheme, the inner 3-fold Optuna TPE search, and the out-of-fold threshold selection that keeps each outer test fold untouched until it is scored exactly once --- is described in full in Section~\ref{sec:hpo}. We first examine CatBoost's overall performance across the pipeline's 4-fold structure using the full repeated cross-validation scheme (Table~\ref{tab:optimization_metrics_40repeats}, pooling all 40 outer iterations), then turn to the four individually-tuned fold models from the first of the ten repeats (Table~\ref{tab:catboost_metrics_firstrepeat}) that are persisted for reuse, without refitting, by the Explainability and Counterfactual Generation analyses below.
 
 \subsubsection{CatBoost Repeated Cross-Validation}
-% =======================================================================================================
+%=================================================
 
 % CatBoost Repeated k-fold Performance Metrics for 40 Total Runs
 %---------------------------------------------------------------
@@ -814,7 +835,7 @@ The mean Youden Index of 0.413 (95\% CI: 0.370--0.456, STD = 0.138) was the most
 Taken together, these repeated cross-validation results establish that CatBoost's performance across the pipeline's 4-fold structure is statistically stable and not the product of favorable data splitting. This reproducibility is a prerequisite for treating the model as a credible decision-support component; it is not, on its own, evidence of readiness for clinical deployment, which would additionally require external validation (Section~\ref{sec:limitations}). With this overall picture established, we next turn to the specific four fold models selected to represent this pipeline throughout the remainder of this Discussion.
 
 \subsubsection{Model Selection, Performance, and Clinical Suitability for Pre-Diagnostic Screening}
-% ============================================================================================
+%==================================================================================================
 The repeated cross-validation above characterizes CatBoost's performance in aggregate, but the Explainability and Counterfactual Generation analyses that follow require concrete, trained models rather than an abstract average across 40 partitions: SHAP attributions and DiCE counterfactuals are computed against one specific fitted CatBoost ensemble per fold, and no meaningful "average model" can be constructed by averaging 40 independently grown tree ensembles with 40 different tuned hyperparameter sets. Some single repeat's four outer-fold models must therefore be selected and persisted for reuse, without refitting, by every subsequent stage of this Discussion --- and, as reported below, all downstream analysis of feature importance, SHAP explanations, and counterfactual generation is dependent on whichever repeat is chosen for this purpose.
 
 We use the first of the ten repeats (fixed by \texttt{random\_state=42}, Section~\ref{sec:hpo}) as this representative set of four fold models. Two considerations defend this choice. First, it is fixed by the pipeline's design rather than selected after comparing repeats' outcomes, so it cannot reflect cherry-picking a favorably-performing repeat; the same repeat would have been used regardless of how it happened to score. Second, its representativeness is directly supported by the concordance with the pooled 40-repeat estimates above: as the discussion below shows, the first repeat's per-fold mean estimates (Table~\ref{tab:catboost_metrics_firstrepeat}) fall within roughly one standard deviation of the full 40-repeat pooled estimates (Table~\ref{tab:optimization_metrics_40repeats}) for every metric, indicating that this particular repeat is not an atypical draw from the pipeline's overall performance distribution. This second point should nonetheless be read as a plausibility check rather than a guarantee: it confirms the first repeat's \emph{aggregate} behavior is unremarkable, not that every individual fold within it is equally representative --- Model 0's comparatively low sensitivity, discussed below, is one place where this repeat does show fold-specific behavior worth keeping in mind when interpreting the Explainability and Counterfactual results that build on it.
@@ -870,7 +891,7 @@ Figure \ref{fig:catboost_auprc} shows the pooled Precision-Recall curve built fr
 
 
 \subsection{Feature Importance and Model Interpretability}
-% =========================================================
+%*********************************************************
 
 % Feature Importances
 % ---------------------
@@ -904,8 +925,8 @@ HbA1c (HBA1C; importance 5.21--8.13, SHAP 0.007--0.025), age (AGE; importance 5.
 In contrast, the comorbidities hypertension (HPN) and chronic kidney disease (CKD) received consistently low feature importance and SHAP values across all four folds, while peripheral arterial occlusive disease (PAOD) and Guillain-Barré syndrome (GBS) received near-zero importance in every fold, suggesting these comorbidities do not independently contribute much to DPN prediction in this cohort --- a finding that likely reflects their comparatively low prevalence in the study population and their pathophysiological distinction from diabetic neuropathy itself.
 
 \subsection{Counterfactual Analysis}
+%***********************************
 \label{sec:counterfactual}
-%===============================================================
 To move beyond predictive accuracy and toward clinical utility, this study employed counterfactual explanation analysis using the DiCE (Diverse Counterfactual Explanations) framework \cite{mothilal2020}. Counterfactual explanations address the question: "What is the minimal change to a patient's features that would result in a different model prediction?" Unlike global feature importance methods such as SHAP or LIME, which describe average model behavior, counterfactuals are inherently patient-specific and action-oriented, making them particularly suited to clinical decision support contexts \cite{wachter2017}. As introduced above, this analysis --- not the classifier's raw discriminative performance --- is the central contribution of this study.
 
 % Local CF Summary Across Models
@@ -963,8 +984,8 @@ We identified misclassified instances (incorrect predictions) and borderline ins
 This low yield is a direct, documented consequence of how DiCE's genetic search behaves on this dataset, not an arbitrary generation failure, and it is worth being explicit about the configuration and its limits so that the counterfactuals reported below are read with the right degree of confidence. Counterfactuals were generated with DiCE's genetic algorithm (\texttt{DiverseCF}), targeting up to 20 diverse counterfactuals per patient over 3 repeated search attempts, with proximity weight 0.5, diversity weight 1.0, a categorical penalty of 0.1, and posthoc sparsity pruning (binary search, parameter 0.05) applied for maximally sparse, clinically legible output. Separately from the yield problem, the genetic search on this dataset and schema has an independently documented tendency to occasionally violate the \texttt{features\_to\_vary} constraint --- i.e., to propose changing a feature explicitly marked immutable, such as SUBJ or a Sudoscan reading --- in a small fraction of counterfactuals for a given patient, regardless of model or configuration; every reported counterfactual in this study has been screened against this constraint and any violating rows removed before reporting, and the removed rows are retained separately (as \texttt{\_unactionable.csv} companions to two of the three case studies below) as a transparency record rather than silently discarded. Both behaviors --- the outright non-convergence for an entire fold, and the intermittent constraint violations within an otherwise successful run --- stem from the same underlying cause: a genetic search's fitness landscape can be poorly conditioned in some regions of a small, high-dimensional clinical feature space, and CatBoost's smoother \texttt{predict\_proba} surface (Section~\ref{sec:catboost_vs_rf}) mitigates, but does not eliminate, this fragility. In practice, this means the 8 patients discussed below are not a representative sample of "typical" DPN cases; they are the subset for which the search happened to succeed, and the absence of a counterfactual for any other candidate is evidence of search difficulty, not evidence that no clinically meaningful counterfactual exists for that patient.
 
 \subsubsection{Instance Level Counterfactual Analysis}
+%=====================================================
 \label{sec:instance-level-cf}
-% =====================================================
 In this section we examine three of the eight successful instances individually, chosen to span the three clinically distinct scenarios a screening tool can produce: a borderline false positive, a borderline true positive, and a confident false negative. Unlike the model's decision threshold or feature importances, these are patient-specific, so we deliberately draw the three cases from three different fold models (3, 0, and 1 respectively) rather than confining the discussion to a single fold. Feature-change heatmaps for these instances are shown in Figures~\ref{fig:localcf-020}--\ref{fig:localcf-123}. The remaining five successful instances (Patients 29, 76, 125, 23, 172; Table~\ref{tab:localcf-listing}) are covered only at the aggregate level in Section~\ref{sec:aggregate-cf} below.
 
 \begin{figure}[p]
@@ -1008,8 +1029,8 @@ Patient 123 is the only false negative among the eight successful instances and,
 Read together, these three cases span the practically relevant range of what a counterfactual can say to a clinician. For Patient 20 and Patient 40, both borderline (margins of 0.006 and 0.014), the counterfactuals are small, single- or two-feature perturbations dominated by HbA1c --- exactly what "minimal sufficient change" should look like in a case that is genuinely close to the threshold, and directly actionable as a glycemic-management recommendation. For Patient 123, confidently misclassified (margin 0.231), the counterfactual set is necessarily larger and more mixed, some of it non-actionable (introducing a comorbidity is not an intervention), but the actionable core --- HbA1c reduction and hypertension management --- still identifies the specific risk factors that, according to the model's training partition, separate her from the confirmed-DPN patients it recognizes. Across all three cases, HbA1c is the dominant and most consistently plausible lever, echoing its central role in the aggregate-level analysis below (Section~\ref{sec:aggregate-cf}); insulin and, in Patient 123's case, hypertension are the next most useful actionable levers, while comorbidity-introduction counterfactuals are the clearest recurring example of a technically valid but clinically meaningless suggestion that a human reader must filter out. This is precisely the caveat raised in Section~\ref{sec:cf-plausibility}: a generated counterfactual is a candidate explanation to be clinically reviewed, not an automatic prescription.
 
 \subsubsection{Aggregate-level Counterfactual Analysis}
+%======================================================
 \label{sec:aggregate-cf}
-% =====================================================
 At this point we analyze counterfactuals for all models on the aggregate level. This allows us to see across all models what features are being targeted to change the models' decisions, allowing us to assess the importance of these features and their possible interactions as well as determine possible clinical implications. Table~\ref{tab:localcf-changed} shows the feature-level frequency of changes across all 166 counterfactuals generated by the 8 successful instances from 3 models (Model 2 contributed none, as discussed in Section~\ref{sec:cf-plausibility}).
 
 %  Local CF Change Features Across Models
@@ -1059,6 +1080,7 @@ The integration of counterfactual analysis into this pre-diagnostic screening fr
 This has implications not only for individual patient management but for population-level screening program design, as the most frequently changed features across all counterfactuals --- HbA1c, insulin use, and dyslipidemia --- directly correspond to the targets of existing diabetes complication management guidelines \cite{ada2024}.
 
 \subsection{A Proposed Clinical Usage Workflow}
+%**********************************************
 The case studies and aggregate patterns above suggest a concrete, low-burden way this pipeline could fit into an existing diabetes clinic workflow, illustrated in Figure~\ref{fig:clinician_workflow}. At a routine follow-up visit, the clinic already collects (or can readily collect) the profile, comorbidity, MNSI, and brief neurological examination data this model uses, optionally supplemented by Sudoscan; no Nerve Conduction Study is required to generate a risk score. The CatBoost model then produces a predicted probability of Confirmed DPN against its fold-calibrated threshold. For patients whose prediction is comfortably below threshold, no further action is needed beyond routine follow-up. For patients who are flagged or borderline, the corresponding DiCE counterfactual is reviewed alongside the prediction: it identifies the smallest realistic change, among the six actionable features, that would move the patient across the threshold. As Section~\ref{sec:cf-plausibility} and the case studies in Section~\ref{sec:instance-level-cf} make clear, this review step requires a clinician to filter the suggestion --- discarding any proposal that amounts to introducing a new comorbidity, and evaluating the remainder (typically glycemic control, insulin initiation, or management of hypertension/dyslipidemia) against the patient's broader clinical picture. The output of that review then supports one of two actions: patients with a high-confidence flag and few or no actionable counterfactual pathways are prioritized for Nerve Conduction Study referral, while patients with a borderline flag and a sparse, actionable counterfactual are directed toward targeted risk-factor management and re-screened at a subsequent visit.
 
 We emphasize, as throughout this Discussion, that this workflow is a proposal for how the pipeline's outputs could support clinical decision-making, not a validated clinical protocol: the risk score and the counterfactual are decision-support inputs, and the referral or treatment decision remains the clinician's.
@@ -1071,6 +1093,7 @@ We emphasize, as throughout this Discussion, that this workflow is a proposal fo
 \end{figure}
 
 \subsection{Limitations}
+%***********************
 \label{sec:limitations}
 Beyond the stage-specific limitations already noted (Section~\ref{sec:models}: baseline evaluation; repeated cross-validation above: model stability), several limitations apply to the study as a whole and should temper how these results are read.
 
@@ -1099,7 +1122,7 @@ Appendix~\ref{secA1} (Supplementary Figures and Tables).
 
 
 \section*{Declarations}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%
 
 % Some journals require declarations to be submitted in a standardised format. Please check the Instructions for Authors of the journal to which you are submitting to see if you need to complete this section. If yes, your manuscript must contain the following sections under the heading `Declarations':
 
@@ -1141,6 +1164,7 @@ Appendix~\ref{secA1} (Supplementary Figures and Tables).
 \begin{appendices}
 
 \section{Supplementary Figures and Tables}\label{secA1}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 This appendix provides supplementary figures and tables supporting the analyses summarised in
 the main text. Figures~\ref{fig:s1} and~\ref{fig:s2} show the full per-patient distributions

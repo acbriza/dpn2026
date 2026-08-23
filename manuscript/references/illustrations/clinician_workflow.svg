@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="560" viewBox="0 0 1600 560">
+
+<rect x="0" y="0" width="1600" height="560" fill="#ffffff"/>
+
+<!-- ===================== HEADER ===================== -->
+<text x="40" y="34" font-family="Arial" font-size="21" font-weight="bold" fill="#0b0b0b">Proposed clinician workflow: screening + counterfactual review</text>
+<text x="40" y="54" font-family="Arial" font-size="12.5" fill="#52514e">A proposed decision-support use of this pipeline, not a validated or deployed clinical protocol (see Discussion, Limitations)</text>
+
+<!-- ===================== BOX 1 : CLINIC VISIT ===================== -->
+<rect x="45" y="88" width="345" height="270" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="75" cy="118" r="15" fill="#0b0b0b"/>
+<text x="75" y="124" font-family="Arial" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">1</text>
+<text x="100" y="123" font-family="Arial" font-size="15.5" font-weight="bold" fill="#0b0b0b">Routine Clinic Visit</text>
+<rect x="60" y="140" width="315" height="1" fill="#e1e0d9"/>
+
+<text x="60" y="163" font-family="Arial" font-size="12.5" fill="#0b0b0b">Collect at a standard diabetes</text>
+<text x="60" y="181" font-family="Arial" font-size="12.5" fill="#0b0b0b">follow-up visit:</text>
+<text x="60" y="205" font-family="Arial" font-size="12" fill="#52514e">&#8226; Profile &amp; comorbidities (HbA1c,</text>
+<text x="72" y="221" font-family="Arial" font-size="12" fill="#52514e">insulin use, HPN, PAOD,</text>
+<text x="72" y="237" font-family="Arial" font-size="12" fill="#52514e">dyslipidemia, CKD)</text>
+<text x="60" y="257" font-family="Arial" font-size="12" fill="#52514e">&#8226; MNSI symptom questionnaire</text>
+<text x="60" y="277" font-family="Arial" font-size="12" fill="#52514e">&#8226; Brief neuro exam (reflex,</text>
+<text x="72" y="293" font-family="Arial" font-size="12" fill="#52514e">vibration, pinprick, light touch)</text>
+<text x="60" y="313" font-family="Arial" font-size="12" fill="#52514e">&#8226; Sudoscan ESC, if available</text>
+<text x="60" y="340" font-family="Arial" font-size="11.5" fill="#eb6834">No nerve conduction study (NCS)</text>
+<text x="60" y="356" font-family="Arial" font-size="11.5" fill="#eb6834">needed at this stage</text>
+
+<!-- ===================== BOX 2 : MODEL SCORE ===================== -->
+<rect x="425" y="88" width="345" height="270" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="455" cy="118" r="15" fill="#0b0b0b"/>
+<text x="455" y="124" font-family="Arial" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">2</text>
+<text x="480" y="123" font-family="Arial" font-size="15.5" font-weight="bold" fill="#0b0b0b">CatBoost Risk Score</text>
+<rect x="440" y="140" width="315" height="1" fill="#e1e0d9"/>
+
+<text x="440" y="163" font-family="Arial" font-size="12.5" fill="#0b0b0b">The trained fold model outputs a</text>
+<text x="440" y="181" font-family="Arial" font-size="12.5" fill="#0b0b0b">predicted probability of Confirmed</text>
+<text x="440" y="199" font-family="Arial" font-size="12.5" fill="#0b0b0b">DPN from the collected features</text>
+<text x="440" y="223" font-family="Arial" font-size="12.5" fill="#2a78d6">Compared against the model's</text>
+<text x="440" y="241" font-family="Arial" font-size="12.5" fill="#2a78d6">own calibrated decision threshold</text>
+<text x="440" y="265" font-family="Arial" font-size="12" fill="#52514e">Below threshold, comfortably &#8594;</text>
+<text x="452" y="281" font-family="Arial" font-size="12" fill="#52514e">low-priority, routine follow-up</text>
+<text x="440" y="305" font-family="Arial" font-size="12" fill="#52514e">Near threshold or above &#8594;</text>
+<text x="452" y="321" font-family="Arial" font-size="12" fill="#52514e">flagged / borderline (Step 3)</text>
+<text x="440" y="345" font-family="Arial" font-size="11.5" fill="#898781">expreport.py &#8212; persisted fold model</text>
+
+<!-- ===================== BOX 3 : COUNTERFACTUAL REVIEW ===================== -->
+<rect x="805" y="88" width="345" height="270" rx="8" fill="#f7f7f5" stroke="#4a3aa7" stroke-width="1.5"/>
+<circle cx="835" cy="118" r="15" fill="#4a3aa7"/>
+<text x="835" y="124" font-family="Arial" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">3</text>
+<text x="860" y="123" font-family="Arial" font-size="15.5" font-weight="bold" fill="#0b0b0b">Review Counterfactual</text>
+<rect x="820" y="140" width="315" height="1" fill="#e1e0d9"/>
+
+<text x="820" y="163" font-family="Arial" font-size="12" fill="#898781">cfreports.py &#8212; DiCE genetic search</text>
+<text x="820" y="187" font-family="Arial" font-size="12.5" fill="#0b0b0b">For flagged/borderline patients only:</text>
+<text x="820" y="205" font-family="Arial" font-size="12.5" fill="#0b0b0b">what is the smallest realistic change</text>
+<text x="820" y="223" font-family="Arial" font-size="12.5" fill="#0b0b0b">to this patient that would change</text>
+<text x="820" y="241" font-family="Arial" font-size="12.5" fill="#0b0b0b">the flag?</text>
+<text x="820" y="265" font-family="Arial" font-size="12" fill="#52514e">Searched over 6 actionable features:</text>
+<text x="820" y="283" font-family="Arial" font-size="12" fill="#52514e">HbA1c, insulin, HPN, PAOD,</text>
+<text x="820" y="299" font-family="Arial" font-size="12" fill="#52514e">dyslipidemia, CKD</text>
+<text x="820" y="323" font-family="Arial" font-size="11.5" fill="#4a3aa7">Clinician screens each suggestion:</text>
+<text x="820" y="339" font-family="Arial" font-size="11.5" fill="#4a3aa7">only reversible, real interventions</text>
+<text x="820" y="355" font-family="Arial" font-size="11.5" fill="#4a3aa7">are actionable advice</text>
+
+<!-- ===================== BOX 4 : CLINICIAN DECISION ===================== -->
+<rect x="1185" y="88" width="370" height="270" rx="8" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<circle cx="1215" cy="118" r="15" fill="#0b0b0b"/>
+<text x="1215" y="124" font-family="Arial" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">4</text>
+<text x="1240" y="123" font-family="Arial" font-size="15.5" font-weight="bold" fill="#0b0b0b">Clinician Decision</text>
+<rect x="1200" y="140" width="335" height="1" fill="#e1e0d9"/>
+
+<rect x="1200" y="152" width="335" height="90" rx="6" fill="#ffffff" stroke="#d8d7d0" stroke-width="1"/>
+<text x="1212" y="172" font-family="Arial" font-size="12" font-weight="bold" fill="#0b0b0b">High-confidence flag</text>
+<text x="1212" y="192" font-family="Arial" font-size="12" fill="#52514e">&#8594; prioritize referral for</text>
+<text x="1212" y="210" font-family="Arial" font-size="12" fill="#52514e">Nerve Conduction Study (NCS)</text>
+<text x="1212" y="230" font-family="Arial" font-size="11" fill="#898781">e.g. large margin, few/no actionable CFs</text>
+
+<rect x="1200" y="250" width="335" height="90" rx="6" fill="#ffffff" stroke="#d8d7d0" stroke-width="1"/>
+<text x="1212" y="270" font-family="Arial" font-size="12" font-weight="bold" fill="#0b0b0b">Borderline flag + actionable CF</text>
+<text x="1212" y="290" font-family="Arial" font-size="12" fill="#52514e">&#8594; targeted risk-factor management</text>
+<text x="1212" y="308" font-family="Arial" font-size="12" fill="#52514e">(e.g. glycemic control), then re-screen</text>
+<text x="1212" y="328" font-family="Arial" font-size="11" fill="#898781">e.g. small margin, sparse actionable CFs</text>
+
+<!-- ===================== ARROWS BETWEEN BOXES ===================== -->
+<g fill="none" stroke="#898781" stroke-width="2">
+<line x1="392" y1="220" x2="416" y2="220"/>
+<line x1="772" y1="220" x2="796" y2="220"/>
+<line x1="1152" y1="220" x2="1176" y2="220"/>
+</g>
+<g fill="#898781">
+<polygon points="416,213 416,227 425,220"/>
+<polygon points="796,213 796,227 805,220"/>
+<polygon points="1176,213 1176,227 1185,220"/>
+</g>
+<text x="404" y="212" font-family="Arial" font-size="10.5" fill="#898781" text-anchor="middle"> </text>
+<text x="784" y="205" font-family="Arial" font-size="10.5" fill="#898781" text-anchor="middle">if flagged /</text>
+<text x="784" y="217" font-family="Arial" font-size="10.5" fill="#898781" text-anchor="middle">borderline</text>
+
+<!-- ===================== DECISION-SUPPORT CALLOUT ===================== -->
+<rect x="45" y="400" width="1510" height="120" rx="8" fill="#fdf1ea" stroke="#eb6834" stroke-width="1.5"/>
+<text x="65" y="428" font-family="Arial" font-size="14" font-weight="bold" fill="#c24f1a">Decision support only, not an automated diagnosis</text>
+<text x="65" y="452" font-family="Arial" font-size="12.5" fill="#7a3a17">The risk score and counterfactual are inputs to clinical judgment: the referral and treatment decision remains the clinician's.</text>
+<text x="65" y="472" font-family="Arial" font-size="12.5" fill="#7a3a17">This pipeline is a proof-of-concept research tool, trained on a single-clinic cohort (n=187) with no external validation or</text>
+<text x="65" y="492" font-family="Arial" font-size="12.5" fill="#7a3a17">prospective testing to date; it has not been deployed in clinical practice (Discussion, Section on Limitations).</text>
+
+<!-- ===================== FOOTER ===================== -->
+<rect x="40" y="534" width="1520" height="1" fill="#e1e0d9"/>
+<text x="40" y="552" font-family="Arial" font-size="11" fill="#898781">Sources: dataload.py (Step 1), optreport.py / expreport.py persisted fold models (Step 2), cfreports.py / bin_cf_final_202608.yml DiCE configuration (Step 3).</text>
+
+</svg>

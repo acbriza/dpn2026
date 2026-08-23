@@ -283,6 +283,16 @@ def nested_cv_optimization(
             # save opt first_repeat_models summary
             first_repeat_optimization_metrics_filename = savedir / f"{config.model.code}_first_repeat_optimization_metrics.csv"
             df_frr = pd.DataFrame([first_repeat_results[i]["metrics"] for i in  range(n_splits_outer)])
+            # append mean/std summary rows (sample std, ddof=1, matching mean_confidence_interval()
+            # below) so consumers don't have to recompute across-fold statistics themselves;
+            # best_params is per-fold and has no meaningful mean/std, so it is left blank.
+            summary = {
+                col: ['mean', 'std'] if col == 'fold'
+                else [np.nan, np.nan] if col == 'best_params'
+                else [df_frr[col].mean(), df_frr[col].std(ddof=1)]
+                for col in df_frr.columns
+            }
+            df_frr = pd.concat([df_frr, pd.DataFrame(summary)], ignore_index=True)
             df_frr.to_csv(first_repeat_optimization_metrics_filename, index_label='split')
 
             # confirm the test indices tile the whole dataset

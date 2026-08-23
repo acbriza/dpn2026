@@ -179,8 +179,9 @@
 
 \maketitle
 
-\section{Introduction}\label{introduction}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%
+\label{introduction}
 
 % The Introduction section expands on the background of the work (some overlap with the Abstract is acceptable). The introduction should not include subheadings.
 
@@ -207,8 +208,10 @@ The integration of machine learning and counterfactual explanations offers a pro
 
 This study aims to investigate the application of machine learning models in conjunction with counterfactual explanation techniques for the prediction and interpretation of diabetic peripheral neuropathy (DPN) risk, thereby contributing to the growing body of research on interpretable and actionable artificial intelligence in medicine. The study also examines the potential insights derived from incorporating nerve conduction study results and Sudoscan measurements—modalities that are comparatively underrepresented in many AI-based DPN studies, which often rely primarily on routine clinical and demographic variables. Furthermore, by utilizing data collected within the Philippine clinical context, this work enhances the geographic diversity of current studies and provides context-specific insights into the application of explainable AI for DPN.
 
-\section{Data Collection}\label{datacollection}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Data Collection}
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\label{datacollection}
+
 A total of 201 adult Filipino patients diagnosed with Diabetes Mellitus (DM) were recruited
 between 2022 and 2023. Subjects with limb amputation, gangrenous/ necrotic foot, with implanted
 cardiac pacemakers or defibrillators, and patients with other known causes of polyneuropathy were
@@ -389,8 +392,10 @@ Figure~\ref{fig:univariable_discrimination} places these per-feature association
 \end{figure}
 
 
-\section{Methods}\label{methods}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Methods}
+%%%%%%%%%%%%%%%%%
+\label{methods}
+
 % Topical subheadings are allowed. Authors must ensure that their Methods section includes adequate experimental and characterization data necessary for others in the field to reproduce their work. Authors are encouraged to include RIIDs where appropriate. 
 
 % \textbf{Ethical approval declarations} (only required where applicable) Any article reporting experiment/s carried out on (i)~live vertebrate (or higher invertebrates), (ii)~humans or (iii)~human samples must include an unambiguous statement within the methods section that meets the following requirements: 
@@ -681,6 +686,7 @@ algorithm & DiverseCF \\
 \label{sec:sufficiencynecessity}
 
 Beyond the diverse counterfactual sets of Table~\ref{tab:local_cf}, two single-feature checks were run for each targeted instance to characterise the role of individual actionable features, rather than only sets of them. \textit{Sufficiency} asks whether varying one feature alone, with every other feature held fixed, is enough to flip the predicted class: DiCE is asked for one counterfactual (\texttt{total\_CFs=1}) with \texttt{features\_to\_vary} restricted to that single feature; if a valid counterfactual is returned within the iteration budget, that feature is sufficient on its own for that patient. \textit{Necessity} asks the complementary question -- whether a feature must change at all: DiCE is asked to vary every \textit{other} actionable feature, with the feature under test held fixed, across \texttt{nrepeats=5} random seeds and up to \texttt{total\_CFs=3} counterfactuals per seed; if no valid counterfactual is found across all 5 seeds, the held-fixed feature is deemed necessary, because the desired class could not be reached without it. Neither check is expected to succeed for every candidate instance -- the search is not guaranteed to converge within its iteration budget even when a valid counterfactual exists -- and the Discussion reports how many of the candidate instances yielded a usable result under this procedure.
+
 
 \section{Discussion}\label{discussion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -975,9 +981,11 @@ Model & Patient Code & Probability & Margin & Outcome & CF Count & Sparsity Mean
 
 
 \paragraph{Feature Actionability and the Counterfactual Candidate Pool}
+%----------------------------------------------------------------------
 A prerequisite for clinically meaningful counterfactuals is that the features being altered must correspond to interventions that are realistically achievable. Accordingly, features were stratified by actionability prior to counterfactual generation (Table~\ref{tab:cf_features}). Immutable demographic attributes (sex, age, DM duration) and examination-derived measurements (neurological findings, MNSI, Sudoscan readings) were excluded, as these do not correspond to modifiable patient states. This exclusion is not merely a technical constraint: counterfactuals generated from non-actionable features risk producing explanations that are statistically valid but clinically misleading \cite{karimi2020}. The final actionable feature set --- HbA1c, insulin use, hypertension, dyslipidemia, CKD, and PAOD --- reflects a pragmatic and evidence-aligned subset of DPN risk factors for which clinical pathways exist. As the case studies below illustrate, however, being on this actionable list is necessary but not sufficient for a specific counterfactual to be a realistic clinical recommendation: DiCE is free to propose \emph{introducing} a comorbidity such as PAOD or CKD (an actionable feature can move in either direction) even though inducing a new disease is never a real intervention, so each proposed change still requires clinical judgment about its direction, not just its feature identity.
 
 \paragraph{Candidate Instances and Counterfactual Generation}
+%------------------------------------------------------------
 \label{sec:cf-plausibility}
 We identified misclassified instances (incorrect predictions) and borderline instances (prediction probability within 0.08 of the fold's own decision threshold) as candidate instances for counterfactual generation. A total of 61 candidates were identified across the four folds (42 misclassified, 19 borderline; Table~\ref{tab:localcf-model-level}), but only 8 yielded a usable counterfactual within the 1-hour per-patient generation budget --- none of them from Model 2, whose 12 candidates all failed to converge. Table~\ref{tab:localcf-model-level} provides a summary of the counterfactuals generated per model while Table~\ref{tab:localcf-listing} provides details of the 8 candidates that successfully generated counterfactuals.
 
@@ -1010,21 +1018,25 @@ In this section we examine three of the eight successful instances individually,
 \end{figure}
 
 \paragraph{Patient 20 --- Borderline False Positive (Model 3)}
+%-------------------------------------------------------------
 \textit{Patient Profile}: Female, 51 years old; diabetes duration 1 year; HbA1c 10.3\%; on insulin; no hypertension or PAOD; dyslipidemia present; no CKD. Predicted as Confirmed DPN at a probability of 0.498, a hair above Model 3's threshold of 0.492 (margin = 0.006) --- essentially a coin flip --- despite an unconfirmed clinical diagnosis.
 
 With a margin of only 0.006, Patient 20 sits closer to her fold's decision boundary than any other candidate in this study, and the 23 counterfactuals generated for her reflect that: this is the most parsimonious case in the dataset, with a mean sparsity of 1.74 features (Table~\ref{tab:localcf-listing}). Several counterfactuals require changing only a single actionable feature: stopping insulin alone (INSULIN: 1$\to$0), managing dyslipidemia alone (DSLPDMIA: 1$\to$0), or reducing HbA1c alone by as little as 2.3--2.7 points. Two-feature combinations are similarly small --- for example, stopping insulin together with a 0.2--0.3 point HbA1c reduction. Across all 23 counterfactuals, HbA1c is the most frequently changed feature (16 of 23), followed by insulin (11 of 23) and dyslipidemia (7 of 23); hypertension, PAOD, and CKD changes are rare (2, 1, and 3 instances respectively). One counterfactual moves the immutable feature DM\_DUR alongside HbA1c and was filtered out as unactionable (Section~\ref{sec:cf-plausibility}) rather than reported as a valid recommendation. Because the margin is so small and the counterfactuals so sparse, this case illustrates the scenario where counterfactual explanation is most directly useful: a patient one small, plausible change away from a different classification, for whom the clinical recommendation --- continued glycemic management, with insulin and dyslipidemia review as secondary levers --- is both actionable and consistent with standard diabetes care.
 
 \paragraph{Patient 40 --- Borderline True Positive (Model 0)}
+%------------------------------------------------------------
 \textit{Patient Profile}: Female, 62 years old; diabetes duration 5 years; HbA1c 7.5\%; on insulin; hypertension, PAOD, and dyslipidemia present; no CKD. Correctly predicted as Confirmed DPN at a probability of 0.513, just above Model 0's threshold of 0.499 (margin = 0.014), matching the confirmed clinical diagnosis.
 
 Patient 40 is a correctly classified borderline case, and the 25 generated counterfactuals show what it would take to move her below the threshold. HbA1c is changed in every single one of the 25 counterfactuals, the only patient in this study for which that is true, and the single most parsimonious counterfactual overall is a 0.5-point HbA1c reduction (7.5\% $\to$ 7.0\%) with no other change --- the smallest single-feature perturbation observed for any patient (L1 = 0.5). Two-feature combinations largely pair a similar HbA1c reduction with stopping insulin (18 of 25 counterfactuals touch insulin) or resolving PAOD (6 of 25); hypertension and CKD are altered less often (4 and 2 instances). Two counterfactuals instead moved the immutable SUBJ feature alongside a larger HbA1c reduction and were filtered out as unactionable. Because this patient is both correctly classified and borderline, the clinical reading is different from a misclassification: the counterfactual does not correct an error, it quantifies how close this patient sits to being reclassified, supporting a watchful-waiting recommendation centered on glycemic control rather than an urgent referral.
 
 \paragraph{Patient 123 --- Confident False Negative (Model 1)}
+%-------------------------------------------------------------
 \textit{Patient Profile}: Female, 68 years old; diabetes duration 3 years; HbA1c 7.18\%; not on insulin; hypertension present; no PAOD, dyslipidemia, or CKD. Incorrectly predicted as Unconfirmed DPN at a probability of 0.269, well below Model 1's threshold of 0.5 (margin = 0.231), despite a confirmed clinical diagnosis.
 
 Patient 123 is the only false negative among the eight successful instances and, at a margin of 0.231, the least borderline case in this study --- Model 1 places her confidently in the wrong class. The 25 counterfactuals generated for her therefore describe what would need to be different for the model to correctly flag her as Confirmed DPN, and every one of them changes HbA1c downward (typically by 1.2--2.2 points, e.g. 7.18\% $\to$ 5.0\%), the largest and most consistent single driver of any patient in this study; hypertension is the second most frequent change (removed in 15 of 25), followed by PAOD (introduced in 11 of 25), insulin (started in 7 of 25), dyslipidemia (introduced in 2 of 25), and CKD (introduced in 1 of 25). This is a case where the actionable/non-actionable distinction matters most: reducing HbA1c and resolving hypertension are legitimate clinical targets, and the smallest counterfactual (HbA1c $-$1.78 combined with resolving hypertension) reflects exactly that; but introducing PAOD, dyslipidemia, or CKD --- which several other counterfactuals propose --- is never a real intervention, only a marker that the model associates the presence of those comorbidities with a higher DPN probability in this training partition. No separate unactionable-CF file was generated for this patient, because every altered feature here happens to fall on the actionable list (Section~\ref{sec:cf-plausibility}); the actionable/non-actionable distinction still has to be applied at the level of the specific proposed change (removing a condition versus introducing one), not merely at the level of which feature was touched. Clinically, this is the case that most directly illustrates the stakes of a false negative in this screening framework: a patient with confirmed DPN, comfortably below the referral threshold, for whom the counterfactual identifies glycemic control and hypertension management as the levers most associated --- in this model's training data --- with the confirmed-DPN phenotype she actually has.
 
 \paragraph{Synthesis of the Three Case Studies}
+%----------------------------------------------
 \label{sec:cf-synthesis}
 Read together, these three cases span the practically relevant range of what a counterfactual can say to a clinician. For Patient 20 and Patient 40, both borderline (margins of 0.006 and 0.014), the counterfactuals are small, single- or two-feature perturbations dominated by HbA1c --- exactly what "minimal sufficient change" should look like in a case that is genuinely close to the threshold, and directly actionable as a glycemic-management recommendation. For Patient 123, confidently misclassified (margin 0.231), the counterfactual set is necessarily larger and more mixed, some of it non-actionable (introducing a comorbidity is not an intervention), but the actionable core --- HbA1c reduction and hypertension management --- still identifies the specific risk factors that, according to the model's training partition, separate her from the confirmed-DPN patients it recognizes. Across all three cases, HbA1c is the dominant and most consistently plausible lever, echoing its central role in the aggregate-level analysis below (Section~\ref{sec:aggregate-cf}); insulin and, in Patient 123's case, hypertension are the next most useful actionable levers, while comorbidity-introduction counterfactuals are the clearest recurring example of a technically valid but clinically meaningless suggestion that a human reader must filter out. This is precisely the caveat raised in Section~\ref{sec:cf-plausibility}: a generated counterfactual is a candidate explanation to be clinically reviewed, not an automatic prescription.
 

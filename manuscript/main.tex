@@ -559,7 +559,7 @@ To provide interpretable insights into the predictions of the trained machine le
 
 \subsubsection{Feature Suitability as Counterfactuals}
 %=====================================================
-Table~\ref{tab:cf_features} shows the feature set and their suitability for counterfactual analysis. We note that nerve conduction studies and Sudoscan features are marked as \textit{conditional} counterfactuals. These are biomarker outcomes of neuropathy. While these are not directly actionable inputs, they can be treated as counterfactuals that answer "what must change". Intervention is left to the physician. 
+Table~\ref{tab:cf_features} shows the feature set and their suitability for counterfactual analysis. Sudoscan readings are not considered suitable considering that they are biomarker outcomes of neuropathy rather than inputs a clinician can act on. Two features are marked \textit{conditional} -- peripheral arterial occlusive disease and chronic kidney disease -- implying that they are partially manageable but not fully reversible.
 
 % =======================================
 % Table of Counterfactual Features

@@ -495,7 +495,7 @@ Every stage of the pipeline enforces a strict separation between the data used t
 \begin{itemize}
     \itemsep0em
     \item \textit{Selection.} The 40 repeated-CV runs for each model--feature-set pair each fit on a training fold and score on a disjoint test fold; no test fold is ever seen during fitting.
-    \item \textit{Hyperparameter optimization.} The nested cross-validation described in Section~\ref{sec:hpo} confines hyperparameter search, refitting, and decision-threshold selection entirely to each outer iteration's training fold; the corresponding outer test fold is touched exactly once, after tuning and thresholding are complete, purely to record performance. A runtime assertion verifies, for every repeat, that the four outer test folds jointly and exactly tile all 187 patients -- so pooled outer-test performance is computed over the whole cohort without double-counting or omission, and without any patient's test-fold prediction coming from a model that trained on them.
+    \item \textit{Hyperparameter optimization.} The nested cross-validation described in Section~\ref{sec:hpo} confines hyperparameter search, refitting, and decision-threshold selection entirely to each outer iteration's training fold; the corresponding outer test fold is touched exactly once, after tuning and thresholding are complete, purely to record performance. 
     \item \textit{Explainability and counterfactual generation.} Both stages reuse the outer-training-fold models and fold-specific thresholds already fitted and selected during optimization (Section~\ref{sec:hpo}); they never refit against, or select a threshold from, an outer test fold.
 \end{itemize}
 

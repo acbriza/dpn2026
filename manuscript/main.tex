@@ -406,7 +406,7 @@ This section describes the machine learning model development pipeline and the c
 \begin{figure}[p]
     \centering
     \includegraphics[width=0.95\textwidth]{references/illustrations/detailed_pipeline.pdf}
-    \caption{The CatBoost model lifecycle, from cohort to counterfactuals. A repeated stratified $k$-fold loop (4 folds $\times$ 10 repeats) divides the cohort into 40 train/test splits; within each, a 3-fold division of that split's training set into tuning folds drives a 100-trial Optuna TPE search. The winning configuration is refit on the full training set, thresholded by maximizing F1 on the out-of-fold precision--recall curve, then scored once on the held-out test set. The first repeat's four fold models are saved and reused: refit identically for feature importance and SHAP, and used as stored---each at its own tuned threshold---for DiCE counterfactual generation over the six actionable features (Figure~\ref{fig:counterfactual_generation}).}
+    \caption{The CatBoost model lifecycle, from cohort to counterfactuals. A repeated stratified $k$-fold loop (4 folds $\times$ 10 repeats) divides the cohort into 40 train/test splits; within each, a 3-fold division of that split's training set into tuning folds drives a 100-trial Optuna TPE search. The winning configuration is refit on the full training set, thresholded by maximizing F1 on the out-of-fold precision--recall curve, then scored once on the held-out test set. The first repeat's four fold models are saved and reused: refit identically for feature importance and SHAP, and used as stored---each at its own tuned threshold---for DiCE counterfactual generation over the six actionable features.}
     \label{fig:pipeline_overview}
 \end{figure}
 
@@ -591,15 +591,7 @@ Table~\ref{tab:cf_features} shows the feature set and their suitability for coun
 \subsubsection{General Setup}
 %============================
 \label{sec:generalsetup}
-Counterfactuals are generated separately for each of the four saved fold models (Section~\ref{sec:hpo}), each wrapped with \textit{that fold's own} tuned decision threshold rather than a threshold shared across folds---consistent with Section~\ref{sec:hpo}'s point that these are four fold-specific configurations of one pipeline, not four independent choices. Figure~\ref{fig:counterfactual_generation} summarizes the end-to-end procedure described in this subsection and the two that follow.
-
-% Figure -- Counterfactual generation procedure % =======================================
-\begin{figure*}[h]
-    \centering
-    \includegraphics[width=\textwidth]{references/illustrations/counterfactual_generation.pdf}
-    \caption{Counterfactual generation procedure, applied independently to each of the four saved fold models. For each fold's held-out test set, misclassified and borderline patients (predicted probability within $\delta=0.08$ of that fold's own tuned threshold) are selected as instances of interest. DiCE is configured with a genetic-algorithm search over the six actionable features (Table~\ref{tab:cf_features}), bounded by a global permitted range computed once over the whole cohort and, for local counterfactual generation, a per-instance range centered on that patient's own values (Table~\ref{tab:local_cf}). Diverse counterfactual sets are produced for each instance of interest.}
-    \label{fig:counterfactual_generation}
-\end{figure*}
+Counterfactuals are generated separately for each of the four saved fold models (Section~\ref{sec:hpo}), each wrapped with \textit{that fold's own} tuned decision threshold rather than a threshold shared across folds---consistent with Section~\ref{sec:hpo}'s point that these are four fold-specific configurations of one pipeline, not four independent choices. Figure~\ref{fig:pipeline_overview} (lower panel) places the procedure described in this subsection within the overall pipeline.
 
 \textit{Global Permitted Range}.
 To ensure feasibility of generated counterfactuals, a global permitted range was defined for all continuous features, using every patient in the dataset (training and test partitions of the fold together, so the range describes the whole observed cohort rather than one fold's split of it) The bounds were computed as follows:

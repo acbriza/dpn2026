@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1095" height="1138" viewBox="0 0 1095 1138">
+
+<rect x="0" y="0" width="1095" height="1138" fill="#ffffff"/>
+
+<!-- ===================== A : COLLECT DATA ===================== -->
+<rect x="30" y="20" width="950" height="78" fill="#eef6f4" stroke="#12796a" stroke-width="2"/>
+<text x="505" y="54" font-family="Arial" font-size="24" font-weight="bold" fill="#0d5c51" text-anchor="middle">Data Collection During Clinic Visit</text>
+<text x="52" y="82" font-family="Arial" font-size="21" fill="#0d5c51">&#8226; Profile &amp; comorbidities</text>
+<text x="322" y="82" font-family="Arial" font-size="21" fill="#0d5c51">&#8226; MNSI</text>
+<text x="434" y="82" font-family="Arial" font-size="21" fill="#0d5c51">&#8226; Neurological examination</text>
+<text x="727" y="82" font-family="Arial" font-size="21" fill="#0d5c51">&#8226; Sudoscan, if available</text>
+
+<!-- ===================== B : MODEL ===================== -->
+<rect x="335" y="126" width="340" height="68" rx="10" fill="#f3f1fb" stroke="#4a3aa7" stroke-width="2"/>
+<text x="505" y="169" font-family="Arial" font-size="24" font-weight="bold" fill="#332876" text-anchor="middle">Trained CatBoost Model</text>
+
+<!-- ===================== CALIBRATED THRESHOLD (input to C) ===================== -->
+<rect x="71" y="273" width="250" height="56" fill="#eef6f4" stroke="#12796a" stroke-width="2"/>
+<text x="196" y="308" font-family="Arial" font-size="21" font-weight="bold" fill="#0d5c51" text-anchor="middle">Calibrated Threshold</text>
+
+<!-- ===================== C : THRESHOLD DECISION ===================== -->
+<polygon points="505,234 655,301 505,368 355,301" fill="#ffffff" stroke="#52514e" stroke-width="2"/>
+<text x="505" y="293" font-family="Arial" font-size="22" fill="#2e2d2b" text-anchor="middle">difference from</text>
+<text x="505" y="319" font-family="Arial" font-size="22" fill="#2e2d2b" text-anchor="middle">threshold</text>
+<text x="521" y="220" font-family="Arial" font-size="21" fill="#52514e">risk probability score</text>
+
+<!-- ===================== F : ROUTINE FOLLOW-UP (terminal) ===================== -->
+<rect x="30" y="430" width="250" height="84" rx="42" fill="#eaf2fc" stroke="#2a78d6" stroke-width="2"/>
+<text x="155" y="463" font-family="Arial" font-size="23" font-weight="bold" fill="#1c4f8f" text-anchor="middle">Low Priority or</text>
+<text x="155" y="491" font-family="Arial" font-size="23" font-weight="bold" fill="#1c4f8f" text-anchor="middle">Routine follow-up</text>
+
+<!-- ===================== G : GENERATE COUNTERFACTUALS ===================== -->
+<rect x="290" y="430" width="430" height="132" rx="10" fill="#f3f1fb" stroke="#4a3aa7" stroke-width="2"/>
+<text x="505" y="466" font-family="Arial" font-size="23" font-weight="bold" fill="#332876" text-anchor="middle">Generate Counterfactuals</text>
+<text x="505" y="496" font-family="Arial" font-size="21" fill="#332876" text-anchor="middle">Search over 6 actionable features:</text>
+<text x="505" y="522" font-family="Arial" font-size="21" fill="#332876" text-anchor="middle">HbA1c, insulin, HPN, PAOD,</text>
+<text x="505" y="548" font-family="Arial" font-size="21" fill="#332876" text-anchor="middle">dyslipidemia, CKD</text>
+
+<!-- ===================== G1 : CLINICIAN SCREENS ===================== -->
+<rect x="345" y="590" width="320" height="78" rx="10" fill="#fdf4ec" stroke="#c2600f" stroke-width="2"/>
+<text x="505" y="622" font-family="Arial" font-size="22" fill="#8a4310" text-anchor="middle">Clinician screens</text>
+<text x="505" y="650" font-family="Arial" font-size="22" fill="#8a4310" text-anchor="middle">counterfactual suggestions</text>
+
+<!-- ===================== H : CF COUNT DECISION ===================== -->
+<polygon points="505,696 655,748 505,800 355,748" fill="#ffffff" stroke="#52514e" stroke-width="2"/>
+<text x="505" y="756" font-family="Arial" font-size="22" fill="#2e2d2b" text-anchor="middle">Any actionable CFs?</text>
+
+<!-- ===================== Z : HIGH PRIORITY (right lane) ===================== -->
+<rect x="855" y="794" width="210" height="84" rx="42" fill="#eaf2fc" stroke="#2a78d6" stroke-width="2"/>
+<text x="960" y="828" font-family="Arial" font-size="23" font-weight="bold" fill="#1c4f8f" text-anchor="middle">High Priority</text>
+<text x="960" y="856" font-family="Arial" font-size="23" font-weight="bold" fill="#1c4f8f" text-anchor="middle">NCS referral</text>
+
+<!-- ===================== L : INTERVENTION DECISION ===================== -->
+<polygon points="505,840 655,902 505,964 355,902" fill="#ffffff" stroke="#52514e" stroke-width="2"/>
+<text x="505" y="876" font-family="Arial" font-size="22" fill="#2e2d2b" text-anchor="middle">real</text>
+<text x="505" y="902" font-family="Arial" font-size="22" fill="#2e2d2b" text-anchor="middle">intervention</text>
+<text x="505" y="928" font-family="Arial" font-size="22" fill="#2e2d2b" text-anchor="middle">possible?</text>
+
+<!-- ===================== Q <- O  (yes branch, mirrored outward) ===================== -->
+<rect x="30" y="1030" width="180" height="84" rx="42" fill="#eaf2fc" stroke="#2a78d6" stroke-width="2"/>
+<text x="120" y="1080" font-family="Arial" font-size="23" font-weight="bold" fill="#1c4f8f" text-anchor="middle">Rescreen</text>
+
+<rect x="236" y="1026" width="240" height="92" rx="10" fill="#fdf4ec" stroke="#c2600f" stroke-width="2"/>
+<text x="356" y="1063" font-family="Arial" font-size="22" fill="#8a4310" text-anchor="middle">Targeted risk-factor</text>
+<text x="356" y="1091" font-family="Arial" font-size="22" fill="#8a4310" text-anchor="middle">management</text>
+
+<!-- ===================== P -> R  (no branch) ===================== -->
+<rect x="584" y="1026" width="240" height="92" rx="10" fill="#fdf4ec" stroke="#c2600f" stroke-width="2"/>
+<text x="704" y="1063" font-family="Arial" font-size="22" fill="#8a4310" text-anchor="middle">General risk-factor</text>
+<text x="704" y="1091" font-family="Arial" font-size="22" fill="#8a4310" text-anchor="middle">management</text>
+
+<rect x="855" y="1030" width="210" height="84" rx="42" fill="#eaf2fc" stroke="#2a78d6" stroke-width="2"/>
+<text x="960" y="1064" font-family="Arial" font-size="23" font-weight="bold" fill="#1c4f8f" text-anchor="middle">Moderate</text>
+<text x="960" y="1092" font-family="Arial" font-size="23" font-weight="bold" fill="#1c4f8f" text-anchor="middle">Priority</text>
+
+<!-- ===================== EDGES ===================== -->
+<g fill="none" stroke="#898781" stroke-width="2">
+<line x1="505" y1="194" x2="505" y2="220"/>
+<line x1="505" y1="368" x2="505" y2="392"/>
+<line x1="155" y1="392" x2="960" y2="392"/>
+<line x1="155" y1="392" x2="155" y2="416"/>
+<line x1="505" y1="392" x2="505" y2="416"/>
+<line x1="960" y1="392" x2="960" y2="780"/>
+<line x1="505" y1="562" x2="505" y2="576"/>
+<line x1="505" y1="668" x2="505" y2="682"/>
+<line x1="655" y1="748" x2="960" y2="748"/>
+<line x1="505" y1="800" x2="505" y2="826"/>
+<line x1="505" y1="964" x2="505" y2="988"/>
+<line x1="356" y1="988" x2="704" y2="988"/>
+<line x1="356" y1="988" x2="356" y2="1012"/>
+<line x1="704" y1="988" x2="704" y2="1012"/>
+<line x1="236" y1="1072" x2="224" y2="1072"/>
+<line x1="824" y1="1072" x2="841" y2="1072"/>
+</g>
+<line x1="505" y1="98" x2="505" y2="112" fill="none" stroke="#898781" stroke-width="2"/>
+<line x1="321" y1="301" x2="341" y2="301" fill="none" stroke="#898781" stroke-width="2"/>
+
+<!-- arrowheads -->
+<g fill="#898781">
+<polygon points="494,112 516,112 505,126"/>
+<polygon points="494,220 516,220 505,234"/>
+<polygon points="341,290 341,312 355,301"/>
+<polygon points="144,416 166,416 155,430"/>
+<polygon points="494,416 516,416 505,430"/>
+<polygon points="494,576 516,576 505,590"/>
+<polygon points="494,682 516,682 505,696"/>
+<polygon points="949,780 971,780 960,794"/>
+<polygon points="494,826 516,826 505,840"/>
+<polygon points="345,1012 367,1012 356,1026"/>
+<polygon points="693,1012 715,1012 704,1026"/>
+<polygon points="224,1061 224,1083 210,1072"/>
+<polygon points="841,1061 841,1083 855,1072"/>
+</g>
+
+<!-- ===================== EDGE LABELS ===================== -->
+<g font-family="Arial" font-size="21" fill="#52514e">
+<text x="167" y="414">comfortably below</text>
+<text x="517" y="414">borderline</text>
+<text x="948" y="414" text-anchor="end">way above</text>
+<text x="667" y="730">few or none</text>
+<text x="517" y="824">several</text>
+<text x="368" y="1010">yes</text>
+<text x="692" y="1010" text-anchor="end">no</text>
+</g>
+
+</svg>

@@ -280,6 +280,35 @@ def _find_instance(cf_dir, model_code, nsplits, patient_code):
                      f'any of the {nsplits} splits under {cf_dir}')
 
 
+def _load_cf_stage_config(cf_dir):
+    """Load the counterfactual stage's own config from the copy it left in its outputs.
+
+    Every stage copies its config next to the artifacts it produced, so the settings
+    that generated those artifacts are recoverable here. Reading them back is preferable
+    to restating them in this stage's config: a restated value is only correct until
+    someone re-runs the counterfactual stage with a different one, and nothing would
+    flag the divergence.
+    """
+    configs = sorted(cf_dir.glob('*.yml'))
+    if len(configs) != 1:
+        raise ValueError(f'expected exactly one copied stage config in {cf_dir}, '
+                         f'found {len(configs)}: {[c.name for c in configs]}')
+    return ymlconfig.dict_to_namespace(ymlconfig.load_config(configs[0]))
+
+
+def _load_fold_thresholds(config_path, cf_config, model_code):
+    """Per-fold decision thresholds as the optimization stage published them.
+
+    Anchored on the trained-models path the counterfactual stage was pointed at, so
+    these are the thresholds belonging to the very models that produced the
+    counterfactuals being plotted, not merely those of a same-named run.
+    """
+    opt_dir = Path(cf_config.optimization.first_repeat_trained_models_filename).parent
+    metrics = pd.read_csv(
+        config_path / opt_dir / f'{model_code}_first_repeat_optimization_metrics.csv')
+    return metrics.set_index('split')['threshold']
+
+
 def _load_case_changes(cf_dir, model_code, midx, patient_code, actionable_features):
     """Read one patient's counterfactuals and return (baseline, change matrix).
 
@@ -329,11 +358,17 @@ def plot_case_study_counterfactuals(config, config_path, outputdir):
     nsplits = config.counterfactuals.nsplits
     actionable_features = config.counterfactuals.actionable_features.split(',')
     case_codes = [int(c) for c in str(config.counterfactuals.case_studies).split(',')]
-    borderline_delta = config.counterfactuals.borderline_delta
 
     binary_features = [f for f in actionable_features if f != 'HBA1C']
     hba1c_col = actionable_features.index('HBA1C')
     cf_dir = config_path / 'binary' / 'counterfactuals' / model_code / tag
+
+    # The rule that made a candidate 'borderline' belongs to the counterfactual stage,
+    # so its own config -- not a copy of the number here -- decides which panels are
+    # labeled Borderline and which Confident.
+    cf_config = _load_cf_stage_config(cf_dir)
+    borderline_delta = cf_config.dice.threshold_delta
+    fold_thresholds = _load_fold_thresholds(config_path, cf_config, model_code)
 
     cases = []
     for code in case_codes:
@@ -342,10 +377,19 @@ def plot_case_study_counterfactuals(config, config_path, outputdir):
             cf_dir, model_code, midx, code, actionable_features)
         # The threshold is not stored alongside the instance, but margin is defined as
         # the absolute distance from it, so it is recoverable from the side the
-        # prediction fell on. Verified equal to the per-fold thresholds that the
-        # optimization stage published, on all four splits.
+        # prediction fell on. That inversion is exact by construction (both `pred` and
+        # `margin` come from the same threshold in get_instances_of_interest), but it
+        # is an assumption reaching across two stages' file formats, so check it
+        # against the published value rather than letting a future divergence pass as
+        # a plausible-looking number on a figure.
         threshold = (instance.pred_proba - instance.margin if instance.pred
                      else instance.pred_proba + instance.margin)
+        published = fold_thresholds[midx]
+        if not np.isclose(threshold, published, atol=1e-6):
+            raise ValueError(
+                f'patient {code}: threshold recovered from split {midx} candidate list '
+                f'({threshold:.6f}) disagrees with the optimization stage threshold '
+                f'({published:.6f}); the two stages have diverged')
         confidence = 'Borderline' if instance.margin <= borderline_delta else 'Confident'
         outcome = f'{confidence} {_outcome(instance.actual, instance.pred).lower()}'
         cases.append(dict(code=code, midx=midx, baseline=baseline, changes=changes,

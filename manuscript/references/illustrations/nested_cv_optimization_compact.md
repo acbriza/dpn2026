@@ -4,6 +4,27 @@ Companion document for `nested_cv_optimization_compact.svg` / `.pdf`.
 Generated 2026-08-21 on branch `codereviewed_methods`, as part of the Methods
 rewrite recorded in `documentation/notes/methods_edit.md`.
 
+## Status — reference for the code, not for the manuscript
+
+This figure is **not used in the manuscript**: `main.tex` does not include it, and it was
+superseded by `detailed_pipeline` (see `detailed_pipeline.md`, which records it as
+"retained for reference only"). It is kept as a reference for the *pipeline code* — its
+panels describe what `module/utils2/optimization.py` actually computes.
+
+It is therefore deliberately faithful to the pipeline rather than to the manuscript's
+reporting. In particular, panel 4 and the pooling panel say **13 metrics**, which is the
+true number recorded per outer-test iteration in `optimization_metrics_ci.csv`
+(threshold, accuracy, precision, sensitivity, specificity, f1, f1.25, f1.5, f1.75, f2,
+youden, roc-auc, auprc). The manuscript reports only eight of these, dropping the four
+extra F-beta variants — see "Reporting decision — metric count" in
+`documentation/notes/methods_edit.md`. **Do not edit this figure to match the
+manuscript's counts**; the divergence is intentional.
+
+One consequence: the last bullet under "What was condensed or dropped" below states that
+this figure "is now wired into the manuscript". That was true when written and is no
+longer; the pointer to `optimization_metrics_ci.csv` it describes now stands on its own
+as code documentation.
+
 ## Relationship to the existing full-size figure
 
 This is a new, smaller diagram sized for a `figure*` (double-column) journal

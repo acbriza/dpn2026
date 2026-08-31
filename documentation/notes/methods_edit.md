@@ -243,3 +243,42 @@ the actual Discussion section, the `optimization_metrics_ci.csv` table, or any o
 other Discussion-section figures/tables. The Methods rewrite establishes the vocabulary
 and mechanism (pooling method, fold-vs-pooled divergence, sufficiency/necessity
 semantics, etc.) those sections will need.
+
+## Reporting decision — metric count (2026-09-01)
+
+The pipeline records **13** metrics per outer-test iteration in
+`optimization_metrics_ci.csv` (threshold, accuracy, precision, sensitivity,
+specificity, f1, f1.25, f1.5, f1.75, f2, youden, roc-auc, auprc — see the outer-test
+bullet under step 2 above). The manuscript **reports 8 of them**: accuracy, precision,
+sensitivity, specificity, F1, the Youden index, ROC-AUC, and AUPRC. The four additional
+F-beta variants (`f1.25`, `f1.5`, `f1.75`, `f2`) are deliberately dropped from the
+reporting; the selected threshold is reported alongside them but as an operating
+parameter rather than a metric, which is the split `tab:optimization_metrics_40repeats`
+already draws in its caption.
+
+Applied in:
+
+- `main.tex` §3.1.2 (selection) — "For each of the 40 validation runs, eight metrics
+  were recorded". Previously said "nine" while listing eight; the selection stage's own
+  output (`selection_metrics_summary.csv`) carries exactly the eight above.
+- `main.tex` §3.1.6 (optimization) — "recording the threshold and eight metrics in
+  Table~\ref{tab:optimization_metrics_40repeats}". Previously said "the thirteen
+  metrics", which was true of the pipeline but not of the table, which prints 9 rows
+  (the threshold plus the eight).
+
+Deliberately **not** changed, because they describe what the pipeline computes rather
+than what the manuscript reports, and remain accurate as such:
+
+- the outer-test bullet in step 2 of this file;
+- `nested_cv_optimization.md` §4 panel E ("the 13 recorded metrics") and its
+  "Outer-loop reporting" list, belonging to the older 9-panel
+  `nested_cv_optimization.svg`;
+- `nested_cv_optimization_compact.svg`, whose panel 4 and pooling panel both say
+  "13 metrics". This figure was briefly edited to 8 during this session and then
+  reverted: it is reference documentation for the pipeline code, not a manuscript
+  figure (`main.tex` does not include it), so it stays faithful to what the code
+  records. A status note recording that was added at the top of
+  `nested_cv_optimization_compact.md`.
+
+The divergence between the figure's 13 and the manuscript's 8 is therefore intentional
+and should not be "fixed" in either direction.

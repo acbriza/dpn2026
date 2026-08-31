@@ -930,7 +930,8 @@ To move beyond predictive accuracy and toward clinical utility, this study emplo
     \centering
     \begin{tabular}{cccccccc}
         \toprule
-        Model & Candidates & Misclassified & \shortstack[r]{Borderline\\(correct)} & Instances with CF & Sparsity Mean & L1 Mean & L2 Mean \\
+        Model & Candidates & Misclassified & Borderline & Instances  & Sparsity & L1 & L2 \\
+         &  &  & (correct) & with CF & Mean & Mean & Mean  \\
         \midrule
         0 & 19 & 14 & 5 & 4 & 2.52 & 2.47 & 1.62 \\
         1 & 13 & 11 & 2 & 1 & 2.40 & 3.27 & 2.20 \\
@@ -951,7 +952,8 @@ To move beyond predictive accuracy and toward clinical utility, this study emplo
     \setlength{\tabcolsep}{4pt}
     \begin{tabular}{ccccccccc}
         \toprule
-        Model & Patient Code & Probability & Margin & Outcome & CF Count & Sparsity Mean & L1 Mean & L2 Mean \\
+        Model & Patient Code & Probability & Margin & Outcome & CF Count & Sparsity  & L1 & L2 \\
+         &  &  &  & & Mean & Mean & Mean \\
         \midrule
         0 & 29 & 0.54 & 0.05 & True Positive & 18 & 2.89 & 2.88 & 1.87 \\
         0 & 40 & 0.51 & 0.01 & True Positive & 25 & 2.16 & 2.21 & 1.54 \\

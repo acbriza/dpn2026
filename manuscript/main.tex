@@ -928,9 +928,9 @@ To move beyond predictive accuracy and toward clinical utility, this study emplo
 \begin{table}[tbp]
     \footnotesize
     \centering
-    \begin{tabular}{rrrrrrrr}
+    \begin{tabular}{cccccccc}
         \toprule
-        Model & Candidates & Misclassified & Borderline & Instances with CF & Sparsity Mean & L1 Mean & L2 Mean \\
+        Model & Candidates & Misclassified & \shortstack[r]{Borderline\\(correct)} & Instances with CF & Sparsity Mean & L1 Mean & L2 Mean \\
         \midrule
         0 & 19 & 14 & 5 & 4 & 2.52 & 2.47 & 1.62 \\
         1 & 13 & 11 & 2 & 1 & 2.40 & 3.27 & 2.20 \\
@@ -938,7 +938,7 @@ To move beyond predictive accuracy and toward clinical utility, this study emplo
         3 & 17 & 8 & 9 & 3 & 2.05 & 2.80 & 2.01 \\
         \bottomrule
     \end{tabular}
-    \caption{Aggregate summary of local counterfactual generation across four CatBoost models trained on cross-validation folds. Candidates denotes the number of test-set patients selected for counterfactual analysis based on being either misclassified or borderline (prediction probability within 0.08 of the fold's decision threshold). Misclassified indicates the subset with incorrect predictions, while Borderline indicates low-confidence predictions (whether predictions were correct or not; a patient can be both). Instances with CF reports how many candidate patients successfully yielded at least one valid counterfactual within the generation budget. Sparsity Mean reflects the average number of features altered per counterfactual; L1 and L2 means quantify the magnitude of feature changes using Manhattan and Euclidean distances, respectively, both computed only over the six actionable features. Model 2 produced 12 candidates but zero successful counterfactual instances (Section~\ref{sec:cf-plausibility} discusses why the DiCE genetic search can fail to converge for an entire fold's candidate pool). Across the three models that did yield counterfactuals, sparsity means cluster tightly (2.05--2.52 out of 6 actionable features), indicating that a prediction reversal typically requires changing only two to three actionable features, not the majority of the actionable set.
+    \caption{Aggregate summary of local counterfactual generation across four CatBoost models trained on cross-validation folds. Candidates denotes the number of test-set patients selected for counterfactual analysis based on being either misclassified or borderline (prediction probability within 0.08 of the fold's decision threshold). Misclassified indicates the subset with incorrect predictions, while Borderline (correct) indicates low-confidence predictions that the model got right; the two are mutually exclusive and together sum to Candidates. A further 9 of the 42 misclassified candidates were also within 0.08 of their fold's threshold, so the Borderline (correct) column undercounts low-confidence predictions overall. Instances with CF reports how many candidate patients successfully yielded at least one valid counterfactual within the generation budget. Sparsity Mean reflects the average number of features altered per counterfactual; L1 and L2 means quantify the magnitude of feature changes using Manhattan and Euclidean distances, respectively, both computed only over the six actionable features. Model 2 produced 12 candidates but zero successful counterfactual instances (Section~\ref{sec:cf-plausibility} discusses why the DiCE genetic search can fail to converge for an entire fold's candidate pool). Across the three models that did yield counterfactuals, sparsity means cluster tightly (2.05--2.52 out of 6 actionable features), indicating that a prediction reversal typically requires changing only two to three actionable features, not the majority of the actionable set.
     }
     \label{tab:localcf-model-level}
 \end{table}
@@ -948,7 +948,8 @@ To move beyond predictive accuracy and toward clinical utility, this study emplo
 \begin{table}[tbp]
     \footnotesize
     \centering
-    \begin{tabular}{rrrrlrrrr}
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabular}{ccccccccc}
         \toprule
         Model & Patient Code & Probability & Margin & Outcome & CF Count & Sparsity Mean & L1 Mean & L2 Mean \\
         \midrule

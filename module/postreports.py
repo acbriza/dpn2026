@@ -27,10 +27,16 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import seaborn as sns
 
 import ymlconfig
 
+
+# Same red/blue pair the per-patient counterfactual heatmaps use, so the two
+# figure families stay visually consistent.
+CF_DECREASE = '#B31B2E'
+CF_INCREASE = '#2367AC'
 
 SELECTION_METRIC_COLUMNS = {
     'auprc': 'AUPRC',
@@ -190,7 +196,12 @@ def consolidate_counterfactuals(config, config_path, outputdir):
             'Model': midx,
             'Candidates': len(ioi_df),
             'Misclassified': int(ioi_df.misclassified.sum()),
-            'Borderline': int((~ioi_df.misclassified).sum()),
+            # Candidates that were not misclassified. Every one of these is within
+            # threshold_delta of its fold's threshold (a candidate that is not
+            # misclassified can only have qualified via the borderline rule), so this
+            # and 'Misclassified' partition 'Candidates'. It is NOT the count of all
+            # low-confidence candidates: misclassified ones can be borderline too.
+            'Borderline (correct)': int((~ioi_df.misclassified).sum()),
             'Instances with CF': n_with_cf,
             'Sparsity Mean': np.mean(sparsity_means) if sparsity_means else np.nan,
             'L1 Mean': np.mean(l1_means) if l1_means else np.nan,
@@ -251,6 +262,178 @@ def consolidate_counterfactuals(config, config_path, outputdir):
     return instance_table, model_summary, changed_table
 
 
+def _find_instance(cf_dir, model_code, nsplits, patient_code):
+    """Locate which fold's held-out test set a patient belongs to.
+
+    Returns (split_index, instance_row). Patients are not distributed by any rule the
+    caller can compute -- the fold assignment comes from the stratified k-fold split --
+    so the only reliable way to find one is to scan each split's candidate list.
+    """
+    for midx in range(nsplits):
+        ioi_path = (cf_dir / f'split{midx}'
+                    / f'{model_code}_split{midx}_instances_of_interest.csv')
+        ioi_df = pd.read_csv(ioi_path)
+        match = ioi_df[ioi_df.patient_code == patient_code]
+        if len(match):
+            return midx, match.iloc[0]
+    raise ValueError(f'patient {patient_code} is not a counterfactual candidate in '
+                     f'any of the {nsplits} splits under {cf_dir}')
+
+
+def _load_case_changes(cf_dir, model_code, midx, patient_code, actionable_features):
+    """Read one patient's counterfactuals and return (baseline, change matrix).
+
+    Row 0 of `<prefix>_local_cf.csv` is the query instance itself and the remainder are
+    its counterfactuals, so the changes are rows 1..n minus row 0, restricted to the
+    actionable features (the file carries every column, but only these six can vary).
+
+    Rows are ordered by how many features they change, then by the size of the HbA1c
+    change, which groups the single-feature counterfactuals at the top and makes the
+    HbA1c panel read monotonically instead of in DiCE's arbitrary generation order.
+    """
+    prefix = f'{model_code}_split{midx}_patient{patient_code:03d}'
+    cf_path = (cf_dir / f'split{midx}' / 'nofiltering' / f'{patient_code:03d}'
+               / f'{prefix}_local_cf.csv')
+    df = pd.read_csv(cf_path)
+    baseline = df.iloc[0][actionable_features].astype(float)
+    changes = df.iloc[1:][actionable_features].astype(float).values - baseline.values
+    hba1c_col = actionable_features.index('HBA1C')
+    order = np.lexsort((changes[:, hba1c_col], (changes != 0).sum(axis=1)))
+    return baseline, changes[order]
+
+
+def plot_case_study_counterfactuals(config, config_path, outputdir):
+    """One combined figure for the patients the manuscript discusses individually.
+
+    Replaces the per-patient full-page reports that `cfreports.py`'s
+    `plot_local_cf_heatmap2` writes (those stay, as the per-patient diagnostic for all
+    successful instances); this is the manuscript figure, and it differs in three ways
+    that matter for reading it:
+
+    - Three patients share one figure instead of one full page each.
+    - HbA1c gets a real quantitative axis rather than a colour, and the axis is shared
+      across the panels, so HbA1c changes are comparable *between* patients. The
+      per-patient heatmap could not support that comparison: it gave each patient its
+      own colour scale.
+    - Binary features get direction glyphs rather than the same colour ramp as HbA1c.
+      A comorbidity flip and a change in HbA1c percentage points are different units,
+      and the shared diverging colormap made a 1 -> 0 insulin flip look like a larger
+      effect than a -0.23 point HbA1c change.
+
+    The patient's own profile is deliberately not drawn on the figure: the manuscript
+    states it in each case's prose, and the per-fold threshold and margin are in the
+    instance-level table, so repeating them here only cost space.
+    """
+    model_code = config.counterfactuals.model.code
+    tag = config.counterfactuals.tag
+    nsplits = config.counterfactuals.nsplits
+    actionable_features = config.counterfactuals.actionable_features.split(',')
+    case_codes = [int(c) for c in str(config.counterfactuals.case_studies).split(',')]
+    borderline_delta = config.counterfactuals.borderline_delta
+
+    binary_features = [f for f in actionable_features if f != 'HBA1C']
+    hba1c_col = actionable_features.index('HBA1C')
+    cf_dir = config_path / 'binary' / 'counterfactuals' / model_code / tag
+
+    cases = []
+    for code in case_codes:
+        midx, instance = _find_instance(cf_dir, model_code, nsplits, code)
+        baseline, changes = _load_case_changes(
+            cf_dir, model_code, midx, code, actionable_features)
+        # The threshold is not stored alongside the instance, but margin is defined as
+        # the absolute distance from it, so it is recoverable from the side the
+        # prediction fell on. Verified equal to the per-fold thresholds that the
+        # optimization stage published, on all four splits.
+        threshold = (instance.pred_proba - instance.margin if instance.pred
+                     else instance.pred_proba + instance.margin)
+        confidence = 'Borderline' if instance.margin <= borderline_delta else 'Confident'
+        outcome = f'{confidence} {_outcome(instance.actual, instance.pred).lower()}'
+        cases.append(dict(code=code, midx=midx, baseline=baseline, changes=changes,
+                          outcome=outcome, pred_proba=instance.pred_proba,
+                          threshold=threshold))
+
+    # One shared HbA1c axis across panels, so the panels can be compared to each other.
+    deltas = np.concatenate([c['changes'][:, hba1c_col] for c in cases])
+    lo, hi = min(deltas.min(), 0), max(deltas.max(), 0)
+    pad = 0.12 * (hi - lo)
+
+    # Panels are proportional to their counterfactual counts, but the figure height is
+    # per-row plus a fixed allowance per panel (title, x-axis labels) and one for the
+    # legend -- scaling the whole figure by the row count instead would leave a short
+    # panel's labels overlapping and a tall one's rows absurdly far apart.
+    heights = [len(c['changes']) for c in cases]
+    fig_height = 0.055 * sum(heights) + 0.78 * len(cases) + 0.45
+    fig = plt.figure(figsize=(6.5, fig_height))
+    gs = fig.add_gridspec(len(cases), 2, height_ratios=heights,
+                          width_ratios=[1.15, 1], hspace=0.55, wspace=0.14)
+
+    for i, case in enumerate(cases):
+        changes = case['changes']
+        n = len(changes)
+        rows = np.arange(n)
+
+        # --- HbA1c: signed magnitude on a shared axis
+        ax_hba1c = fig.add_subplot(gs[i, 0])
+        delta = changes[:, hba1c_col]
+        colors = [CF_DECREASE if v < 0 else CF_INCREASE for v in delta]
+        ax_hba1c.hlines(rows, 0, delta, color=colors, linewidth=1.5)
+        ax_hba1c.scatter(delta, rows, s=8, color=colors, zorder=3)
+        ax_hba1c.axvline(0, color='#666666', linewidth=0.8)
+        ax_hba1c.set_xlim(lo - pad, hi + pad)
+        ax_hba1c.set_ylim(n - 0.5, -0.5)
+        ax_hba1c.set_yticks([])
+        ax_hba1c.tick_params(axis='x', labelsize=6)
+        ax_hba1c.set_ylabel(f'{n} CFs', fontsize=6.5)
+        ax_hba1c.set_xlabel(
+            f"HbA1c change from {case['baseline']['HBA1C']:.4g}% (percentage points)",
+            fontsize=6.5, labelpad=1)
+        for side in ('top', 'right'):
+            ax_hba1c.spines[side].set_visible(False)
+
+        # --- Binary features: direction of the flip, one column per feature
+        ax_flips = fig.add_subplot(gs[i, 1])
+        for j, feature in enumerate(binary_features):
+            values = changes[:, actionable_features.index(feature)]
+            introduced, resolved = values > 0, values < 0
+            ax_flips.scatter(np.full(introduced.sum(), j), rows[introduced],
+                             marker='^', s=22, color=CF_INCREASE)
+            ax_flips.scatter(np.full(resolved.sum(), j), rows[resolved],
+                             marker='v', s=22, color=CF_DECREASE)
+        ax_flips.set_xlim(-0.6, len(binary_features) - 0.4)
+        ax_flips.set_ylim(n - 0.5, -0.5)
+        ax_flips.set_xticks(range(len(binary_features)))
+        ax_flips.set_xticklabels(
+            [f"{f}\n({case['baseline'][f]:.0f})" for f in binary_features], fontsize=6)
+        ax_flips.set_yticks([])
+        ax_flips.grid(axis='x', color='#E8E8E8', linewidth=0.6)
+        ax_flips.set_axisbelow(True)
+        for side in ('top', 'right', 'left'):
+            ax_flips.spines[side].set_visible(False)
+
+        ax_hba1c.text(
+            0, 1.10,
+            f"({chr(ord('a') + i)}) Patient {case['code']:03d} · Model {case['midx']} "
+            f"· {case['outcome']} · p = {case['pred_proba']:.3f}, "
+            f"threshold {case['threshold']:.3f}",
+            transform=ax_hba1c.transAxes, fontsize=8, va='bottom')
+
+    fig.legend(handles=[
+        Line2D([], [], marker='^', linestyle='', color=CF_INCREASE,
+               label='0 $\\to$ 1  introduced / started'),
+        Line2D([], [], marker='v', linestyle='', color=CF_DECREASE,
+               label='1 $\\to$ 0  resolved / stopped')],
+        loc='lower center', ncol=2, fontsize=7, frameon=False,
+        bbox_to_anchor=(0.5, -0.035))
+
+    cf_out_dir = outputdir / 'counterfactuals'
+    cf_out_dir.mkdir(parents=True, exist_ok=True)
+    path = cf_out_dir / 'case_study_counterfactuals.png'
+    fig.savefig(path, dpi=300, bbox_inches='tight')
+    plt.close(fig)
+    print(f'Wrote {path} (patients {", ".join(str(c) for c in case_codes)})')
+    return path
+
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: python postreports.py <config file>")
@@ -271,6 +454,7 @@ def main():
 
     consolidate_selection(config, config_path, outputdir)
     consolidate_counterfactuals(config, config_path, outputdir)
+    plot_case_study_counterfactuals(config, config_path, outputdir)
 
 
 if __name__ == "__main__":

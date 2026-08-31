@@ -1,0 +1,26 @@
+flowchart TB
+    A["Data Collection During Clinic Visit
+        - Profile and Commorbidities
+    - MNSI
+    - Neurological examination
+    - Sudoscan, if available"] --> B("Trained Catboost Model")
+    B -- risk probability score --> C{"difference from
+    threshold"}
+    C --> D["Comfortably below"] & E["Borderline"] & K["Way above"]
+    K --> Z(["High Priority<br>NCS referral"])
+    D --> F["Low Priority or 
+    Routine follow up"]
+    E --> G["Generate Counterfactuals
+    Search over 6 actionable features: 
+    HbA1c, insulin, HPN, PAOD, dyslipidemia, CKD"]
+    G --> G1["Clinician screens 
+    counterfactual suggestions"]
+    G1 --> H{"Any actionable CFs?"}
+    H --> I["Few or none"] & J["Several"]
+    J --> L{"real <br>intervention<br>possible?"}
+    L --> M["Yes"] & N["No"]
+    M --> O["Targeted<br>risk-factor <br>management"]
+    N --> P["General<br>risk-factor <br>management"]
+    P --> R(["Moderate Priority"])
+    I --> Z
+    O --> Q(["Rescreen"])

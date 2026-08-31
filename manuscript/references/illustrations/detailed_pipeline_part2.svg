@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="436" viewBox="0 0 540 436">
+
+<rect x="0" y="0" width="540" height="436" fill="#ffffff"/>
+
+<!-- ===================== HEADER ===================== -->
+<text x="20" y="25" font-family="Arial" font-size="18" font-weight="bold" fill="#0b0b0b">Explaining the model</text>
+<text x="20" y="42" font-family="Arial" font-size="11.5" fill="#52514e">The 4 outer-fold models of repeat 1, reused for explainability and counterfactuals</text>
+
+<!-- ===================== PANEL 4 ===================== -->
+<rect x="20" y="56" width="500" height="142" rx="6" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<text x="34" y="78" font-family="Arial" font-size="15" font-weight="bold" fill="#0b0b0b">Feature importance &amp; SHAP</text>
+<text x="250" y="78" font-family="Arial" font-size="11.5" fill="#898781">&#183; the 4 saved fold models, refit</text>
+<text x="34" y="98" font-family="Arial" font-size="13" fill="#52514e">Refit with identical params, data and seed &#8212; reproduces the</text>
+<text x="34" y="115" font-family="Arial" font-size="13" fill="#52514e">stored models and adds feature names</text>
+
+<rect x="34" y="126" width="236" height="62" rx="5" fill="#ffffff" stroke="#a3197a" stroke-width="1.5"/>
+<text x="46" y="144" font-family="Arial" font-size="13" font-weight="bold" fill="#a3197a">Feature Importance</text>
+<text x="46" y="160" font-family="Arial" font-size="12.5" fill="#52514e">get feature importance per</text>
+<text x="46" y="174" font-family="Arial" font-size="12.5" fill="#52514e">fold model &#8594; 4-model heatmap</text>
+
+<rect x="286" y="126" width="234" height="62" rx="5" fill="#ffffff" stroke="#a3197a" stroke-width="1.5"/>
+<text x="298" y="144" font-family="Arial" font-size="13" font-weight="bold" fill="#a3197a">SHAP</text>
+<text x="298" y="160" font-family="Arial" font-size="12.5" fill="#52514e">Explainer over each fold&#8217;s own</text>
+<text x="298" y="174" font-family="Arial" font-size="12.5" fill="#52514e">test fold &#8594; mean |SHAP| heatmap</text>
+
+<!-- ===================== PANEL 5 ===================== -->
+<rect x="20" y="208" width="500" height="218" rx="6" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<text x="34" y="230" font-family="Arial" font-size="15" font-weight="bold" fill="#0b0b0b">Counterfactuals (DiCE)</text>
+<text x="225" y="230" font-family="Arial" font-size="11.5" fill="#898781">&#183; the same 4 models, used as stored</text>
+<text x="34" y="250" font-family="Arial" font-size="13" fill="#52514e">Used exactly as stored &#8212; no refit. Each is wrapped with its own</text>
+<text x="34" y="267" font-family="Arial" font-size="13" fill="#52514e">tuned threshold, so DiCE decides at that cut-off, not 0.5</text>
+
+<rect x="34" y="278" width="472" height="34" rx="5" fill="#ffffff" stroke="#0b7285" stroke-width="1.5"/>
+<text x="46" y="300" font-family="Arial" font-size="13" fill="#52514e"><tspan font-weight="bold" fill="#0b7285">Instances of interest</tspan> &#8212; misclassified, or |p &#8722; threshold| &#8804; 0.08</text>
+
+<line x1="270" y1="312" x2="270" y2="320" stroke="#898781" stroke-width="1.5"/>
+<polygon points="264,320 276,320 270,327" fill="#898781"/>
+
+<rect x="34" y="328" width="472" height="34" rx="5" fill="#ffffff" stroke="#0b7285" stroke-width="1.5"/>
+<text x="46" y="350" font-family="Arial" font-size="13" fill="#52514e"><tspan font-weight="bold" fill="#0b7285">DiCE genetic search</tspan> &#8212; varies only the 6 actionable features</text>
+
+<line x1="270" y1="362" x2="270" y2="370" stroke="#898781" stroke-width="1.5"/>
+<polygon points="264,370 276,370 270,377" fill="#898781"/>
+
+<rect x="34" y="378" width="472" height="34" rx="5" fill="#ffffff" stroke="#0b7285" stroke-width="1.5"/>
+<text x="46" y="400" font-family="Arial" font-size="13" fill="#52514e"><tspan font-weight="bold" fill="#0b7285">Outputs</tspan> &#8212; local CFs + global CF importance</text>
+
+</svg>

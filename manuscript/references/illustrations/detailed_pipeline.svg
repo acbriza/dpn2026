@@ -1,0 +1,185 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="650" height="898" viewBox="0 0 650 898">
+
+<rect x="0" y="0" width="650" height="898" fill="#ffffff"/>
+
+<!-- ===================== HEADER ===================== -->
+<text x="20" y="24" font-family="Arial" font-size="17" font-weight="bold" fill="#0b0b0b">From cohort to counterfactuals</text>
+<text x="20" y="40" font-family="Arial" font-size="11.5" fill="#52514e">How the CatBoost model is trained, tuned, evaluated and explained &#183; 187 patients &#183; random seed 42</text>
+
+<rect x="20" y="48" width="10" height="10" rx="2" fill="#2a78d6"/>
+<text x="34" y="57" font-family="Arial" font-size="11" fill="#52514e">used to fit</text>
+<rect x="112" y="48" width="10" height="10" rx="2" fill="#1baf7a"/>
+<text x="126" y="57" font-family="Arial" font-size="11" fill="#52514e">inner validation</text>
+<rect x="232" y="48" width="10" height="10" rx="2" fill="#eb6834"/>
+<text x="246" y="57" font-family="Arial" font-size="11" fill="#52514e">outer test (held out)</text>
+<rect x="380" y="48" width="10" height="10" rx="2" fill="#4a3aa7"/>
+<text x="394" y="57" font-family="Arial" font-size="11" fill="#52514e">search / decision</text>
+
+<!-- ===================== PANEL 1 : WHICH PATIENTS ARE HELD OUT ===================== -->
+<rect x="20" y="68" width="610" height="126" rx="6" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<text x="34" y="88" font-family="Arial" font-size="14.5" font-weight="bold" fill="#0b0b0b">Which patients are held out</text>
+<text x="34" y="104" font-family="Arial" font-size="11.5" fill="#898781">Repeated Stratified K-Fold: 4 folds &#215; 10 repeats = 40 outer iterations</text>
+
+<rect x="34" y="112" width="108" height="15" rx="3" fill="#eb6834"/>
+<rect x="146" y="112" width="108" height="15" rx="3" fill="#2a78d6"/>
+<rect x="258" y="112" width="108" height="15" rx="3" fill="#2a78d6"/>
+<rect x="370" y="112" width="108" height="15" rx="3" fill="#2a78d6"/>
+<text x="88" y="123" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">test</text>
+<text x="200" y="123" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="312" y="123" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="424" y="123" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+
+<rect x="34" y="130" width="108" height="15" rx="3" fill="#2a78d6"/>
+<rect x="146" y="130" width="108" height="15" rx="3" fill="#eb6834"/>
+<rect x="258" y="130" width="108" height="15" rx="3" fill="#2a78d6"/>
+<rect x="370" y="130" width="108" height="15" rx="3" fill="#2a78d6"/>
+<text x="88" y="141" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="200" y="141" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">test</text>
+<text x="312" y="141" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="424" y="141" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+
+<rect x="34" y="148" width="108" height="15" rx="3" fill="#2a78d6"/>
+<rect x="146" y="148" width="108" height="15" rx="3" fill="#2a78d6"/>
+<rect x="258" y="148" width="108" height="15" rx="3" fill="#eb6834"/>
+<rect x="370" y="148" width="108" height="15" rx="3" fill="#2a78d6"/>
+<text x="88" y="159" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="200" y="159" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="312" y="159" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">test</text>
+<text x="424" y="159" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+
+<rect x="34" y="166" width="108" height="15" rx="3" fill="#2a78d6"/>
+<rect x="146" y="166" width="108" height="15" rx="3" fill="#2a78d6"/>
+<rect x="258" y="166" width="108" height="15" rx="3" fill="#2a78d6"/>
+<rect x="370" y="166" width="108" height="15" rx="3" fill="#eb6834"/>
+<text x="88" y="177" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="200" y="177" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="312" y="177" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="424" y="177" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">test</text>
+
+<rect x="498" y="120" width="118" height="48" rx="5" fill="#ffffff" stroke="#898781" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="557" y="142" font-family="Arial" font-size="15" font-weight="bold" fill="#0b0b0b" text-anchor="middle">&#215;10</text>
+<text x="557" y="157" font-family="Arial" font-size="10.5" fill="#52514e" text-anchor="middle">repeats</text>
+
+<!-- ===================== PANEL 2 : WHICH TRAINING PATIENTS TUNE THE MODEL ===================== -->
+<rect x="20" y="204" width="610" height="214" rx="6" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<text x="34" y="224" font-family="Arial" font-size="14.5" font-weight="bold" fill="#0b0b0b">Which training patients tune the model</text>
+<text x="34" y="240" font-family="Arial" font-size="11.5" fill="#898781">Stratified K-Fold: 3-fold, outer-training set only</text>
+
+<rect x="34" y="250" width="332" height="15" rx="3" fill="#2a78d6"/>
+<text x="200" y="261" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">outer-training set</text>
+<line x1="200" y1="268" x2="200" y2="276" stroke="#898781" stroke-width="2"/>
+<polygon points="194,276 206,276 200,282" fill="#898781"/>
+
+<rect x="34" y="286" width="108" height="15" rx="3" fill="#1baf7a"/>
+<rect x="146" y="286" width="108" height="15" rx="3" fill="#2a78d6"/>
+<rect x="258" y="286" width="108" height="15" rx="3" fill="#2a78d6"/>
+<text x="88" y="297" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">val</text>
+<text x="200" y="297" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="312" y="297" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+
+<rect x="34" y="304" width="108" height="15" rx="3" fill="#2a78d6"/>
+<rect x="146" y="304" width="108" height="15" rx="3" fill="#1baf7a"/>
+<rect x="258" y="304" width="108" height="15" rx="3" fill="#2a78d6"/>
+<text x="88" y="315" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="200" y="315" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">val</text>
+<text x="312" y="315" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+
+<rect x="34" y="322" width="108" height="15" rx="3" fill="#2a78d6"/>
+<rect x="146" y="322" width="108" height="15" rx="3" fill="#2a78d6"/>
+<rect x="258" y="322" width="108" height="15" rx="3" fill="#1baf7a"/>
+<text x="88" y="333" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="200" y="333" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">train</text>
+<text x="312" y="333" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">val</text>
+
+<rect x="34" y="348" width="582" height="54" rx="5" fill="#ffffff" stroke="#4a3aa7" stroke-width="1.5"/>
+<text x="46" y="366" font-family="Arial" font-size="13" font-weight="bold" fill="#4a3aa7">Optuna TPE &#8212; 100 trials per outer iteration</text>
+<text x="46" y="382" font-family="Arial" font-size="12.9" fill="#0b0b0b">Objective: mean AUPRC across the 3 validation folds</text>
+<text x="46" y="397" font-family="Arial" font-size="12.9" fill="#52514e">Tunes: depth &#183; learning rate &#183; L2 leaf regularization &#183; positive-class weight</text>
+
+<!-- ===== CONNECTOR: PANEL 2 -> PANEL 3 ===== -->
+<line x1="40" y1="418" x2="40" y2="438" stroke="#898781" stroke-width="1.5"/>
+<polygon points="36,438 44,438 40,446" fill="#898781"/>
+<text x="54" y="434" font-family="Arial" font-size="11.5" fill="#52514e">carried forward: winning hyperparameters + the same 3 inner splits</text>
+
+<!-- ===================== PANEL 3 : REFIT / THRESHOLD / EVAL ===================== -->
+<rect x="20" y="446" width="610" height="178" rx="6" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
+<text x="34" y="466" font-family="Arial" font-size="14.5" font-weight="bold" fill="#0b0b0b">Refit, threshold selection, and outer-test evaluation</text>
+<text x="460" y="466" font-family="Arial" font-size="11.5" fill="#898781">&#183; per outer iteration</text>
+
+<rect x="34" y="478" width="496" height="36" rx="5" fill="#ffffff" stroke="#2a78d6" stroke-width="1.5"/>
+<text x="46" y="494" font-family="Arial" font-size="13" font-weight="bold" fill="#2a78d6">1 &#183; Refit</text>
+<text x="46" y="508" font-family="Arial" font-size="12.9" fill="#52514e">Winning params refit on the full outer-training set</text>
+
+<rect x="34" y="526" width="262" height="36" rx="5" fill="#ffffff" stroke="#1baf7a" stroke-width="1.5"/>
+<text x="46" y="542" font-family="Arial" font-size="13" font-weight="bold" fill="#1baf7a">2 &#183; Out-of-fold scores</text>
+<text x="46" y="556" font-family="Arial" font-size="12.9" fill="#52514e">One held-out score per patient</text>
+
+<line x1="296" y1="544" x2="304" y2="544" stroke="#898781" stroke-width="1.5"/>
+<polygon points="304,540 304,548 312,544" fill="#898781"/>
+
+<rect x="312" y="526" width="218" height="36" rx="5" fill="#ffffff" stroke="#4a3aa7" stroke-width="1.5"/>
+<text x="324" y="542" font-family="Arial" font-size="13" font-weight="bold" fill="#4a3aa7">3 &#183; Decision threshold</text>
+<text x="324" y="556" font-family="Arial" font-size="12.9" fill="#52514e">Maximize F1 on the OOF curve</text>
+
+<line x1="530" y1="496" x2="560" y2="496" stroke="#898781" stroke-width="1.5"/>
+<line x1="530" y1="544" x2="560" y2="544" stroke="#898781" stroke-width="1.5"/>
+<line x1="560" y1="496" x2="560" y2="592" stroke="#898781" stroke-width="1.5"/>
+<line x1="560" y1="592" x2="538" y2="592" stroke="#898781" stroke-width="1.5"/>
+<polygon points="538,588 538,596 530,592" fill="#898781"/>
+
+<rect x="34" y="574" width="496" height="36" rx="5" fill="#ffffff" stroke="#eb6834" stroke-width="1.5"/>
+<text x="46" y="590" font-family="Arial" font-size="13" font-weight="bold" fill="#eb6834">4 &#183; Outer-test evaluation</text>
+<text x="46" y="604" font-family="Arial" font-size="12.9" fill="#52514e">Refit model + its threshold scored once &#8594; performance metrics and plots</text>
+
+<!-- ===== CONNECTOR: PANEL 3 -> EXPLANATION PANEL ===== -->
+<line x1="40" y1="624" x2="40" y2="632" stroke="#898781" stroke-width="1.5"/>
+<polygon points="36,632 44,632 40,640" fill="#898781"/>
+
+<!-- ===================== PANEL 4 : EXPLAINING THE MODEL (WRAPPER) ===================== -->
+<rect x="20" y="640" width="610" height="250" rx="6" fill="#eeede8" stroke="#cfcec6" stroke-width="1"/>
+<text x="34" y="660" font-family="Arial" font-size="14.5" font-weight="bold" fill="#0b0b0b">Explaining the model</text>
+<text x="196" y="660" font-family="Arial" font-size="11.5" fill="#898781">&#183; repeat 1 only: its 4 fold models and thresholds, saved and reused</text>
+
+<!-- --- sub-panel A : feature importance &amp; SHAP --- -->
+<rect x="32" y="668" width="586" height="103" rx="5" fill="#f9f9f7" stroke="#dedcd4" stroke-width="1"/>
+<text x="44" y="686" font-family="Arial" font-size="13" font-weight="bold" fill="#0b0b0b">Feature importance &amp; SHAP</text>
+<text x="232" y="686" font-family="Arial" font-size="11.5" fill="#898781">&#183; the 4 fold models, refit</text>
+<text x="44" y="701" font-family="Arial" font-size="12.3" fill="#52514e">Refit with identical params, data and seed &#8212; reproduces the stored models</text>
+
+<rect x="44" y="709" width="280" height="54" rx="5" fill="#ffffff" stroke="#a3197a" stroke-width="1.5"/>
+<text x="56" y="726" font-family="Arial" font-size="12.9" font-weight="bold" fill="#a3197a">Feature Importance</text>
+<text x="56" y="740" font-family="Arial" font-size="12.3" fill="#52514e">get feature importance per</text>
+<text x="56" y="754" font-family="Arial" font-size="12.3" fill="#52514e">fold model &#8594; 4-model heatmap</text>
+
+<rect x="338" y="709" width="268" height="54" rx="5" fill="#ffffff" stroke="#a3197a" stroke-width="1.5"/>
+<text x="350" y="726" font-family="Arial" font-size="12.9" font-weight="bold" fill="#a3197a">SHAP</text>
+<text x="350" y="740" font-family="Arial" font-size="12.3" fill="#52514e">Explainer over each fold&#8217;s own</text>
+<text x="350" y="754" font-family="Arial" font-size="12.3" fill="#52514e">test fold &#8594; mean |SHAP| heatmap</text>
+
+<!-- --- sub-panel B : counterfactuals --- -->
+<rect x="32" y="779" width="586" height="101" rx="5" fill="#f9f9f7" stroke="#dedcd4" stroke-width="1"/>
+<text x="44" y="797" font-family="Arial" font-size="13" font-weight="bold" fill="#0b0b0b">Counterfactuals (DiCE)</text>
+<text x="210" y="797" font-family="Arial" font-size="11.5" fill="#898781">&#183; the same 4 models, used as stored &#8212; no refit</text>
+<text x="44" y="812" font-family="Arial" font-size="12.3" fill="#52514e">Each wrapped with its own tuned threshold, so DiCE decides at that cut-off, not 0.5</text>
+
+<rect x="44" y="820" width="166" height="52" rx="5" fill="#ffffff" stroke="#0b7285" stroke-width="1.5"/>
+<text x="56" y="836" font-family="Arial" font-size="12.9" font-weight="bold" fill="#0b7285">Instances of interest</text>
+<text x="56" y="850" font-family="Arial" font-size="11.8" fill="#52514e">misclassified, or</text>
+<text x="56" y="864" font-family="Arial" font-size="11.8" fill="#52514e">|p &#8722; threshold| &#8804; 0.08</text>
+
+<line x1="210" y1="846" x2="218" y2="846" stroke="#898781" stroke-width="1.5"/>
+<polygon points="218,842 218,850 226,846" fill="#898781"/>
+
+<rect x="226" y="820" width="150" height="52" rx="5" fill="#ffffff" stroke="#0b7285" stroke-width="1.5"/>
+<text x="238" y="836" font-family="Arial" font-size="12.9" font-weight="bold" fill="#0b7285">DiCE genetic search</text>
+<text x="238" y="850" font-family="Arial" font-size="11.8" fill="#52514e">varies only the 6</text>
+<text x="238" y="864" font-family="Arial" font-size="11.8" fill="#52514e">actionable features</text>
+
+<line x1="376" y1="846" x2="384" y2="846" stroke="#898781" stroke-width="1.5"/>
+<polygon points="384,842 384,850 392,846" fill="#898781"/>
+
+<rect x="392" y="820" width="214" height="52" rx="5" fill="#ffffff" stroke="#0b7285" stroke-width="1.5"/>
+<text x="404" y="836" font-family="Arial" font-size="12.9" font-weight="bold" fill="#0b7285">Outputs per fold</text>
+<text x="404" y="857" font-family="Arial" font-size="11.8" fill="#52514e">local CFs + global CF importance</text>
+
+</svg>

@@ -264,7 +264,7 @@ The full list of features, their groupings, description, and code are shown in T
 This study was approved by the local Institutional Ethics Review Board and all subjects gave their written consent prior to participating.
 
 % Table of Features, Codes, Description % =======================================
-\begin{table}[!ht]
+\begin{table}[!tbp]
     \centering
     \footnotesize
     \caption{\textbf{Clinical variable codes.} Variable codes used throughout this manuscript, organized by feature group, with a plain-language description of each. Nerve conduction study (NCS) variables are reported bilaterally and are shown as mirrored left/right code pairs sharing one description.}
@@ -333,7 +333,7 @@ This study was approved by the local Institutional Ethics Review Board and all s
 Table~\ref{tab:cohort} reports the baseline characteristics of the 187 analyzed patients for each of the 22 candidate predictors, stratified by Confirmed and Unconfirmed DPN status, together with each variable's univariable effect size (AUC for continuous features, odds ratio for binary features) and Benjamini--Hochberg-corrected significance. The four neurological examination signs and diabetes mellitus duration showed the strongest univariable associations with confirmed DPN, while comorbidities other than hypertension were weakly and inconsistently associated with the outcome. The full per-patient distributions underlying these summary statistics are shown for the continuous and binary predictors in Figures~\ref{fig:s1} and~\ref{fig:s2} (Appendix), respectively; the provenance and completeness of the underlying data are detailed in Table~\ref{tab:s1_provenance} (Appendix).
 
 % Table 1 -- Cohort characteristics by DPN status % =======================================
-\begin{table}[!ht]
+\begin{table}[!tbp]
     \centering
     \footnotesize
     \caption{\textbf{Characteristics of the analyzed cohort, by diabetic peripheral neuropathy status.} Values are shown for all 187 analyzed patients and separately for the 57 Unconfirmed and 130 Confirmed patients, for each of the 22 candidate predictors available to the models.}
@@ -456,7 +456,7 @@ In addition, multicollinearity among the 22 candidate predictors was addressed u
 %=======================================
 % Feature Selection
 %=======================================
-\begin{table}[h!]
+\begin{table}[tbp]
     \centering
     \small
     \begin{tabular}{ll}
@@ -557,7 +557,7 @@ Table~\ref{tab:cf_features} shows the feature set and their suitability for coun
 % =======================================
 % Table of Counterfactual Features
 % =======================================
-\begin{table}[h!]
+\begin{table}[tbp]
     \centering
     \footnotesize
     \begin{tabular}{p{0.1\linewidth} p{0.25\linewidth} p{0.1\linewidth} p{0.35\linewidth}}
@@ -607,7 +607,7 @@ where $x_{min}$ and $x_{max}$ denote the observed minimum and maximum values, re
 % =======================================
 % DICE General Configuration
 % =======================================
-\begin{table}[h!]
+\begin{table}[tbp]
     \centering
     \small
     \begin{tabular}{lll}
@@ -653,7 +653,7 @@ where, as for the global range, $\sigma$ is each feature's standard deviation ov
 %=========================================================
 The parameters used for local counterfactual generation are summarized in Table~\ref{tab:local_cf}. The selected parameters balance proximity, diversity, and sparsity, ensuring that generated counterfactuals are close to the original instances, sufficiently varied, and involve minimal feature changes. This results in actionable and interpretable explanations suitable for clinical applications.
 
-\begin{table}[h!]
+\begin{table}[tbp]
     \centering
     \small
     \begin{tabular}{ll}
@@ -805,7 +805,7 @@ Taken together, these repeated cross-validation results establish that CatBoost'
 
 % CatBoost Repeated k-fold Performance Metrics for 40 Total Runs
 %---------------------------------------------------------------
-\begin{table}[t]
+\begin{table}[tbp]
     \centering
     \footnotesize
     \begin{tabular}{llrrrr}
@@ -845,7 +845,7 @@ The F1-scores, ranging from 0.774 to 0.879 (mean: 0.842), and AUPRC values rangi
 
 % CatBoost Performance Metrics for the 4 Models During the First Repeat of 10 Repeats
 %--------------------------------------------%---------------------------------------
-\begin{table}[t]
+\begin{table}[tbp]
     \centering
     \footnotesize
     \begin{tabular}{llcccccc}
@@ -925,7 +925,7 @@ To move beyond predictive accuracy and toward clinical utility, this study emplo
 
 % Local CF Summary Across Models
 % -------------------------------
-\begin{table}[h]
+\begin{table}[tbp]
     \footnotesize
     \centering
     \begin{tabular}{rrrrrrrr}
@@ -945,7 +945,7 @@ To move beyond predictive accuracy and toward clinical utility, this study emplo
 
 % Local CF Details Across Models
 % -------------------------------
-\begin{table}[h]
+\begin{table}[tbp]
     \footnotesize
     \centering
     \begin{tabular}{rrrrlrrrr}
@@ -995,7 +995,7 @@ Two further rules apply throughout. First, direction is a necessary but not a su
 % =======================================
 % Table of Counterfactual Change Readings
 % =======================================
-\begin{table}[h!]
+\begin{table}[tbp]
     \centering
     \footnotesize
     \begin{tabular}{p{0.17\linewidth} p{0.36\linewidth} p{0.36\linewidth}}
@@ -1078,7 +1078,7 @@ At this point we analyze counterfactuals for all models on the aggregate level. 
 
 %  Local CF Change Features Across Models
 % ---------------------------------------
-\begin{table}[h]
+\begin{table}[tbp]
     \footnotesize
     \centering
     \begin{tabular}{llrrrrrrr}
@@ -1128,12 +1128,13 @@ The case studies and aggregate patterns above suggest a concrete, low-burden way
 
 We emphasize, as throughout this Discussion, that this workflow is a proposal for how the pipeline's outputs could support clinical decision-making, not a validated clinical protocol: the risk score and the counterfactual are decision-support inputs, and the referral or treatment decision remains the clinician's.
 
-\begin{figure}[h]
+\begin{figure}[p]
     \centering
     \includegraphics[width=0.99\textwidth]{references/illustrations/clinician_workflow_flow_compact.pdf}
     \caption{Proposed clinician workflow combining the CatBoost risk score with DiCE counterfactual review. Node color denotes role: teal for data (collected at the visit, or the stored fold-calibrated threshold), purple for automated computation, white diamonds for decision points, orange for steps a clinician performs, and blue for the four outcome states. Data collection requires only routinely collected clinical data. Counterfactual generation is reached only by patients whose score is borderline; those far above the threshold are referred directly. Screening the counterfactual suggestions requires clinician judgment to separate actionable proposals (e.g., glycemic control) from proposals that are not real interventions (e.g., introducing a comorbidity). This workflow is a proposal, not a validated or deployed clinical protocol: the risk score and the counterfactual are decision-support inputs, and the referral or treatment decision remains the clinician's (Section~\ref{sec:limitations}).}
     \label{fig:clinician_workflow}
 \end{figure}
+\clearpage
 
 \subsection{Limitations}
 %***********************
@@ -1296,7 +1297,7 @@ of the six counterfactual-actionable features discussed alongside Figure~\ref{fi
 \clearpage
 
 % ===================== Table S1 =====================
-\begin{table}[!ht]
+\begin{table}[!tbp]
     \centering
     \footnotesize
     \caption{\textbf{Data provenance and completeness.} Every alteration applied between

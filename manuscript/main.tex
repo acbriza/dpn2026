@@ -400,15 +400,15 @@ Figure~\ref{fig:univariable_discrimination} places these per-feature association
 
 % \textbf{Ethical approval declarations} (only required where applicable) Any article reporting experiment/s carried out on (i)~live vertebrate (or higher invertebrates), (ii)~humans or (iii)~human samples must include an unambiguous statement within the methods section that meets the following requirements: 
 
-This section describes the machine learning model development pipeline and the counterfactual generation methodology. The pipeline comprises five stages: model/feature-set selection, hyperparameter optimization, explainability analysis, counterfactual generation, and exploratory data analysis. Every quantitative claim in this section and in the Discussion derives from one of these five stages, which are summarised in Figure~\ref{fig:pipeline_overview}.
+This section describes the machine learning model development pipeline and the counterfactual generation methodology. The pipeline comprises five stages: model/feature-set selection, hyperparameter optimization, explainability analysis, counterfactual generation, and exploratory data analysis. Every quantitative claim in this section and in the Discussion derives from one of these five stages. Figure~\ref{fig:pipeline_overview} traces the path from the patient cohort to the counterfactual explanations across the three stages that operate on the selected model -- hyperparameter optimization, explainability analysis, and counterfactual generation -- and is expanded stage by stage in the subsections below.
 
-% Figure -- General pipeline overview % =======================================
-\begin{figure*}[h]
+% Figure -- Detailed pipeline: training, tuning, evaluation, explanation % ==============
+\begin{figure}[p]
     \centering
-    \includegraphics[width=\textwidth]{references/illustrations/pipeline_overview.pdf}
-    \caption{Overview of the five-stage modelling pipeline. Nerve conduction study (NCS) features are excluded before the first stage because they enter the diagnostic reference standard (Table~\ref{tab:clinical_data}). Selection benchmarks 14 algorithms across 12 feature sets under repeated stratified 4-fold cross-validation and identifies CatBoost on the full feature set as the model carried forward. Hyperparameter optimization performs a nested cross-validation search for CatBoost only (Figure~\ref{fig:nested_cv}); its first cross-validation repeat is saved and reused, without refitting, by both later stages. Explainability retrains the four saved fold models to characterise feature importance, SHAP attributions, discrimination, calibration, and clinical utility. Counterfactual generation applies DiCE to the same four saved fold models (Figure~\ref{fig:counterfactual_generation}) to produce patient-level, actionable explanations.}
+    \includegraphics[width=0.95\textwidth]{references/illustrations/detailed_pipeline.pdf}
+    \caption{The CatBoost model lifecycle, from cohort to counterfactuals. An outer repeated stratified $k$-fold loop (4 folds $\times$ 10 repeats) supplies the held-out test folds; an inner 3-fold split of each outer-training set drives a 100-trial Optuna TPE search. The winning configuration is refit on the outer-training set, thresholded by maximising F1 on the out-of-fold precision--recall curve, then scored once on the outer test fold. The first repeat's four fold models are saved and reused: refit identically for feature importance and SHAP, and used as stored -- each at its own tuned threshold -- for DiCE counterfactual generation over the six actionable features (Figure~\ref{fig:counterfactual_generation}).}
     \label{fig:pipeline_overview}
-\end{figure*}
+\end{figure}
 
 \subsection{Machine Learning Modeling}
 %*************************************
@@ -516,15 +516,7 @@ Class imbalance itself is handled inside the model rather than by resampling the
 %==========================================
 \label{sec:hpo}
 
-CatBoost, selected on the full feature set as described in Section~\ref{sec:modelselection}, was carried forward to nested cross-validation hyperparameter optimization (Figure~\ref{fig:nested_cv}). An \textit{outer} repeated stratified $k$-fold loop -- $k=4$ folds $\times$ 10 repeats, 40 outer iterations, under a fixed random seed -- provides the training/test partitions over which final performance is reported; nested inside every one of those 40 outer iterations, an \textit{inner} stratified $k$-fold loop ($k=3$) partitions that iteration's outer-training set only, and is used exclusively for hyperparameter search. These two loops serve different purposes and operate on different data, which is the mechanism described in Section~\ref{sec:leakage}.
-
-% Figure -- Nested cross-validation for hyperparameter optimization % =======================================
-\begin{figure*}[h]
-    \centering
-    \includegraphics[width=\textwidth]{references/illustrations/nested_cv_optimization_compact.pdf}
-    \caption{Nested cross-validation for CatBoost hyperparameter optimization. The outer repeated stratified $k$-fold loop (4 folds $\times$ 10 repeats = 40 iterations) supplies the train/test partitions over which performance is ultimately reported; within each outer iteration, the inner stratified $k$-fold loop ($k=3$) partitions the outer-training set only, and an Optuna TPE search of 100 trials tunes tree depth, learning rate, $L_2$ leaf regularisation, and the positive-class weight against the mean inner-validation AUPRC. The winning configuration is refit on the full outer-training set, an out-of-fold decision threshold is selected by maximising F1 on the inner out-of-fold precision--recall curve, and only then is the outer test fold touched, exactly once, to record the 13 metrics of Table~\ref{tab:optimization_metrics_40repeats}. The outer test fold (orange) is never seen during search, refitting, or threshold selection -- the property that licenses treating its metrics as an out-of-sample estimate (Section~\ref{sec:leakage}).}
-    \label{fig:nested_cv}
-\end{figure*}
+CatBoost, selected on the full feature set as described in Section~\ref{sec:modelselection}, was carried forward to nested cross-validation hyperparameter optimization (Figure~\ref{fig:pipeline_overview}, upper panels). An \textit{outer} repeated stratified $k$-fold loop -- $k=4$ folds $\times$ 10 repeats, 40 outer iterations, under a fixed random seed -- provides the training/test partitions over which final performance is reported; nested inside every one of those 40 outer iterations, an \textit{inner} stratified $k$-fold loop ($k=3$) partitions that iteration's outer-training set only, and is used exclusively for hyperparameter search. These two loops serve different purposes and operate on different data, which is the mechanism described in Section~\ref{sec:leakage}.
 
 Within each outer iteration, an Optuna Tree-structured Parzen Estimator (TPE) sampler ran 100 trials, each fitting three CatBoost models -- one per inner fold -- and scoring the trial by the mean AUPRC across those three inner validation folds. Four hyperparameters were searched: tree depth (4--10, integer), learning rate (0.003--0.3, log-uniform), $L_2$ leaf regularisation (1.0--10.0, uniform), and the positive-class weight (0.3--1.0, uniform; Section~\ref{sec:classimbalance}). All other CatBoost settings were held constant across every trial, fold, and repeat: a logistic loss function, AUC as the evaluation metric, a maximum of 500 boosting iterations, and early stopping after 50 rounds without improvement.
 

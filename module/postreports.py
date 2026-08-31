@@ -126,6 +126,25 @@ def _plot_global_cf_heatmap(df, path, title, vmin, vmax, fmt=".2f"):
     plt.close(fig)
 
 
+def _read_cf_distances(dist_path):
+    """One patient's counterfactual distances, without the query instance.
+
+    generate_diverse_cfs pools its counterfactuals into a frame whose first row is the
+    query instance itself ("include instance values in the report"), and that row
+    survives into the distances file as cf_row 0 with sparsity/L1/L2 all zero. It is
+    not a counterfactual: counting it inflates every CF Count by one, and averaging it
+    in pulls every sparsity/L1/L2 mean toward zero. Drop it here rather than at the
+    source, so the per-patient artifacts keep showing the baseline they are read
+    against.
+    """
+    dist_df = pd.read_csv(dist_path).set_index('cf_row')
+    query = dist_df.loc[0]
+    if query.sparsity != 0:
+        raise ValueError(f'{dist_path}: cf_row 0 was expected to be the query instance '
+                         f'(sparsity 0) but changes {int(query.sparsity)} features')
+    return dist_df.drop(index=0)
+
+
 def consolidate_counterfactuals(config, config_path, outputdir):
     """Cross-model instance-level and aggregate counterfactual tables/figures:
     - cf_fulltable: one row per patient instance that produced counterfactuals
@@ -163,7 +182,7 @@ def consolidate_counterfactuals(config, config_path, outputdir):
                 # candidate instance never produced usable counterfactuals
                 continue
 
-            dist_df = pd.read_csv(dist_path)
+            dist_df = _read_cf_distances(dist_path)
             cf_count = len(dist_df)
             sparsity_mean = dist_df['sparsity'].mean()
             l1_mean = dist_df['L1_dist'].mean()

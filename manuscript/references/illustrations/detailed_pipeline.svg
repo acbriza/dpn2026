@@ -9,16 +9,16 @@
 <rect x="20" y="48" width="10" height="10" rx="2" fill="#2a78d6"/>
 <text x="34" y="57" font-family="Arial" font-size="11" fill="#52514e">used to fit</text>
 <rect x="112" y="48" width="10" height="10" rx="2" fill="#1baf7a"/>
-<text x="126" y="57" font-family="Arial" font-size="11" fill="#52514e">inner validation</text>
+<text x="126" y="57" font-family="Arial" font-size="11" fill="#52514e">tuning validation</text>
 <rect x="232" y="48" width="10" height="10" rx="2" fill="#eb6834"/>
-<text x="246" y="57" font-family="Arial" font-size="11" fill="#52514e">outer test (held out)</text>
+<text x="246" y="57" font-family="Arial" font-size="11" fill="#52514e">test set (held out)</text>
 <rect x="380" y="48" width="10" height="10" rx="2" fill="#4a3aa7"/>
 <text x="394" y="57" font-family="Arial" font-size="11" fill="#52514e">search / decision</text>
 
 <!-- ===================== PANEL 1 : WHICH PATIENTS ARE HELD OUT ===================== -->
 <rect x="20" y="68" width="610" height="126" rx="6" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
 <text x="34" y="88" font-family="Arial" font-size="14.5" font-weight="bold" fill="#0b0b0b">Which patients are held out</text>
-<text x="34" y="104" font-family="Arial" font-size="11.5" fill="#898781">Repeated Stratified K-Fold: 4 folds &#215; 10 repeats = 40 outer iterations</text>
+<text x="34" y="104" font-family="Arial" font-size="11.5" fill="#898781">Repeated Stratified K-Fold: 4 folds &#215; 10 repeats = 40 train/test splits</text>
 
 <rect x="34" y="112" width="108" height="15" rx="3" fill="#eb6834"/>
 <rect x="146" y="112" width="108" height="15" rx="3" fill="#2a78d6"/>
@@ -63,10 +63,10 @@
 <!-- ===================== PANEL 2 : WHICH TRAINING PATIENTS TUNE THE MODEL ===================== -->
 <rect x="20" y="204" width="610" height="214" rx="6" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
 <text x="34" y="224" font-family="Arial" font-size="14.5" font-weight="bold" fill="#0b0b0b">Which training patients tune the model</text>
-<text x="34" y="240" font-family="Arial" font-size="11.5" fill="#898781">Stratified K-Fold: 3-fold, outer-training set only</text>
+<text x="34" y="240" font-family="Arial" font-size="11.5" fill="#898781">Stratified K-Fold: 3-fold, training set only</text>
 
 <rect x="34" y="250" width="332" height="15" rx="3" fill="#2a78d6"/>
-<text x="200" y="261" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">outer-training set</text>
+<text x="200" y="261" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">training set</text>
 <line x1="200" y1="268" x2="200" y2="276" stroke="#898781" stroke-width="2"/>
 <polygon points="194,276 206,276 200,282" fill="#898781"/>
 
@@ -92,23 +92,23 @@
 <text x="312" y="333" font-family="Arial" font-size="10.5" fill="#ffffff" text-anchor="middle">val</text>
 
 <rect x="34" y="348" width="582" height="54" rx="5" fill="#ffffff" stroke="#4a3aa7" stroke-width="1.5"/>
-<text x="46" y="366" font-family="Arial" font-size="13" font-weight="bold" fill="#4a3aa7">Optuna TPE &#8212; 100 trials per outer iteration</text>
-<text x="46" y="382" font-family="Arial" font-size="12.9" fill="#0b0b0b">Objective: mean AUPRC across the 3 validation folds</text>
+<text x="46" y="366" font-family="Arial" font-size="13" font-weight="bold" fill="#4a3aa7">Optuna TPE &#8212; 100 trials per train/test split</text>
+<text x="46" y="382" font-family="Arial" font-size="12.9" fill="#0b0b0b">Objective: mean AUPRC across the 3 tuning folds</text>
 <text x="46" y="397" font-family="Arial" font-size="12.9" fill="#52514e">Tunes: depth &#183; learning rate &#183; L2 leaf regularization &#183; positive-class weight</text>
 
 <!-- ===== CONNECTOR: PANEL 2 -> PANEL 3 ===== -->
 <line x1="40" y1="418" x2="40" y2="438" stroke="#898781" stroke-width="1.5"/>
 <polygon points="36,438 44,438 40,446" fill="#898781"/>
-<text x="54" y="434" font-family="Arial" font-size="11.5" fill="#52514e">carried forward: winning hyperparameters + the same 3 inner splits</text>
+<text x="54" y="434" font-family="Arial" font-size="11.5" fill="#52514e">carried forward: winning hyperparameters + the same 3 tuning folds</text>
 
 <!-- ===================== PANEL 3 : REFIT / THRESHOLD / EVAL ===================== -->
 <rect x="20" y="446" width="610" height="178" rx="6" fill="#f7f7f5" stroke="#d8d7d0" stroke-width="1"/>
-<text x="34" y="466" font-family="Arial" font-size="14.5" font-weight="bold" fill="#0b0b0b">Refit, threshold selection, and outer-test evaluation</text>
-<text x="460" y="466" font-family="Arial" font-size="11.5" fill="#898781">&#183; per outer iteration</text>
+<text x="34" y="466" font-family="Arial" font-size="14.5" font-weight="bold" fill="#0b0b0b">Refit, threshold selection, and test-set evaluation</text>
+<text x="460" y="466" font-family="Arial" font-size="11.5" fill="#898781">&#183; per train/test split</text>
 
 <rect x="34" y="478" width="496" height="36" rx="5" fill="#ffffff" stroke="#2a78d6" stroke-width="1.5"/>
 <text x="46" y="494" font-family="Arial" font-size="13" font-weight="bold" fill="#2a78d6">1 &#183; Refit</text>
-<text x="46" y="508" font-family="Arial" font-size="12.9" fill="#52514e">Winning params refit on the full outer-training set</text>
+<text x="46" y="508" font-family="Arial" font-size="12.9" fill="#52514e">Winning params refit on the full training set</text>
 
 <rect x="34" y="526" width="262" height="36" rx="5" fill="#ffffff" stroke="#1baf7a" stroke-width="1.5"/>
 <text x="46" y="542" font-family="Arial" font-size="13" font-weight="bold" fill="#1baf7a">2 &#183; Out-of-fold scores</text>
@@ -128,7 +128,7 @@
 <polygon points="538,588 538,596 530,592" fill="#898781"/>
 
 <rect x="34" y="574" width="496" height="36" rx="5" fill="#ffffff" stroke="#eb6834" stroke-width="1.5"/>
-<text x="46" y="590" font-family="Arial" font-size="13" font-weight="bold" fill="#eb6834">4 &#183; Outer-test evaluation</text>
+<text x="46" y="590" font-family="Arial" font-size="13" font-weight="bold" fill="#eb6834">4 &#183; Test-set evaluation</text>
 <text x="46" y="604" font-family="Arial" font-size="12.9" fill="#52514e">Refit model + its threshold scored once &#8594; performance metrics and plots</text>
 
 <!-- ===== CONNECTOR: PANEL 3 -> EXPLANATION PANEL ===== -->
@@ -154,7 +154,7 @@
 <rect x="338" y="709" width="268" height="54" rx="5" fill="#ffffff" stroke="#a3197a" stroke-width="1.5"/>
 <text x="350" y="726" font-family="Arial" font-size="12.9" font-weight="bold" fill="#a3197a">SHAP</text>
 <text x="350" y="740" font-family="Arial" font-size="12.3" fill="#52514e">Explainer over each fold&#8217;s own</text>
-<text x="350" y="754" font-family="Arial" font-size="12.3" fill="#52514e">test fold &#8594; mean |SHAP| heatmap</text>
+<text x="350" y="754" font-family="Arial" font-size="12.3" fill="#52514e">test set &#8594; mean |SHAP| heatmap</text>
 
 <!-- --- sub-panel B : counterfactuals --- -->
 <rect x="32" y="779" width="586" height="101" rx="5" fill="#f9f9f7" stroke="#dedcd4" stroke-width="1"/>

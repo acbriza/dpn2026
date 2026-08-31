@@ -23,19 +23,44 @@ Rendered text size is `px_size × 372 / canvas_width_px` at `width=\textwidth`.
 | `detailed_pipeline_part1.svg` | 540×698 | 481pt (87% page) | 9.0pt | ~72pt ≈ 7 lines |
 | `detailed_pipeline_part2.svg` | 540×436 | 300pt (54% page) | 9.0pt | ample |
 
-The single-page version needs `\begin{figure}[p]` and a caption of roughly 360
-characters or less. If more caption is needed, drop to `width=0.95\textwidth`
-(body text 7.1pt, height 484pt, caption budget ~69pt).
+**The manuscript ships the single-page version**, as `fig:pipeline_overview`
+(`main.tex`, `\begin{figure}[p]` at `width=0.95\textwidth`) — body text 7.1pt,
+graphic ~488pt, leaving ~65pt of caption. The current 8-line caption fits with
+slack. The two-figure split is kept built and maintained as an alternative if the
+single page ever has to give ground, but is not referenced by `main.tex`.
 
-For reference, `nested_cv_optimization_compact.svg` (1600px canvas, 11.5px text)
-renders at **2.7pt** in this column — far below the ~6pt floor. That figure
-should be re-sized on the same basis if it is kept.
+`nested_cv_optimization_compact.svg` is **retained for reference only and is not
+used in the manuscript** — no `\ref` or `\includegraphics` points at it. It was
+never re-sized: at a 1600px canvas with 11.5px text it would render at **2.7pt**
+in this column, far below the ~6pt floor, so it must not be dropped into the
+single-column layout as-is.
 
 ## Content decisions (this session)
 
 - **Panels renamed away from code vocabulary**: "Outer loop —
   RepeatedStratifiedKFold" → "Which patients are held out"; "Inner loop — per
   outer iteration" → "Which training patients tune the model".
+- **The outer/inner vocabulary was retired everywhere**, in the figures *and* in
+  `main.tex`, on the grounds that it is sklearn's internal naming rather than
+  something a clinical reader can decode. The two must stay in sync — changing one
+  alone desynchronizes the figure from the Methods text that describes it.
+
+  | was | is now |
+  |---|---|
+  | outer iteration | train/test split |
+  | outer-training set / outer training fold | training set |
+  | outer test fold | test set |
+  | inner splits / inner folds | tuning folds |
+  | inner validation | tuning validation |
+  | outer-fold refits | fold models |
+
+  `main.tex` now contains zero occurrences of "outer" or "inner" in this sense.
+  Two things deliberately survive the rename: the splitter names in the panel
+  subtitles (`Repeated Stratified K-Fold`, `Stratified K-Fold`, "4 folds", "3-fold")
+  because those are the sklearn classes actually used and are worth naming; and
+  "fold model" / "per fold" for the four saved models of repeat 1, which the
+  manuscript also keeps. The inner-fold tiles stay labelled `val` — a normal
+  abbreviation of the legend's "tuning validation".
 - **All four fold rows** (outer) and **all three fold rows** (inner) are drawn,
   rather than 2 rows plus a caption noting the rest.
 - **Panel subtitles name the sklearn splitter** (`Repeated Stratified K-Fold`,

@@ -29,6 +29,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import seaborn as sns
+from PIL import Image
 
 import ymlconfig
 
@@ -37,6 +38,13 @@ import ymlconfig
 # figure families stay visually consistent.
 CF_DECREASE = '#B31B2E'
 CF_INCREASE = '#2367AC'
+
+# Any pixel channel below this counts as ink when locating the blank gutter that
+# separates a figure's legend panel from its heatmap panel.
+LEGEND_INK_CUTOFF = 245
+
+# The explainability heatmaps whose legend panel is stripped for the manuscript.
+LEGEND_STRIPPED_FIGURES = ('all_splits_feature_importances', 'all_splits_shap')
 
 SELECTION_METRIC_COLUMNS = {
     'auprc': 'AUPRC',
@@ -102,6 +110,74 @@ def consolidate_selection(config, config_path, outputdir):
         f.write(latex)
     print(f'Wrote {sel_dir / "selection_metrics_summary.csv"} ({feature_set} feature set, tag={tag})')
     return table
+
+
+def _legend_gutter(path):
+    """Left edge of the heatmap panel in one of explainability.py's heatmap figures.
+
+    Those figures are drawn as two side-by-side axes -- a legend-only panel and the
+    heatmap itself (`width_ratios=[2, 4]`, see utils2/explainability.py) -- so the
+    legend can be removed by cropping rather than replotting, which would otherwise
+    mean recomputing SHAP. Between the two axes is a band of entirely blank pixel
+    columns; its right edge is where the heatmap's row labels begin.
+
+    The band is located rather than hardcoded so the crop survives regeneration with
+    a different number of features or longer labels, both of which move it. The
+    search is restricted to the left 45% of the image because a second, narrower
+    blank band separates the heatmap from its colorbar on the right, and that one
+    must not be mistaken for this one.
+    """
+    ink = (np.array(Image.open(path).convert('RGB')) < LEGEND_INK_CUTOFF).any(axis=2).any(axis=0)
+    limit = int(len(ink) * 0.45)
+
+    runs, start = [], None
+    for i, inked in enumerate(ink[:limit]):
+        if not inked and start is None:
+            start = i
+        elif inked and start is not None:
+            runs.append((start, i))
+            start = None
+    # Drop the leading run: that is the figure's own left margin, not the gutter.
+    runs = [(a, b) for a, b in runs if a > 0]
+    if not runs:
+        raise ValueError(f'No legend gutter found in {path}; was the figure drawn without one?')
+
+    _, end = max(runs, key=lambda r: r[1] - r[0])
+    return max(0, end - 2)   # keep a hairline of margin before the row labels
+
+
+def strip_explainability_legends(config, config_path, outputdir):
+    """Legend-free copies of the feature-importance and SHAP heatmaps.
+
+    The manuscript shows the two as side-by-side panels of one figure, with a single
+    color key in the caption. Each figure's own legend panel would appear twice and
+    occupies roughly the left third of the image, so dropping it both removes the
+    duplication and buys back the width that keeps the cell annotations legible at
+    half textwidth.
+
+    The source figures are left untouched; these are written as separate files.
+    """
+    model_code = config.explainability.model.code
+    tag = config.explainability.tag
+    exp_dir = (config_path / 'binary' / 'explainability' / model_code / tag)
+
+    exp_out_dir = outputdir / 'explainability'
+    exp_out_dir.mkdir(parents=True, exist_ok=True)
+
+    written = []
+    for stem in LEGEND_STRIPPED_FIGURES:
+        src = exp_dir / f'{model_code}_{stem}.png'
+        if not src.exists():
+            raise FileNotFoundError(f'{src} not found; run expreport.py for tag={tag} first')
+        dst = exp_out_dir / f'{model_code}_{stem}_nolegend.png'
+
+        image = Image.open(src)
+        x0 = _legend_gutter(src)
+        image.crop((x0, 0, image.width, image.height)).save(dst)
+
+        print(f'Wrote {dst} (cropped {x0}px of legend panel from {image.width}px)')
+        written.append(dst)
+    return written
 
 
 def _outcome(actual, pred):
@@ -553,6 +629,7 @@ def main():
     shutil.copy(config_path / config_filename, outputdir / config_filename)
 
     consolidate_selection(config, config_path, outputdir)
+    strip_explainability_legends(config, config_path, outputdir)
     instance_table, _, _ = consolidate_counterfactuals(config, config_path, outputdir)
     plot_case_study_counterfactuals(config, config_path, outputdir)
     plot_remaining_counterfactuals(config, config_path, outputdir, instance_table)

@@ -322,10 +322,10 @@ data provenance are given in Additional file~1
 \label{sec:models}
 
 Fourteen algorithms spanning linear and probabilistic models (logistic regression, linear
-discriminant analysis, quadratic discriminant analysis, stochastic gradient descent, Gaussian naive
-Bayes, linear support vector machine), instance-based learning (k-nearest neighbors), kernel methods
-(RBF support vector machine), tree ensembles (decision tree, random forest, extra trees, gradient
-boosting), and advanced gradient boosting frameworks (XGBoost, LightGBM, CatBoost) were evaluated
+discriminant analysis, stochastic gradient descent, Gaussian naive Bayes, linear support vector
+machine), instance-based learning (k-nearest neighbors), kernel methods (RBF support vector
+machine), tree ensembles (decision tree, random forest, extra trees, gradient boosting), and
+advanced gradient boosting frameworks (XGBoost, LightGBM, CatBoost) were evaluated
 under default or standard hyperparameters, together with a naive classifier predicting the majority
 class as a baseline. This spread covers linear, nonlinear, probabilistic, and ensemble paradigms,
 which differ in interpretability, flexibility, and capacity; a description of each is given in
@@ -1261,13 +1261,12 @@ dysfunction \cite{garcia2022detection}.
 \subsection{Candidate models}
 
 Fourteen algorithms were benchmarked. \textit{Linear and probabilistic models}---logistic regression,
-linear discriminant analysis (LDA), quadratic discriminant analysis (QDA), stochastic gradient
-descent (SGD), Gaussian naive Bayes, and linear support vector machine---are interpretable and
-computationally efficient; logistic regression and linear SVM are effective in high-dimensional
-spaces, LDA and QDA model class-conditional distributions with QDA allowing nonlinear boundaries
-through class-specific covariance, naive Bayes performs well under conditional independence, and SGD
-enables scalable optimization. \textit{k-nearest neighbors} is a non-parametric instance-based method
-predicting from proximity in feature space, simple but sensitive to feature scaling and noise.
+linear discriminant analysis (LDA), stochastic gradient descent (SGD), Gaussian naive Bayes, and
+linear support vector machine---are interpretable and computationally efficient; logistic
+regression and linear SVM are effective in high-dimensional spaces, LDA models class-conditional
+distributions, naive Bayes performs well under conditional independence, and SGD enables scalable
+optimization. \textit{k-nearest neighbors} is a non-parametric instance-based method predicting
+from proximity in feature space, simple but sensitive to feature scaling and noise.
 \textit{Tree-based and ensemble methods}---decision tree, random forest, extra trees, and gradient
 boosting---capture nonlinear relationships and feature interactions, with the ensembles improving
 generalization through bagging and randomized feature selection. \textit{Advanced gradient boosting

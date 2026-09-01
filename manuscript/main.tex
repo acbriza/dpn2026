@@ -1364,8 +1364,8 @@ decision curve analysis are unaffected, both being per-observation averages.
 \begin{figure}[!ht]
     \centering
     \includegraphics[width=0.65\textwidth]{references/eda/fig2_univariable_discrimination.pdf}
-        \caption{Univariable discrimination of each candidate predictor, ranked by area under the
-    receiver operating characteristic curve, with the tuned multivariable CatBoost model (AUC 0.799)
+        \caption{Univariable discrimination of each candidate predictor, ranked by univariable
+    discrimination, $|\mathrm{AUC} - 0.5|$, with the tuned multivariable CatBoost model (AUC 0.799)
     marked for comparison. No single feature approaches the multivariable model; the six
     counterfactual-actionable features cluster close to the no-discrimination line.}
     \label{fig:univariable_discrimination}
@@ -1395,8 +1395,8 @@ decision curve analysis are unaffected, both being per-observation averages.
     diabetic peripheral neuropathy.} \textbf{a} Prevalence of each of the 12 binary features in the
     Unconfirmed and Confirmed groups, with Wilson 95\% confidence intervals, which remain valid for
     the rare comorbidities where normal-approximation intervals do not. \textbf{b} Odds ratios for
-    the same features on a logarithmic scale, with Wald confidence intervals and a
-    Haldane--Anscombe correction applied where a cell count was zero; the dashed line marks the
+    the same features on a logarithmic scale, with Wald confidence intervals; no cell count was
+    zero, so no Haldane--Anscombe continuity correction was required. The dashed line marks the
     null value of 1. Filled markers denote a Benjamini--Hochberg q-value below 0.05 and diamonds
     denote the features available to the counterfactual engine. The neurological examination signs
     (DEC\_LTS, DEC\_PPS, DEC\_VS, DEC\_AR) show the strongest and most consistent associations,
@@ -1472,6 +1472,15 @@ decision curve analysis are unaffected, both being per-observation averages.
         reference standard; they are excluded from every modeling, explainability and
         counterfactual stage (Table~\ref{tab:clinical_data}-B).\end{flushleft}
 \end{table}
+
+Figure~\ref{fig:s4} isolates the six features the counterfactual engine may vary. Their
+univariable discrimination is uniformly weak (AUC 0.514--0.585; only INSULIN, $q = 0.046$,
+survives false discovery rate correction), which is why the counterfactuals of
+Section~\ref{sec:results-cf-aggregate} must displace them so far to reverse a prediction. The
+coherence check the figure sets up is met: insulin is the second most frequently altered feature
+across the 158 counterfactuals (81, 51.3\%). HbA1c leads (144, 91.1\%) despite weaker marginal
+signal (AUC 0.545) because it is the only continuous variable in the set, and so the only one
+admitting graded rather than all-or-nothing change.
 
 \begin{figure}[!ht]
     \centering
@@ -1565,7 +1574,7 @@ decision curve analysis are unaffected, both being per-observation averages.
         \toprule
         & & Model 0 & Model 1 & Model 2 & Model 3 & Mean & Std\\
         \midrule
-        Parameter &  threshold & 0.499 & 0.500 & 0.483 & 0.492 & 0.493 & 0.008 \\
+        Parameter &  threshold & 0.499 & 0.500 & 0.483 & 0.492 & 0.494 & 0.008 \\
         \midrule
         CatBoost parameters & Tree depth & 9.000 & 4.000 & 10.000 & 10.000 & 8.250 & 2.872 \\
         & Learning rate & 0.016 & 0.017 & 0.020 & 0.003 & 0.014 & 0.007 \\
@@ -1692,7 +1701,7 @@ decision curve analysis are unaffected, both being per-observation averages.
     \caption{\textbf{Counterfactuals for the five successful instances not examined
     individually in the main text.} \textbf{a} Patient 29 (Model 0), \textbf{b} Patient 76
     (Model 0), \textbf{c} Patient 125 (Model 0), \textbf{d} Patient 23 (Model 3),
-    \textbf{e} Patient 172 (Model 3). All five lie within 0.07 of their fold's decision
+    \textbf{e} Patient 172 (Model 3). All five lie within 0.08 of their fold's decision
     threshold, and all are correctly classified except Patient 125, a false positive. The
     panels are constructed and read exactly as in Figure~\ref{fig:localcf-cases}, whose
     caption gives the full reading conventions; the HbA1c axis is shared by these five

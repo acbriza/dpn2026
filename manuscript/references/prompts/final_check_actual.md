@@ -16,7 +16,7 @@ P10, P12, P16, P17, P19, P20 and P24. Four BMC features drive them, and each dif
 what a typical clinical journal asks for:
 
 - **No length limit.** BMC Research articles have no cap on words, figures, tables, or
-  references. The manuscript's 16 figures and 13 tables are a readability question here,
+  references. The manuscript's 7 figures and 5 tables are a readability question here,
   not a compliance one — which changes what several checks are arguing for.
 - **A fixed section structure**: Background / Methods / Results / Discussion /
   Conclusions, followed by a mandatory **List of abbreviations**, then a mandatory
@@ -79,20 +79,29 @@ manufacture findings to look productive.
 **Manuscript map** (accurate as of this writing; the file moves often, so re-derive the
 line numbers before relying on them — the structure is the part that matters):
 
-- Front matter: title 106, 11 authors, 4 affiliations, template placeholder `\abstract` 152, real structured abstract 166 (~349 words), keywords 174 (ten)
-- `\section{Introduction}` 182 — BMC's required heading is `Background`
-- `\section{Data Collection}` 211 — a top-level section for which BMC's structure has no slot
-- `\section{Methods}` 395 (`Machine Learning Modeling`, `Explainability Analysis`, `Counterfactual Generation`)
-- `\section{Results}` 680 (`Baseline Model and Feature Set Evaluation`, `CatBoost Hyperparameter Optimization`, `Feature Importance and SHAP Attributions`, `Counterfactual Generation`)
-- `\section{Discussion}` 1022 (`Feature Set and Model Selection`, `CatBoost Model Training and Optimization`, `Feature Importance and Model Interpretability`, `Counterfactual Analysis`, `A Proposed Clinical Usage Workflow`, `Limitations`)
-- `\section{Conclusion}` 1241 — BMC's required heading is `Conclusions`
-- `\bmhead{Acknowledgements}` 1271, currently empty; `\section*{Declarations}` 1275, currently a bare `itemize` of template headings with no content
-- Appendix `Supplementary Figures and Tables` 1317
+- Front matter: title 106, 11 authors, 4 affiliations, template placeholder `\abstract` 152, real structured abstract 165 (~349 words), keywords ~173 (ten)
+- `\section{Background}` 181 — already renamed from `Introduction` to BMC's required heading
+- `\section{Methods}` 206 (`Study Population and Data Collection`, `Machine Learning Modeling`, `Explainability Analysis`, `Counterfactual Generation`) — the former top-level `Data Collection` section has already been folded in here
+- `\section{Results}` 564 (`Baseline Model and Feature Set Evaluation`, `CatBoost Hyperparameter Optimization`, `Feature Importance and SHAP Attributions`, `Counterfactual Generation`, `Instance-Level Counterfactuals`, `Aggregate Counterfactual Feature Changes`)
+- `\section{Discussion}` 801 (`Feature Set and Model Selection`, `CatBoost Model Training and Optimization`, `Feature Importance and Model Interpretability`, `Counterfactual Analysis`, `Instance-Level Counterfactual Analysis`, `Aggregate-Level Counterfactual Analysis`, `A Proposed Clinical Usage Workflow`, `Limitations`)
+- `\section{Conclusions}` 1125 — already renamed from `Conclusion` to BMC's required heading
+- `\bmhead{Acknowledgements}` 1167, now filled; `\section*{Declarations}` 1171, now filled in but still inside the *Springer* template's `itemize`, using Springer's heading list and order rather than BMC's
+- Appendix `\section{Supplementary Material}` 1233 (`secA1`), 7 subsections, ~4,700 words
 - **No `List of abbreviations` section anywhere** — BMC requires one
-- 16 figure environments, 13 table environments, ~29 `\cite` commands, 57 bib entries, 1498 lines
+- 7 figure environments, 5 table environments in the main text, 31 `\cite` commands, 57 bib entries, 1711 lines
 
-Note that Results and Discussion were split into separate sections recently; any earlier
-finding that says results are reported inside the Discussion is now stale.
+Two structural facts that earlier findings may contradict — both are deliberate and current:
+
+- Results and Discussion are separate sections. Any finding that says results are reported
+  inside the Discussion is stale.
+- **Results and Discussion are intentionally flat**: `\subsection` only, no
+  `\subsubsection` and no `\paragraph`. This matches the journal — across 18 Research
+  articles sampled from it, **no** article has a subsubsection anywhere in its Discussion,
+  and 13 of 16 keep Results to a single heading level. The signposting those headings used
+  to carry now lives in the prose (transition sentences, and each patient vignette naming
+  itself in its opening clause). Do **not** recommend re-introducing deeper headings in
+  either section; Methods is the one section where depth 2 is within journal norm and it
+  keeps its `\subsubsection`s.
 
 **Where the numbers come from.** Every quantitative claim should trace to a generated
 artifact under `manuscript/references/`, which mirrors the pipeline outputs in
@@ -457,8 +466,9 @@ You are line-editing manuscript/main.tex for language and grammar at the standar
 BMC Medical Informatics and Decision Making. Do not edit the file — produce a correction
 list. Do not read manuscript/archived_versions/; only main.tex is under review.
 
-Work section by section (Abstract, Introduction, Data Collection, Methods, Discussion and
-each of its six subsections, Conclusion, all captions, appendix). For each, report:
+Work section by section (Abstract, Background, Methods, Results and each of its six
+subsections, Discussion and each of its eight subsections, Conclusions, all captions,
+Supplementary Material). For each, report:
 
 1. OUTRIGHT ERRORS: subject-verb disagreement, tense inconsistency, dangling and
    misplaced modifiers, faulty parallelism in lists, pronoun reference with no clear
@@ -576,17 +586,20 @@ A. TEMPLATE AND PLACEHOLDER RESIDUE — this is the fastest desk rejection there
       an affiliation.
    3. Any remaining lorem-ipsum, "sample", "e.g. this is an example", instructional
       comments left uncommented, or template figure/table examples.
-B. DECLARATIONS. The Declarations section is currently a bare itemize list of the
-   *Springer* template's headings with no content under any of them — and BMC's required
-   list is different. BMC requires, each present even when the answer is "Not applicable":
+B. DECLARATIONS. The Declarations section now has content under every heading, but it is
+   still the *Springer* template's `itemize` using Springer's heading list and order — and
+   BMC's required list is different. BMC requires, each present even when the answer is "Not applicable":
    Ethics approval and consent to participate (with the approving committee's name and
    reference number, and the consent or waiver statement — this is a human-subjects study
    at East Avenue Medical Center); Consent for publication; Availability of data and
    materials (mandatory, and required even when the data cannot be shared); Competing
    interests; Funding; Authors' contributions (per author, for all 11); Acknowledgements.
    Confirm that list against the live guidelines, then report each missing statement
-   separately as a BLOCKER. Acknowledgements is currently empty — confirm that is intended,
-   and check whether the AI-use disclosure belongs there (see P27).
+   separately as a BLOCKER. Two known gaps to confirm: the ethics statement names neither
+   the approving committee nor a reference number, and Springer's "Materials availability"
+   and "Code availability" items do not map onto BMC's single "Availability of data and
+   materials". Acknowledgements now thanks a named non-author contributor — check whether
+   the AI-use disclosure belongs there too (see P27).
 C. HUMAN-SUBJECTS AND PRIVACY. This manuscript discusses individual patients by their
    study code (Patients 20, 40, 76, 123, 172 and others) alongside clinical detail.
    Assess whether the ethics statement covers publication of individual-level data, whether
@@ -594,12 +607,12 @@ C. HUMAN-SUBJECTS AND PRIVACY. This manuscript discusses individual patients by 
    attributes could identify a patient in a single-center cohort of 187. Report any risk.
 D. STRUCTURE. Check the manuscript against BMC's prescribed order for a Research article:
    Background, Methods, Results, Discussion, Conclusions, List of abbreviations,
-   Declarations, References. Results and Discussion are already separate sections, so the
-   remaining deviations are: Introduction should be Background; Conclusion should be
-   Conclusions; the top-level Data Collection section has no slot in the order and needs to
-   fold into Methods; and there is no List of abbreviations section at all, which BMC
-   requires. Verify each, and check that the Results/Discussion split actually holds rather
-   than being a heading change over interleaved content.
+   Declarations, References. Background, Methods, Results, Discussion and Conclusions are
+   already named and ordered correctly, and the former top-level Data Collection section
+   has been folded into Methods, so the one remaining deviation is that there is no List of
+   abbreviations section at all, which BMC requires. Verify each, and check that the
+   Results/Discussion split actually holds rather than being a heading change over
+   interleaved content.
 E. REPORTING GUIDELINE. BMC requires adherence to the relevant EQUATOR guideline, which
    for a prediction-model paper is TRIPOD (TRIPOD+AI for a machine-learning model). Report
    whether the manuscript names a guideline in the Methods, whether a completed checklist
@@ -607,7 +620,7 @@ E. REPORTING GUIDELINE. BMC requires adherence to the relevant EQUATOR guideline
    to be missing outright.
 F. TRIAL/STUDY REGISTRATION, and whether the journal would expect one for this design.
 G. FORMAT COMPLIANCE. BMC sets no limit on main-text words, figures, tables, or
-   references, so do not report the 16 figures, 13 tables, or 57 references as violations —
+   references, so do not report the 7 figures, 5 tables, or 57 references as violations —
    confirm the no-limit rule still holds, then judge them on readability instead. The hard
    limits are the abstract at 350 words (currently ~349 — count it exactly) and the ban on
    citations, equations, and undefined abbreviations inside it. Also check: figures
@@ -1079,7 +1092,7 @@ run latexmk/pdflatex/bibtex; do not edit main.tex — report only.
    enumerate every construct in main.tex that would not survive the move — \bmhead,
    \abstract used as a command, \keywords, the affiliation macros, the appendices
    environment, and any sn-jnl-specific table or float handling — and say how many of the
-   1498 lines are actually affected. Report this as the highest-cost formatting item in
+   1711 lines are actually affected. Report this as the highest-cost formatting item in
    the pack, and do not guess at BMC's answer: fetch it.
 3. Check the submission constraints on whichever template applies: whether the manuscript
    must be ONE .tex file with no \input/\include, whether figures must be attached
@@ -1123,14 +1136,21 @@ For each figure:
 2. COLOR. Is the encoding colorblind-safe (deuteranopia in particular)? The counterfactual
    case-study figure encodes direction as red/blue — check whether it is distinguishable
    without color and whether a redundant encoding (shape, position, sign, hatch) exists.
-   Flag any figure where color alone carries meaning.
+   Flag any figure where color alone carries meaning. The explainability figure's caption
+   names its feature-group colors in words ("Sudoscan (orange)", "profile (blue)", ...)
+   rather than colouring the caption text itself; that is deliberate — BMC's XML production
+   can strip inline colour, and \textcolor as a legend key survives neither that nor
+   grayscale. Do not propose reverting it.
 3. GRAYSCALE SURVIVAL. Would the figure remain interpretable printed in black and white?
 4. SELF-CONTAINED CAPTIONS. Every caption should let a reader understand the figure
    without the body text: what is plotted, on what data, what the units are, what error
    bars/bands represent, what n is, and what every visual encoding means. Flag captions
    that omit any of these. Separately flag captions that have gone the other way and now
-   contain argumentation belonging in the Discussion (several here run 150+ words), and
-   check every caption against BMC's stated limits on figure title and legend length.
+   contain argumentation belonging in the Discussion. Captions were cut in the shortening
+   pass and now total ~605 words across 14, the longest 128 — so treat a caption over the
+   journal's stated legend limit as a finding, but do not assume overlong captions are
+   still present. Check every caption against BMC's stated limits on title and legend
+   length.
 5. AXIS INTEGRITY. Truncated axes, inconsistent scales between panels that invite
    comparison, missing units, missing baselines (a PR curve without its prevalence line, a
    discrimination plot without 0.5).
@@ -1295,7 +1315,8 @@ Evaluate the front matter of manuscript/main.tex for discoverability and fit. Do
    Is it within typical length limits? Propose three alternatives — one descriptive, one
    finding-forward, one design-forward — each with a matching short title.
 2. ABSTRACT: exact word count against BMC Medical Informatics and Decision Making's
-   350-word limit — a rough count gives ~349, so the abstract has essentially no headroom
+   350-word limit — a rough count still gives ~349 (the shortening pass did not touch the
+   abstract), so the abstract has essentially no headroom
    and any addition requires a cut elsewhere; identify the weakest 30 words to trade away
    if room is needed. Check the headings read exactly Background / Methods / Results /
    Conclusions; whether any abbreviation is used undefined; whether any citation or
@@ -1406,7 +1427,7 @@ A. SCOPE AND ARTICLE TYPE. Confirm "Research article" is the right type, and che
    should be submitted to, and whether that changes any requirement or deadline.
 B. LENGTH AND FLOAT COUNT. BMC Research articles are understood to have no limit on words,
    figures, tables, or references — verify that this still holds. If it does, do NOT report
-   the 16 figures, 13 tables, or 57 references as a compliance violation. Judge them
+   the 7 figures, 5 tables, or 57 references as a compliance violation. Judge them
    against what the journal actually publishes instead.
 
    Reference distribution, measured from 18 Research articles published in this journal
@@ -1422,16 +1443,22 @@ B. LENGTH AND FLOAT COUNT. BMC Research articles are understood to have no limit
    | Abstract words | 288 | 264-351 | 165-411 |
 
    Published PDF length for eight of those articles ran 9-26 pages, median ~15.5. A
-   least-squares fit over those eight gives roughly 4 pages of fixed overhead, 1 page per
-   1,330 body words, 0.7 page per figure, 0.33 page per table, and 0.14 page per 10
+   least-squares fit over those eight gives roughly 3.7 pages of fixed overhead, 1 page per
+   1,459 body words, 0.67 page per figure, 0.34 page per table, and 0.33 page per 10
    references — accurate to under a page on all eight, and good enough to project a target.
+   (These coefficients are the ones in `documentation/notes/article_shortenning.md`, which
+   records the fit and its residuals; an earlier version of this prompt quoted a garbled
+   variant. Use the notes file as the source if the two ever diverge again.)
 
-   This manuscript currently carries ~16,101 body words, 3,275 words of captions across 26
-   floats, 16 figures, 13 tables, and 57 references, which projects to roughly 32 published
-   pages — above every article in the sample. Report the overage against the distribution,
-   not against a limit, and rank the floats by how little the main argument loses if they
-   move to Additional files. Check BMC's rule on large tables belonging in Additional files
-   against each of the 13. Re-measure all of this rather than trusting these numbers.
+   A shortening pass has already been run against this distribution. The manuscript now
+   carries ~9,429 body words, ~605 words of captions across 14, 7 figures, 5 tables, and 57
+   references, which projects to roughly 18 published pages — inside the 16-20 target and
+   inside the sample's range, down from ~16,101 words and ~32 projected pages. **The length
+   problem is solved; do not re-open it.** Re-measure to confirm it still holds, and report
+   only a regression above ~20 projected pages. Do not rank floats for demotion or propose
+   further prose cuts unless the re-measurement shows the manuscript has grown back. Do
+   still check BMC's rule on large tables belonging in Additional files against each of the
+   5 remaining tables — that is a placement rule, not a length one.
 
    The one hard limit is the abstract at 350 words. The current abstract is ~349 words by
    rough count, so count it exactly under the journal's own counting rule and report the
@@ -1441,11 +1468,11 @@ C. STRUCTURE. BMC prescribes the section order for a Research article: Title pag
    abbreviations; Declarations; References; then figure legends, tables, and descriptions
    of additional files. Confirm that order, then check the manuscript against it and report
    every deviation:
-   - \section{Introduction} (line 182) must become Background.
-   - \section{Conclusion} (line 1241) must become Conclusions.
-   - \section{Data Collection} (line 211) is a top-level section with no slot in the
-     prescribed order. Decide where it goes — most of it is Methods — and say exactly what
-     moves where, including whether any of it belongs in Background.
+   - Background, Methods, Results, Discussion and Conclusions are already named and ordered
+     to match. The former `\section{Introduction}` and `\section{Conclusion}` have been
+     renamed, and the former top-level `\section{Data Collection}` is now
+     `\subsection{Study Population and Data Collection}` inside Methods. Confirm rather
+     than re-propose these.
    - There is no List of abbreviations section; BMC requires one. P17 builds the register
      that fills it, so cross-reference P17 rather than redoing that work.
    - Results and Discussion are already separate sections. Verify the split actually holds:
@@ -1465,9 +1492,9 @@ E. MANDATORY DECLARATIONS. BMC requires a Declarations section whose subheadings
    consent to participate; Consent for publication; Availability of data and materials;
    Competing interests; Funding; Authors' contributions; Acknowledgements; and the optional
    Authors' information. Confirm that list and its order against the live guidelines, then
-   check the manuscript's Declarations at line 1275 — currently a bare itemize of the
-   *Springer* template's headings, a different list in a different order, with no content
-   under any of them. Report each missing statement separately as a BLOCKER, and check
+   check the manuscript's Declarations at line 1171 — now filled in, but still the
+   *Springer* template's `itemize`: a different list in a different order from BMC's.
+   Report each missing or mis-mapped statement separately as a BLOCKER, and check
    these BMC-specific requirements:
    - Ethics approval must name the approving committee and its reference number, and state
      that informed consent was obtained, or that consent was waived, by whom, and why. This
@@ -1481,7 +1508,8 @@ E. MANDATORY DECLARATIONS. BMC requires a Declarations section whose subheadings
      options the authors can choose between.
    - Authors' contributions must be given per author. With 11 authors, check that each has
      a stated contribution and that the set is consistent with the authorship criteria.
-   - Acknowledgements (line 1271) is empty, and may also be where the AI-use disclosure
+   - Acknowledgements (line 1167) thanks a named non-author contributor, and may also be
+     where the AI-use disclosure
      belongs — see P27.
 F. REPORTING GUIDELINE AND CHECKLIST. BMC requires adherence to the relevant EQUATOR
    guideline; for a diagnostic or prognostic prediction model that is TRIPOD, and TRIPOD+AI
@@ -1499,8 +1527,9 @@ H. FIGURES, TABLES, AND ADDITIONAL FILES. Verify each of these and check every f
    - Figures uploaded as separate files, one figure per file, none embedded in the
      manuscript file; the accepted formats and the minimum resolution for each.
    - Figure title and legend supplied in the manuscript text rather than inside the image,
-     with BMC's limits on title length and legend length. Several current captions run well
-     past 150 words — P20 already flags them; here, check them against the actual limit.
+     with BMC's limits on title length and legend length. Captions were cut in the
+     shortening pass and now run 128 words at the longest, so check them against the actual
+     limit rather than assuming a breach.
    - Figure sizing for the journal's column widths, and minimum text size within the
      artwork.
    - Tables supplied as editable text and never as images, numbered, cited in order, each
@@ -1608,8 +1637,8 @@ DECISION NEEDED, quoting the policy:
    in the acknowledgements as an author-like contributor, or in the corresponding-author
    details. Confirm no author is credited to a tool.
 2. DISCLOSURE PRESENT. Is there any AI-use statement in the manuscript at all? (There is
-   currently none — the Declarations section is an empty template list and
-   Acknowledgements is blank.) Determine where the publisher requires it: a dedicated
+   currently none — the Declarations section has content under every heading but no AI-use
+   item, and Acknowledgements thanks only a named human contributor.) Determine where the publisher requires it: a dedicated
    declaration heading, the Acknowledgements, the Methods, or the cover letter — some
    require it in more than one place.
 3. DISCLOSURE IS ACCURATE AND COMPLETE. Compare the drafted disclosure against your Step 1

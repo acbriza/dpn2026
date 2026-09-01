@@ -1503,6 +1503,16 @@ admitting graded rather than all-or-nothing change.
 
 \subsection{Model and feature set selection}
 
+This subsection documents the baseline benchmarking stage of Section~\ref{sec:modelselection}, in
+which every one of the fourteen candidate algorithms was scored against each of twelve feature sets
+under untuned, default settings. Three items are reported: the definition and coding of the twelve
+feature sets, the full algorithm leaderboard on the full feature set, and the run-level spread of
+AUPRC behind those means. Only the full feature set is tabulated here, since it is the set carried
+forward; the ablation and Sudoscan-anchored sets served to establish that no reduced set improved on
+it, and their comparison is summarized in Section~\ref{sec:catboost_vs_rf}. The metrics at this
+stage are deliberately untuned baselines and are not comparable with the optimized results reported
+in Section~\ref{results}.
+
 \begin{table}[tbp]
     \centering
     \small
@@ -1566,6 +1576,16 @@ admitting graded rather than all-or-nothing change.
 
 \subsection{Hyperparameter optimization}
 
+This subsection reports the per-fold detail underlying the nested cross-validation procedure of
+Section~\ref{sec:hpo}. The headline performance claim remains the mean over all 40 train/test splits
+(Table~\ref{tab:optimization_metrics_40repeats}); what is given here is the first repeat's four fold
+models---their individually tuned hyperparameters, their separately selected decision thresholds, and
+their held-out metrics---because these four models, and no others, are the ones saved and reused
+without refitting by the explainability and counterfactual stages. Their fold-to-fold variability is
+therefore worth inspecting directly, as it propagates into every downstream result. Also reported are
+the pooled out-of-sample diagnostics for these same four models, which should be read with the
+caveats set out above under \textit{Pooled model diagnostics}.
+
 \begin{table}[tbp]
     \centering
     \footnotesize
@@ -1603,6 +1623,16 @@ admitting graded rather than all-or-nothing change.
 \end{figure*}
 
 \subsection{Counterfactual generation}
+
+This subsection gives the material needed to reproduce and audit the counterfactual stage of
+Sections~\ref{sec:generalsetup} and~\ref{sec:instance-level-cf}: the exact DiCE instantiation used
+for each fold model, the generation parameters applied to each selected instance, and the resulting
+yield---first per fold model, then per individual patient. The yield tables also make explicit how
+sparse the successful outcome was: of 61 misclassified or borderline candidates across the four
+folds, only 8 produced any valid counterfactual, with one fold producing none at all. Those counts,
+rather than the properties of the counterfactuals themselves, are the main quantitative caveat on the
+counterfactual results, and are taken up in Sections~\ref{sec:cf-plausibility}
+and~\ref{sec:limitations}.
 
 \begin{table}[tbp]
     \centering

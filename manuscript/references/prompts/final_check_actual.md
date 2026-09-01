@@ -9,11 +9,39 @@ context needed by the next one.
 
 ## 0. How to use this pack
 
-**Authoritative sources.** The manuscript is `manuscript/main.tex` (single file, Springer
-Nature `sn-jnl` class, `sn-mathphys-num` numbered reference style). Ignore
-`manuscript/main-claude.tex` and `manuscript/sn-article.tex` — the first is a superseded
-copy, the second is the unmodified Springer template. Bibliography is
-`manuscript/bibfile.bib` (`manuscript/sn-bibliography.bib` is template sample data).
+**Target journal: *BMC Medical Informatics and Decision Making*** (BMC, part of Springer
+Nature; fully open access, APC-funded, MEDLINE-indexed). Several prompts here are written
+against BMC's requirements rather than a generic journal's — P26 above all, but also P9,
+P10, P12, P16, P17, P19, P20 and P24. Four BMC features drive them, and each differs from
+what a typical clinical journal asks for:
+
+- **No length limit.** BMC Research articles have no cap on words, figures, tables, or
+  references. The manuscript's 16 figures and 13 tables are a readability question here,
+  not a compliance one — which changes what several checks are arguing for.
+- **A fixed section structure**: Background / Methods / Results / Discussion /
+  Conclusions, followed by a mandatory **List of abbreviations**, then a mandatory
+  **Declarations** block with prescribed subheadings, then References.
+- **A structured abstract of at most 350 words**, with no citations and no undefined
+  abbreviations. The current abstract is ~349 words — at the ceiling.
+- **BMC's own article template**, not Springer's `sn-jnl`, which is what this manuscript
+  currently uses.
+
+Treat all four as strong priors to be re-verified against the live guidelines, not as
+settled fact; every prompt that leans on one says so and tells you to confirm it.
+
+**Authoritative sources.** The manuscript is `manuscript/main.tex` (single file, currently
+Springer Nature `sn-jnl` class with the `sn-mathphys-num` reference style — both are
+problems against this target; see P19 and P26). Bibliography is `manuscript/bibfile.bib`
+(`manuscript/sn-bibliography.bib` is template sample data).
+
+**Off limits.** Do not read, quote, diff against, or draw any conclusion from
+`manuscript/archived_versions/`. It holds superseded drafts (`main-claude.tex`,
+`main-disc.tex`, and their build artifacts), kept for the authors' personal reference only
+and forming no part of the submission. A finding sourced from an archived draft is a false
+finding — `main.tex` is the only text under review, and an earlier draft is not evidence
+about it. `manuscript/sn-article.tex` is the unmodified Springer sample and is likewise
+not part of the manuscript. Where a prompt below tells you to search the manuscript
+directory, exclude `archived_versions/` from that search.
 
 **Two rules that apply to every prompt below:**
 
@@ -48,17 +76,23 @@ Findings must be ordered most-severe first, and the file must open with a one-pa
 summary plus counts per severity. If a check finds nothing, say so plainly — do not
 manufacture findings to look productive.
 
-**Manuscript map** (for orientation; re-derive if the file has moved on):
+**Manuscript map** (accurate as of this writing; the file moves often, so re-derive the
+line numbers before relying on them — the structure is the part that matters):
 
-- Front matter: title, 11 authors, 4 affiliations, abstract, keywords — lines ~106–175
-- `\section{Introduction}` ~182
-- `\section{Data Collection}` ~211
-- `\section{Methods}` ~395 (`Machine Learning Modeling`, `Explainability Analysis`, `Counterfactual Generation`)
-- `\section{Discussion}` ~680 (`Feature Set and Model Selection`, `CatBoost Model Training and Optimization`, `Feature Importance and Model Interpretability`, `Counterfactual Analysis`, `A Proposed Clinical Usage Workflow`, `Limitations`)
-- `\section{Conclusion}` ~1138
-- `\section*{Declarations}` ~1172
-- Appendix `Supplementary Figures and Tables` ~1214
-- ~16 figure environments, ~13 table environments, ~29 `\cite` commands, 57 bib entries
+- Front matter: title 106, 11 authors, 4 affiliations, template placeholder `\abstract` 152, real structured abstract 166 (~349 words), keywords 174 (ten)
+- `\section{Introduction}` 182 — BMC's required heading is `Background`
+- `\section{Data Collection}` 211 — a top-level section for which BMC's structure has no slot
+- `\section{Methods}` 395 (`Machine Learning Modeling`, `Explainability Analysis`, `Counterfactual Generation`)
+- `\section{Results}` 680 (`Baseline Model and Feature Set Evaluation`, `CatBoost Hyperparameter Optimization`, `Feature Importance and SHAP Attributions`, `Counterfactual Generation`)
+- `\section{Discussion}` 1022 (`Feature Set and Model Selection`, `CatBoost Model Training and Optimization`, `Feature Importance and Model Interpretability`, `Counterfactual Analysis`, `A Proposed Clinical Usage Workflow`, `Limitations`)
+- `\section{Conclusion}` 1241 — BMC's required heading is `Conclusions`
+- `\bmhead{Acknowledgements}` 1271, currently empty; `\section*{Declarations}` 1275, currently a bare `itemize` of template headings with no content
+- Appendix `Supplementary Figures and Tables` 1317
+- **No `List of abbreviations` section anywhere** — BMC requires one
+- 16 figure environments, 13 table environments, ~29 `\cite` commands, 57 bib entries, 1498 lines
+
+Note that Results and Discussion were split into separate sections recently; any earlier
+finding that says results are reported inside the Discussion is now stale.
 
 **Where the numbers come from.** Every quantitative claim should trace to a generated
 artifact under `manuscript/references/`, which mirrors the pipeline outputs in
@@ -419,8 +453,9 @@ Write to manuscript/references/prompts/findings/p6-american-english.md.
 ## P7 — Language and grammar
 
 ```text
-You are line-editing manuscript/main.tex for language and grammar at the standard of a
-Springer clinical-informatics journal. Do not edit the file — produce a correction list.
+You are line-editing manuscript/main.tex for language and grammar at the standard of
+BMC Medical Informatics and Decision Making. Do not edit the file — produce a correction
+list. Do not read manuscript/archived_versions/; only main.tex is under review.
 
 Work section by section (Abstract, Introduction, Data Collection, Methods, Discussion and
 each of its six subsections, Conclusion, all captions, appendix). For each, report:
@@ -521,10 +556,11 @@ point inventory first, then the redundancy findings, then the motif occurrence t
 science. Run this one **last** and re-run it after every batch of edits.
 
 ```text
-You are the handling editor of a Springer Nature clinical-informatics journal doing the
+You are the handling editor at BMC Medical Informatics and Decision Making doing the
 initial technical check on manuscript/main.tex. Your job is to decide whether this
 submission gets sent for review or returned to the authors. Be unsparing. Do not edit —
-report only.
+report only. Do not read manuscript/archived_versions/; those are superseded drafts and
+are not the submission.
 
 Check every item below and return a verdict per item: READY / MUST FIX BEFORE SUBMISSION /
 CANNOT ASSESS.
@@ -540,32 +576,45 @@ A. TEMPLATE AND PLACEHOLDER RESIDUE — this is the fastest desk rejection there
       an affiliation.
    3. Any remaining lorem-ipsum, "sample", "e.g. this is an example", instructional
       comments left uncommented, or template figure/table examples.
-B. DECLARATIONS. The Declarations section is currently a bare itemize list of headings
-   with no content. Every one of these must be present with real text: Funding; Conflict
-   of interest / Competing interests; Ethics approval and consent to participate (with the
-   IRB/ERB name and approval number — this is a human-subjects study at East Avenue
-   Medical Center); Consent for publication; Data availability; Materials availability;
-   Code availability; Author contributions (CRediT-style). Report each missing one
-   separately as a BLOCKER. Acknowledgements is currently empty — confirm that is intended.
+B. DECLARATIONS. The Declarations section is currently a bare itemize list of the
+   *Springer* template's headings with no content under any of them — and BMC's required
+   list is different. BMC requires, each present even when the answer is "Not applicable":
+   Ethics approval and consent to participate (with the approving committee's name and
+   reference number, and the consent or waiver statement — this is a human-subjects study
+   at East Avenue Medical Center); Consent for publication; Availability of data and
+   materials (mandatory, and required even when the data cannot be shared); Competing
+   interests; Funding; Authors' contributions (per author, for all 11); Acknowledgements.
+   Confirm that list against the live guidelines, then report each missing statement
+   separately as a BLOCKER. Acknowledgements is currently empty — confirm that is intended,
+   and check whether the AI-use disclosure belongs there (see P27).
 C. HUMAN-SUBJECTS AND PRIVACY. This manuscript discusses individual patients by their
    study code (Patients 20, 40, 76, 123, 172 and others) alongside clinical detail.
    Assess whether the ethics statement covers publication of individual-level data, whether
    consent for publication is documented, and whether any combination of reported
    attributes could identify a patient in a single-center cohort of 187. Report any risk.
-D. STRUCTURE. The manuscript presents its results inside the Discussion section and has no
-   separate Results section. Assess whether this will survive an editorial structure check
-   for a research article at a clinical journal (IMRaD is near-universally expected), and
-   state plainly what the risk is and what restructuring would cost.
-E. REPORTING GUIDELINE. A clinical prediction-model paper is normally expected to follow
-   TRIPOD+AI (or CLAIM). Report whether the manuscript names a guideline, whether a
-   completed checklist is referenced as supplementary material, and list the TRIPOD+AI
-   items that appear to be missing outright.
+D. STRUCTURE. Check the manuscript against BMC's prescribed order for a Research article:
+   Background, Methods, Results, Discussion, Conclusions, List of abbreviations,
+   Declarations, References. Results and Discussion are already separate sections, so the
+   remaining deviations are: Introduction should be Background; Conclusion should be
+   Conclusions; the top-level Data Collection section has no slot in the order and needs to
+   fold into Methods; and there is no List of abbreviations section at all, which BMC
+   requires. Verify each, and check that the Results/Discussion split actually holds rather
+   than being a heading change over interleaved content.
+E. REPORTING GUIDELINE. BMC requires adherence to the relevant EQUATOR guideline, which
+   for a prediction-model paper is TRIPOD (TRIPOD+AI for a machine-learning model). Report
+   whether the manuscript names a guideline in the Methods, whether a completed checklist
+   is prepared for upload as an Additional file, and list the TRIPOD+AI items that appear
+   to be missing outright.
 F. TRIAL/STUDY REGISTRATION, and whether the journal would expect one for this design.
-G. FORMAT COMPLIANCE. Word counts (abstract and whole text) against typical limits; figure
-   count (~16 main-text figures is high — most journals cap at 6-8 and push the rest to
-   supplementary); table count (~13, same issue); reference count (57); whether figures
-   are supplied as separate files as the template requires rather than embedded; whether
-   the document class option matches the target journal's reference style.
+G. FORMAT COMPLIANCE. BMC sets no limit on main-text words, figures, tables, or
+   references, so do not report the 16 figures, 13 tables, or 57 references as violations —
+   confirm the no-limit rule still holds, then judge them on readability instead. The hard
+   limits are the abstract at 350 words (currently ~349 — count it exactly) and the ban on
+   citations, equations, and undefined abbreviations inside it. Also check: figures
+   supplied as separate files rather than embedded; tables as editable text; supplementary
+   material prepared as numbered Additional files rather than a LaTeX appendix; and the
+   template itself — this manuscript uses Springer's sn-jnl class with sn-mathphys-num
+   references, neither of which is BMC's. See P26 item L.
 H. BUILD HEALTH. Run the LaTeX build and report: undefined references, undefined
    citations, multiply-defined labels, missing graphics, overfull/underfull boxes,
    and any font or package warning. Quote the log lines. A PDF that does not compile
@@ -573,8 +622,9 @@ H. BUILD HEALTH. Run the LaTeX build and report: undefined references, undefined
 I. FIGURE FILE HEALTH. Any figure supplied at low resolution, any raster PNG where a
    vector PDF exists in the pipeline outputs, any figure whose text would be illegible at
    print width.
-J. AI-USE DISCLOSURE. Most publishers now require a statement if generative AI was used in
-   preparation. Report whether one is present and flag it as needed if not.
+J. AI-USE DISCLOSURE. BMC, Springer Nature, ICMJE, and COPE all require disclosure where
+   generative AI was used in preparing the manuscript. Report whether any statement is
+   present, where BMC wants it, and flag its absence. P27 covers this in full.
 K. TITLE, KEYWORDS, ORCIDs, and whether the corresponding author's contact details are
    complete.
 L. ANYTHING ELSE that would make you return this without review. Say it directly.
@@ -620,9 +670,13 @@ candidate patients"; HbA1c 91.1%, insulin 51.3%, dyslipidemia 37.3%, hypertensio
 the 2022-2023 recruitment window and the Quezon City tertiary hospital setting.
 
 Also check: does the abstract claim anything the body does not establish, and does the
-body contain a headline result the abstract omits? Is the abstract within a 200-250 word
-budget? Does it contain citations, equations, or undefined abbreviations (journals
-routinely forbid all three in abstracts)?
+body contain a headline result the abstract omits? Count the abstract exactly against the
+target journal's 350-word limit — BMC Medical Informatics and Decision Making — since a
+rough count puts it at ~349 words, meaning any addition made elsewhere in this review
+pushes it over. Report the exact count and the remaining margin. Check also that it
+contains no citation, no equation, and no undefined abbreviation, all three of which BMC
+forbids in abstracts, and that its four headings read exactly Background / Methods /
+Results / Conclusions.
 
 Write to manuscript/references/prompts/findings/p10-abstract-consistency.md.
 ```
@@ -703,6 +757,14 @@ Give particular attention to items this study's design makes load-bearing:
 - Interpretability/AI-specific items: fairness or subgroup assessment, the explanation
   methods used and their limitations, human oversight.
 - Availability of data, code, and the trained model.
+
+The target journal is BMC Medical Informatics and Decision Making, which requires
+adherence to the relevant EQUATOR guideline and normally wants the completed checklist
+uploaded as an Additional file. So produce the checklist in a form that can actually be
+submitted: one row per TRIPOD+AI item, with the manuscript page or line number where the
+item is addressed, and "not reported" where it is not. Confirm the journal's exact
+requirement — which guideline it names, whether the checklist is mandatory, and whether it
+must carry page or line numbers — before finalizing the format.
 
 Finish with a prioritized list of the smallest set of additions that would bring the
 manuscript to substantial compliance, and note which of them can be satisfied entirely
@@ -864,8 +926,14 @@ Assess:
    Check module/dataload.py and index_to_patient_code() to establish the truth.
 3. Whether the supplementary/appendix material, the figures, or any table discloses
    row-level data for the full cohort.
-4. Whether the ethics and consent statements (currently absent — see P9) cover
-   publication of individual-level case descriptions.
+4. Whether the ethics and consent statements (currently absent — see P9) cover publication
+   of individual-level case descriptions. The target journal, BMC Medical Informatics and
+   Decision Making, requires a "Consent for publication" declaration wherever a manuscript
+   contains any individual person's data. Fetch BMC's actual wording, determine whether
+   de-identified individual-level clinical attributes presented case by case fall under it,
+   and report the answer with the policy quoted — do not assume in either direction. If it
+   applies, the consent has to exist before submission, which makes this a scheduling
+   problem for the authors, not just a drafting one.
 5. Whether the repository itself, if code/data are to be released, would expose the raw
    dataset (dataset/EAMC_DPN_Dataset.xlsx) or any derived file containing identifiers, and
    what a data-availability statement can honestly promise.
@@ -943,8 +1011,15 @@ Produce:
    and the four per-fold fitted models. Flag every sentence where which sense is meant is
    not immediately clear.
 
+6. THE `List of abbreviations` SECTION. BMC Medical Informatics and Decision Making
+   requires a List of abbreviations section between Conclusions and Declarations, and the
+   manuscript has none. Deliver it: the finished section, in LaTeX, listing every acronym
+   from the register above with its expansion, ordered as the journal requires
+   (alphabetical unless the guidelines say otherwise — check). This is the one output in
+   this prompt that is meant to be pasted into main.tex rather than only reported.
+
 Write to manuscript/references/prompts/findings/p17-terminology.md, leading with the
-acronym register table.
+acronym register table and closing with the drafted List of abbreviations section.
 ```
 
 ---
@@ -967,9 +1042,12 @@ Check the reference machinery of manuscript/main.tex. Do not edit — report onl
 4. Check float placement: figures/tables that land pages away from their discussion,
    floats using [p] or [!ht] in ways that will break under the journal's own class,
    supplementary floats interleaved with main-text ones.
-5. Check citation numbering and ordering under the sn-mathphys-num style: first-appearance
-   order, no duplicate entries for one work, no cited-but-absent or present-but-uncited
-   bib entries (compare \cite keys against bibfile.bib's 57 entries and against main.bbl).
+5. Check citation numbering and ordering: first-appearance order, no duplicate entries for
+   one work, no cited-but-absent or present-but-uncited bib entries (compare \cite keys
+   against bibfile.bib's 57 entries and against main.bbl). Note that the current
+   sn-mathphys-num style is not the target journal's — BMC has its own numbered style — so
+   check the ordering logic rather than the rendered format, which will change (P26 item I,
+   P19 item 2).
 6. Check the appendix: every supplementary figure/table is cited from the main text, and
    the Supplementary Information statement matches what is actually supplied.
 7. Report any \label placed before its \caption (which silently misnumbers references).
@@ -992,13 +1070,22 @@ run latexmk/pdflatex/bibtex; do not edit main.tex — report only.
    font substitution, and the full list of Overfull/Underfull boxes with their line
    numbers and overflow amounts (there is a known history of overfull tables in this
    manuscript).
-2. Verify the document class options match the intended target journal
-   (currently sn-jnl with sn-mathphys-num). If the target is a clinical journal, the
-   reference style is very likely wrong — sn-vancouver-num is the usual choice for
-   medical titles. Flag it and say what changing it entails.
-3. Check the template's own submission constraints, which are stated in the file's header
-   comments: the manuscript must be ONE .tex file with no \input/\include, and figures
-   must be attached separately rather than embedded. Confirm compliance.
+2. TEMPLATE MISMATCH. The target journal is BMC Medical Informatics and Decision Making,
+   and this manuscript is built on Springer Nature's sn-jnl class with the sn-mathphys-num
+   reference style — a mathematical/physical-sciences numbered style. Establish which
+   LaTeX template BMC currently accepts for a BMC-series submission and whether sn-jnl
+   qualifies at all. Then cost the two paths concretely: (a) staying on sn-jnl and only
+   swapping the bibliography style, and (b) converting to BMC's own template. For (b),
+   enumerate every construct in main.tex that would not survive the move — \bmhead,
+   \abstract used as a command, \keywords, the affiliation macros, the appendices
+   environment, and any sn-jnl-specific table or float handling — and say how many of the
+   1498 lines are actually affected. Report this as the highest-cost formatting item in
+   the pack, and do not guess at BMC's answer: fetch it.
+3. Check the submission constraints on whichever template applies: whether the manuscript
+   must be ONE .tex file with no \input/\include, whether figures must be attached
+   separately rather than embedded (the sn-jnl header comments say they must), and whether
+   supplementary material must leave the document as numbered Additional files rather than
+   remaining as a LaTeX appendix. Confirm compliance against the live guidelines.
 4. Report any package loaded but unused, any package that conflicts with sn-jnl, and any
    manual formatting that fights the class (hard-coded \vspace, \hphantom, manual
    line breaks in captions, \let\cline\cmidrule redefinitions).
@@ -1021,10 +1108,18 @@ Review the visual quality and accessibility of every figure and table in
 manuscript/main.tex, viewing the actual image files under manuscript/references/. Do not
 edit — report only.
 
+Before starting, fetch BMC Medical Informatics and Decision Making's figure and table
+preparation requirements — accepted formats, minimum resolution, figure width, minimum
+text size in artwork, figure title and legend length limits, and the rules on colour and
+shading in tables — and check each float against the actual numbers rather than against
+general good practice. Note that BMC wants figures as separate files with the title and
+legend in the manuscript text, not inside the image.
+
 For each figure:
 1. LEGIBILITY AT PRINT SIZE. Given the \includegraphics width and the journal column
    width, will axis labels, tick labels, legends, and annotations be readable? Flag every
-   figure whose smallest text would fall below roughly 6-7 pt when printed.
+   figure whose smallest text would fall below the journal's stated minimum, or below
+   roughly 6-7 pt if no minimum is stated.
 2. COLOR. Is the encoding colorblind-safe (deuteranopia in particular)? The counterfactual
    case-study figure encodes direction as red/blue — check whether it is distinguishable
    without color and whether a redundant encoding (shape, position, sign, hatch) exists.
@@ -1034,7 +1129,8 @@ For each figure:
    without the body text: what is plotted, on what data, what the units are, what error
    bars/bands represent, what n is, and what every visual encoding means. Flag captions
    that omit any of these. Separately flag captions that have gone the other way and now
-   contain argumentation belonging in the Discussion (several here run 150+ words).
+   contain argumentation belonging in the Discussion (several here run 150+ words), and
+   check every caption against BMC's stated limits on figure title and legend length.
 5. AXIS INTEGRITY. Truncated axes, inconsistent scales between panels that invite
    comparison, missing units, missing baselines (a PR curve without its prevalence line, a
    discrimination plot without 0.5).
@@ -1106,7 +1202,9 @@ limitations as drafted sentences ready to insert.
 **Why:** the cheapest way to find what Reviewer 2 will say is to be Reviewer 2 first.
 
 ```text
-You are Reviewer 2 for a clinical machine-learning journal, assigned manuscript/main.tex.
+You are Reviewer 2 for BMC Medical Informatics and Decision Making, assigned
+manuscript/main.tex. Its readership is health-informatics and clinical decision-support
+researchers, so weight methodological and deployment questions accordingly.
 You are fair but skeptical, you have reviewed many small-cohort prediction-model papers,
 and you are unimpressed by methodology described rather than demonstrated. Read the whole
 manuscript. Do not edit it.
@@ -1196,11 +1294,16 @@ Evaluate the front matter of manuscript/main.tex for discoverability and fit. Do
    design, the population, and the claim.) Does it name the study design and setting?
    Is it within typical length limits? Propose three alternatives — one descriptive, one
    finding-forward, one design-forward — each with a matching short title.
-2. ABSTRACT: word count against a 250-word budget; structural fit with the target journal's
-   required headings; whether any abbreviation is used undefined; whether any claim exceeds
-   the body (cross-check with P5 and P10); whether the Conclusions sentence is a conclusion
-   or a restatement of results.
-3. KEYWORDS: the current ten include both broad and highly specific terms. Assess overlap
+2. ABSTRACT: exact word count against BMC Medical Informatics and Decision Making's
+   350-word limit — a rough count gives ~349, so the abstract has essentially no headroom
+   and any addition requires a cut elsewhere; identify the weakest 30 words to trade away
+   if room is needed. Check the headings read exactly Background / Methods / Results /
+   Conclusions; whether any abbreviation is used undefined; whether any citation or
+   equation appears (BMC forbids both); whether any claim exceeds the body (cross-check
+   with P5 and P10); and whether the Conclusions sentence is a conclusion or a restatement
+   of results.
+3. KEYWORDS: ten at present, mixing broad and highly specific terms. Check the count
+   against the journal's permitted range and whether it wants MeSH terms. Assess overlap
    with the title (keywords that duplicate title words are wasted, since title words are
    already indexed), MeSH alignment for a biomedical index, and whether the set would
    surface this paper for the searches its intended readers actually run. Propose a revised
@@ -1249,115 +1352,179 @@ Write to manuscript/references/prompts/findings/p25-voice.md.
 
 ---
 
-## P26 — Adherence to the journal's submission guidelines
+## P26 — Adherence to BMC Medical Informatics and Decision Making's guidelines
 
 **Why:** P9 asks whether an editor would return the paper; this one checks it line by line
-against the journal's actual Instructions for Authors. **It needs the target journal named.**
-Nothing in the repo names one, and the current class option (`sn-mathphys-num`, a
-mathematical/physical-sciences reference style) is very likely wrong for a clinical title —
-so decide the target before running this, or run it in shortlist mode as described below.
+against the journal's actual Instructions for Authors. The target is fixed — *BMC Medical
+Informatics and Decision Making* — so this prompt needs no input from you, and it is worth
+running **early**. BMC's requirements here are structural (a prescribed section order, a
+List of abbreviations, a fixed Declarations block, its own LaTeX template), and reworking
+structure after the prose has been polished throws the polish away.
 
 ```text
-You are checking manuscript/main.tex for compliance with a specific journal's submission
-guidelines. Do not edit the manuscript — produce a compliance matrix and a submission-day
+You are checking manuscript/main.tex for compliance with the submission guidelines of
+BMC Medical Informatics and Decision Making (BMC, part of Springer Nature; fully open
+access). Do not edit the manuscript — produce a compliance matrix and a submission-day
 checklist.
 
-TARGET JOURNAL: <<<fill in the journal name and the URL of its Instructions for
-Authors / Submission Guidelines page>>>
+Do not read manuscript/archived_versions/. Those are superseded drafts kept for personal
+reference and form no part of the submission.
 
-If no journal is named above, do not invent one. Instead run in SHORTLIST MODE: propose
-four candidate journals that fit this paper (a 187-patient single-center diabetic
-peripheral neuropathy prediction-model study with counterfactual explanations, from the
-Philippines), each with scope fit, typical article type, whether it is indexed in
-MEDLINE/PubMed, open-access status and APC, and the two or three guideline requirements
-that would most affect this manuscript. Then run the full check below against Springer
-Nature's general research-article requirements as a placeholder and mark every
-journal-specific item as PENDING JOURNAL SELECTION.
+FIRST, FETCH THE GUIDELINES. Work from the live pages, not from memory — BMC's
+requirements change, and a stale requirement is worse than no requirement. Fetch at least:
+  - the journal's submission guidelines, including the "Preparing your manuscript" page
+    for the Research article type
+    (https://bmcmedinformdecismak.biomedcentral.com/submission-guidelines)
+  - BMC's editorial policies (https://www.biomedcentral.com/getpublished/editorial-policies)
+  - the journal's aims-and-scope page
+Quote the guideline text for every item you check, with its URL. If a page will not fetch,
+mark the items depending on it UNVERIFIED rather than filling the gap from memory.
 
-Fetch the journal's live Instructions for Authors rather than working from memory —
-guidelines change and a stale requirement is worse than no requirement. Quote the
-guideline text for each item you check. If you cannot fetch it, say so and mark the whole
-check UNVERIFIED rather than guessing.
+The notes below record what the guidelines said when this prompt was written. Treat each
+as a claim to confirm or correct, and say explicitly wherever the live guidelines differ
+from what is written here — that discrepancy list is itself a deliverable.
 
-Produce a compliance matrix with one row per requirement: requirement (quoted) | what the
-manuscript currently does (with line number) | COMPLIES / VIOLATES / NOT APPLICABLE /
-AUTHOR DECISION NEEDED | what to change.
+Produce a compliance matrix, one row per requirement: requirement (quoted, with URL) |
+what the manuscript currently does (with line number) | COMPLIES / VIOLATES / NOT
+APPLICABLE / AUTHOR DECISION NEEDED | what to change.
 
 Cover at least:
 
-A. SCOPE AND ARTICLE TYPE. Does the journal accept this article type (original research /
-   original article)? Does the study fall within its stated scope? Is there an article
-   type that fits better (e.g. "brief report" given the cohort size)? Flag scope mismatch
-   as a BLOCKER — it is the most common desk rejection reason after incompleteness.
-B. LENGTH LIMITS. Whole-text word count, abstract word count, number of figures, number of
-   tables, number of references, number of supplementary items. This manuscript currently
-   has roughly 16 main-text figures and 13 tables, which exceeds the limit at most clinical
-   journals — report the exact overage and propose which specific floats move to
-   supplementary, ranked by how little the main argument loses.
-C. STRUCTURE. Required section headings and their order (most clinical journals require
-   IMRaD with a distinct Results section; this manuscript reports results inside the
-   Discussion). Required abstract structure and headings — check the journal's exact
-   heading words (Background/Methods/Results/Conclusions vs Objective/Design/Setting/...)
-   against what the manuscript uses. Whether abstracts may contain citations,
-   abbreviations, or statistics.
-D. TITLE PAGE AND FRONT MATTER. Title length limit; running/short title limit; whether the
-   design must appear in the title; author name format; maximum author count and whether a
-   contribution statement is required for that number (there are 11 authors); ORCID
-   requirement (mandatory for corresponding author at many publishers, and every \email
-   field for co-authors currently contains placeholder text); affiliation format;
-   corresponding-author designation and required contact details; keyword count and whether
-   MeSH terms are required.
-E. MANDATORY STATEMENTS. List every statement the journal requires, with its required
-   heading wording: funding, competing interests, ethics approval and consent to
-   participate (with committee name and reference number), consent for publication,
-   data availability (and whether a specific repository or access statement is mandatory),
-   materials availability, code availability, author contributions (CRediT taxonomy?),
-   acknowledgements, and any AI-use statement (see P27). For each, quote the journal's
-   required wording and report whether the manuscript has it. All of these are currently
-   empty headings in the Declarations section.
-F. REPORTING GUIDELINE AND CHECKLIST. Whether the journal mandates TRIPOD+AI, TRIPOD,
-   CLAIM, or STARD for this study type; whether a completed checklist must be uploaded as a
-   separate file; whether the checklist must cite page/line numbers; whether the guideline
-   must be named in the Methods.
-G. ETHICS AND REGISTRATION. Declaration-of-Helsinki statement wording; whether the ethics
-   committee's approval number must appear in Methods as well as Declarations; whether
-   study registration is required for this design and, if so, where the number goes.
-H. FIGURES AND TABLES. Accepted file formats and whether figures must be uploaded as
-   separate files rather than embedded (the Springer template header in main.tex says they
-   must); minimum resolution for line art, halftone, and combination art; maximum
-   dimensions; whether color is free online and charged in print; caption placement and
-   length limits; whether captions may contain citations; table formatting rules (no
-   vertical rules, footnote symbol order); whether figures must be cited in order.
-I. REFERENCES. Required style and whether the manuscript's document-class option produces
-   it (currently sn-mathphys-num; sn-vancouver-num is the usual clinical choice); maximum
-   reference count; DOI requirement; whether preprints, websites, or personal
-   communications are permitted and how they are formatted; "et al." threshold; whether
-   references must be in first-citation order.
-J. SUBMISSION PACKAGE. Enumerate every file the journal requires at submission and what
-   this repo currently has or lacks: cover letter (and what it must state), title page as a
-   separate blinded/unblinded file, main manuscript file, figure files, table files,
-   supplementary material, reporting checklist, ethics documentation, consent forms,
-   author agreement or copyright form, highlights, graphical abstract, suggested and
-   opposed reviewers, and any conflict-of-interest form per author.
-K. PEER-REVIEW MODEL. Single-blind, double-blind, or open. If double-blind, list every
-   identifying element that must be stripped: author names and affiliations, the named
-   hospital and city, funding acknowledgements, self-citations phrased in the first person,
-   dataset and repository names, and file metadata.
-L. PRODUCTION FORMALITIES. Line numbering and double spacing for review; page numbering;
-   font and margin requirements; whether LaTeX is accepted at all and which template
-   version; whether a PDF or source files are submitted; permissions and credit lines for
-   any reproduced or adapted material.
-M. POLICY ITEMS. Preprint policy and whether posting affects eligibility; data-sharing
-   policy; plagiarism/similarity screening threshold; duplicate and overlapping publication;
-   authorship criteria (ICMJE) and whether all 11 authors meet them; APC and waiver
-   eligibility for the corresponding author's country.
+A. SCOPE AND ARTICLE TYPE. Confirm "Research article" is the right type, and check the
+   alternatives the journal offers (Software, Database, Study protocol, Debate,
+   Correspondence) in case one fits better. Check the study against the stated scope:
+   clinical decision support and machine learning on health data sit squarely inside it,
+   so if scope fit is fine, say so plainly rather than manufacturing a concern. Note
+   whether the journal is running an article collection or thematic series this paper
+   should be submitted to, and whether that changes any requirement or deadline.
+B. LENGTH AND FLOAT COUNT. BMC Research articles have no limit on words, figures, tables,
+   or references — verify that this still holds. If it does, do NOT report the 16 figures,
+   13 tables, or 57 references as a compliance violation. Report them instead as an
+   editorial-judgment item: which floats earn their place in the main text and which serve
+   the reader better as Additional files, ranked by how little the argument loses. Check
+   BMC's rule on large tables belonging in Additional files against each of the 13. The one
+   hard limit is the abstract at 350 words: the current abstract is ~349 words by rough
+   count, so count it exactly under the journal's own counting rule and report the margin.
+C. STRUCTURE. BMC prescribes the section order for a Research article: Title page;
+   Abstract; Keywords; Background; Methods; Results; Discussion; Conclusions; List of
+   abbreviations; Declarations; References; then figure legends, tables, and descriptions
+   of additional files. Confirm that order, then check the manuscript against it and report
+   every deviation:
+   - \section{Introduction} (line 182) must become Background.
+   - \section{Conclusion} (line 1241) must become Conclusions.
+   - \section{Data Collection} (line 211) is a top-level section with no slot in the
+     prescribed order. Decide where it goes — most of it is Methods — and say exactly what
+     moves where, including whether any of it belongs in Background.
+   - There is no List of abbreviations section; BMC requires one. P17 builds the register
+     that fills it, so cross-reference P17 rather than redoing that work.
+   - Results and Discussion are already separate sections. Verify the split actually holds:
+     no results-only material left in the Discussion, no interpretation stranded in
+     Results.
+   - The abstract's headings must be exactly Background / Methods / Results / Conclusions.
+     Check the wording used, and check that the abstract contains no citation, no equation,
+     and no undefined abbreviation.
+D. TITLE PAGE AND FRONT MATTER. Title format and any length limit; whether the design
+   should appear in the title; the short/running title; full names and affiliations for all
+   11 authors; an email address for every author — eight \email fields currently hold the
+   literal placeholder "email address or ORCID", which on its own is a return without
+   review; the corresponding author designated with complete contact details; ORCID
+   requirements; keyword count and whether MeSH terms are wanted (there are ten keywords).
+E. MANDATORY DECLARATIONS. BMC requires a Declarations section whose subheadings are fixed
+   and which must all appear even when the answer is "Not applicable": Ethics approval and
+   consent to participate; Consent for publication; Availability of data and materials;
+   Competing interests; Funding; Authors' contributions; Acknowledgements; and the optional
+   Authors' information. Confirm that list and its order against the live guidelines, then
+   check the manuscript's Declarations at line 1275 — currently a bare itemize of the
+   *Springer* template's headings, a different list in a different order, with no content
+   under any of them. Report each missing statement separately as a BLOCKER, and check
+   these BMC-specific requirements:
+   - Ethics approval must name the approving committee and its reference number, and state
+     that informed consent was obtained, or that consent was waived, by whom, and why. This
+     is a human-subjects study at East Avenue Medical Center.
+   - Consent for publication is required where a manuscript contains any individual
+     person's data. This one presents individual patients by study code with their clinical
+     attributes, so establish what BMC's rule actually says about de-identified
+     individual-level data and report the answer rather than assuming either way. See P16.
+   - Availability of data and materials is mandatory and must appear even when the data
+     cannot be shared, with the reason and the conditions of access stated. Draft the
+     options the authors can choose between.
+   - Authors' contributions must be given per author. With 11 authors, check that each has
+     a stated contribution and that the set is consistent with the authorship criteria.
+   - Acknowledgements (line 1271) is empty, and may also be where the AI-use disclosure
+     belongs — see P27.
+F. REPORTING GUIDELINE AND CHECKLIST. BMC requires adherence to the relevant EQUATOR
+   guideline; for a diagnostic or prognostic prediction model that is TRIPOD, and TRIPOD+AI
+   for a machine-learning model. Establish which guideline the journal names, whether the
+   completed checklist must be uploaded as an Additional file, whether it must carry page
+   or line numbers, and whether the guideline must be named in the Methods. Cross-reference
+   P12 for the checklist's content instead of repeating it.
+G. ETHICS AND REGISTRATION. Declaration of Helsinki wording; whether the approval number
+   must appear in the Methods as well as the Declarations; prospective versus retrospective
+   consent; whether an observational study of this design requires registration under the
+   journal's policy and, if so, where the number goes; any data-protection statement
+   required for patient-level data.
+H. FIGURES, TABLES, AND ADDITIONAL FILES. Verify each of these and check every float
+   against it:
+   - Figures uploaded as separate files, one figure per file, none embedded in the
+     manuscript file; the accepted formats and the minimum resolution for each.
+   - Figure title and legend supplied in the manuscript text rather than inside the image,
+     with BMC's limits on title length and legend length. Several current captions run well
+     past 150 words — P20 already flags them; here, check them against the actual limit.
+   - Figure sizing for the journal's column widths, and minimum text size within the
+     artwork.
+   - Tables supplied as editable text and never as images, numbered, cited in order, each
+     with a title; BMC's rules on colour and shading in tables; large tables moved to
+     Additional files.
+   - Additional files: numbered "Additional file 1" onward, each with a format, title, and
+     description, and each cited in the text. The manuscript currently carries its
+     supplementary material as a LaTeX appendix, which is not the same thing. List exactly
+     what has to move out of the .tex into separate files.
+I. REFERENCES. Establish BMC's reference style precisely — author-list truncation and the
+   "et al." threshold, journal-name abbreviation, whether DOIs are required, and how
+   preprints, datasets, software, and web pages are formatted — then check whether
+   sn-mathphys-num produces anything close. It does not, so state the fix concretely:
+   BMC's own BibTeX style if the BMC template is adopted, or the nearest mapped equivalent.
+   Also check first-citation ordering, cited-but-absent and present-but-uncited entries
+   (cross-reference P18), and whether any of the 57 entries is of a type BMC restricts.
+J. SUBMISSION PACKAGE AND SYSTEM. Enumerate every file the submission requires and what
+   this repo has or lacks: cover letter and what BMC wants it to state, the manuscript
+   file, separate figure files, additional files, the reporting checklist, ethics
+   documentation, and any author or competing-interest forms. Establish which portal the
+   journal currently uses — BMC journals have been migrating to Springer Nature's
+   submission system — and whether it accepts LaTeX source, requires a PDF, or wants both.
+K. PEER-REVIEW MODEL AND TRANSPARENCY. Establish which model this journal uses and whether
+   it publishes the peer-review history alongside accepted articles, since that determines
+   what the authors should be willing to have made public. If any anonymisation is
+   required, list every identifying element to strip: author names and affiliations, the
+   named hospital and city, funding acknowledgements, first-person self-citations, dataset
+   names, and file metadata. If review is not blinded, say so and drop the item rather than
+   padding the matrix.
+L. TEMPLATE AND PRODUCTION FORMALITIES. This is the item most likely to require real work.
+   The manuscript is built on Springer Nature's sn-jnl class, while BMC has historically
+   had its own LaTeX template and style files. Establish which template the journal
+   currently accepts and whether sn-jnl is acceptable for a BMC-series submission. If it is
+   not, cost the conversion: enumerate the specific constructs in main.tex that would not
+   survive it (\bmhead, \abstract as a command, \keywords, the affiliation macros, the
+   appendices environment, sn-mathphys-num) and estimate the work. Also check line and page
+   numbering for review, spacing requirements, and permissions or credit lines for any
+   adapted material.
+M. POLICY ITEMS. Preprint policy; data-sharing policy; similarity screening; duplicate and
+   overlapping publication; ICMJE authorship criteria against all 11 authors; the open
+   access licence and what it implies for any reused material; and the article-processing
+   charge — establish the current fee for this journal, and whether the corresponding
+   author qualifies for a waiver or discount given a Philippine institution, checking the
+   journal's waiver policy and Springer Nature's country-based scheme rather than assuming
+   an answer. Report the APC as AUTHOR DECISION NEEDED with the figure attached: it is the
+   most common reason a fully compliant manuscript still does not get submitted.
 
 Finish with two deliverables: (1) a numbered pre-submission checklist ordered so it can be
-worked through on submission day, with each item marked as "Claude can draft this" or
-"author decision required"; and (2) the exact list of changes needed in main.tex, grouped
-by whether they are LaTeX/class changes, content additions, or structural rework.
+worked through on submission day, each item marked "Claude can draft this" or "author
+decision required"; and (2) the exact list of changes needed in main.tex, grouped into
+template/LaTeX changes, content additions, and structural rework, with the structural
+rework ordered first so it is done before any further prose polishing.
 
-Write to manuscript/references/prompts/findings/p26-submission-guidelines.md.
+Write to manuscript/references/prompts/findings/p26-submission-guidelines.md, opening with
+the list of places where the live guidelines differed from the notes in this prompt.
 ```
 
 ---
@@ -1375,9 +1542,13 @@ You are checking manuscript/main.tex against publisher policy on the use of larg
 models and generative AI. Do not edit the manuscript — report findings and draft the
 disclosure text.
 
-TARGET JOURNAL / PUBLISHER: <<<fill in; if blank, check against Springer Nature's AI
-policy plus the ICMJE recommendations and COPE's position statement, and say that is what
-you did>>>
+TARGET JOURNAL / PUBLISHER: BMC Medical Informatics and Decision Making — BMC, part of
+Springer Nature. Check against BMC's own editorial policy on AI use, Springer Nature's
+policy where BMC defers to it, and the ICMJE recommendations and COPE position statement,
+both of which BMC endorses. Where the three differ, comply with the strictest. Note in
+particular that Springer Nature currently asks for LLM use to be documented in the
+Methods, or in a suitable alternative section where there is no Methods — confirm where
+BMC wants it and do not assume the Acknowledgements is sufficient.
 
 Fetch the publisher's current policy rather than relying on memory, and quote it. Policies
 in this area changed materially in 2023-2025 and are still moving.
@@ -1465,18 +1636,23 @@ inventory table, then the compliance matrix, then the three drafted statements.
 
 # Part C — Running the pack
 
-**Suggested order.** Content correctness before polish; polish before compliance; the
-editor's eye last.
+**Suggested order.** Structure first, then content correctness, then polish; the editor's
+eye last. P26 moved to the front once the target journal was fixed: *BMC Medical
+Informatics and Decision Making* requires section renames, a new List of abbreviations
+section, a rebuilt Declarations block, supplementary material moved out into Additional
+files, and possibly a template conversion. All of that reorders and renames text, and
+every language check run before it would have to be run again after.
 
 | Wave | Prompts | Rationale |
 | --- | --- | --- |
+| 0. Journal fit | P26 | Establish what BMC actually requires before anything else moves. Its structural demands change what the later checks are aiming at. Apply the structural rework it finds before running wave 5. |
 | 1. Ground truth | P14, P2, P15, P11 | Establish that the numbers and figures are real and current. Everything downstream is worthless if they are not. |
 | 2. Internal consistency | P3, P10, P18 | Make the manuscript agree with itself. |
 | 3. Evidence and sources | P4, P13, P12, P21 | Make the manuscript agree with its sources and its own limits. |
 | 4. Argument | P5, P23, P22 | Size the claims; position them; then attack them. |
 | 5. Language | P7, P6, P8, P17, P1, P25 | Polish only after the content stops moving. |
 | 6. Presentation | P20, P19, P24 | Floats, build, front matter. |
-| 7. Compliance | P26, P27 | Journal guidelines and AI-use policy. Run P26 early too, if the target journal is already chosen — its length and structure limits change what the other checks are aiming at. |
+| 7. Compliance | P26 (re-run), P27 | Re-run P26 as a verification pass once its findings have been applied, then check AI-use policy. |
 | 8. Gate | P16, P9 | Privacy and the desk-rejection sweep, re-run after all edits are applied. |
 
 **Notes on execution:**
@@ -1488,9 +1664,17 @@ editor's eye last.
   breakage is caught next to the edit that caused it.
 - Keep every findings file. When a finding is dismissed rather than fixed, record why in
   the same file — that record is what you will want when a reviewer raises the same point.
-- P26 and P27 both need an input you must supply: the target journal. P26 is close to
-  useless without it (it degrades to shortlist mode); P27 falls back to Springer Nature
-  plus ICMJE and COPE, which is a reasonable floor.
+- P26 and P27 are both written against *BMC Medical Informatics and Decision Making* and
+  need no input from you. Both instruct fetching the live guidelines rather than trusting
+  the requirements recorded in this pack; if a session cannot reach the web, its
+  journal-specific findings are UNVERIFIED and should be treated that way.
+- Nothing in `manuscript/archived_versions/` is part of the review. It holds superseded
+  drafts kept for personal reference. If a check cites one, the finding is invalid — the
+  current `main.tex` is the only text under review.
+- The BMC-specific facts seeded through this pack (no length limits, the prescribed section
+  order, the mandatory List of abbreviations, the 350-word abstract, BMC's own template)
+  were written down at one point in time. Each prompt that uses one says to confirm it.
+  When a session finds the live guidelines say otherwise, fix this pack too.
 - P27 is only truthful once P4 has passed — you cannot attest that citations were
   human-verified before verifying them. Run P4 first.
 - The acronym first-use audit lives inside P17, item 1; there is no separate prompt for

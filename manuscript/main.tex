@@ -560,7 +560,7 @@ Table~\ref{tab:cf_features} shows the feature set and their suitability for coun
 \begin{table}[tbp]
     \centering
     \footnotesize
-    \begin{tabular}{p{0.1\linewidth} p{0.25\linewidth} p{0.1\linewidth} p{0.35\linewidth}}
+    \begin{tabular}{p{0.14\linewidth} p{0.25\linewidth} p{0.115\linewidth} p{0.35\linewidth}}
         \toprule
         \textbf{Group} &  \textbf{Feature(s)} & \textbf{Suitable?} & \textbf{Reason} \\
         \midrule
@@ -610,7 +610,7 @@ where $x_{min}$ and $x_{max}$ denote the observed minimum and maximum values, re
 \begin{table}[tbp]
     \centering
     \small
-    \begin{tabular}{lll}
+    \begin{tabular}{@{}p{0.22\linewidth} p{0.24\linewidth} p{0.44\linewidth}@{}}
         \toprule
         Component & Parameter & Value / Description \\
         % \multirow{3}{*}{Data (dice\_ml.Data)}
@@ -625,7 +625,7 @@ where $x_{min}$ and $x_{max}$ denote the observed minimum and maximum values, re
         & backend & sklearn \\
         & model\_type & classifier \\
         \midrule
-        DiCE object(dice\_ml.Dice)  & method & genetic \\
+        DiCE object (dice\_ml.Dice)  & method & genetic \\
         \bottomrule
     \end{tabular}
     \caption{Configuration parameters used to initialize the DiCE (Diverse Counterfactual Explanations) framework for post-hoc model interpretability, instantiated once per fold model. Three core objects were instantiated: the Data object (dice\_ml.Data), which supplies that fold's held-out test set as DiCE's background data alongside the continuous and binary categorical input features and their globally permitted ranges; the Model object (dice\_ml.Model), which wraps that fold's trained CatBoost classifier operating under that fold's own tuned decision threshold (Section~\ref{sec:hpo}); and the DiCE object (dice\_ml.Dice), which executes counterfactual generation using a genetic algorithm. Together, these components enable the generation of actionable counterfactual explanations that identify the minimal feature changes required to alter a patient's predicted DPN classification.}
@@ -656,7 +656,7 @@ The parameters used for local counterfactual generation are summarized in Table~
 \begin{table}[tbp]
     \centering
     \small
-    \begin{tabular}{ll}
+    \begin{tabular}{@{}p{0.33\linewidth} p{0.6\linewidth}@{}}
         \hline
         \textbf{Parameter} & \textbf{Value / Description} \\
         \hline
@@ -848,6 +848,7 @@ The F1-scores, ranging from 0.774 to 0.879 (mean: 0.842), and AUPRC values rangi
 \begin{table}[tbp]
     \centering
     \footnotesize
+    \setlength{\tabcolsep}{4pt}
     \begin{tabular}{llcccccc}
         \toprule
         & & Model 0 & Model 1 & Model 2 & Model 3 & Mean & Std\\

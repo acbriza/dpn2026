@@ -350,15 +350,16 @@ def _load_case_changes(cf_dir, model_code, midx, patient_code, actionable_featur
     return baseline, changes[order]
 
 
-def plot_case_study_counterfactuals(config, config_path, outputdir):
-    """One combined figure for the patients the manuscript discusses individually.
+def _cf_panel_figure(config, config_path, outputdir, case_codes, filename,
+                     row_height=0.055, panel_pad=0.78, hspace=0.55):
+    """One combined figure holding a panel per patient in `case_codes`.
 
     Replaces the per-patient full-page reports that `cfreports.py`'s
     `plot_local_cf_heatmap2` writes (those stay, as the per-patient diagnostic for all
     successful instances); this is the manuscript figure, and it differs in three ways
     that matter for reading it:
 
-    - Three patients share one figure instead of one full page each.
+    - Several patients share one figure instead of one full page each.
     - HbA1c gets a real quantitative axis rather than a colour, and the axis is shared
       across the panels, so HbA1c changes are comparable *between* patients. The
       per-patient heatmap could not support that comparison: it gave each patient its
@@ -376,7 +377,6 @@ def plot_case_study_counterfactuals(config, config_path, outputdir):
     tag = config.counterfactuals.tag
     nsplits = config.counterfactuals.nsplits
     actionable_features = config.counterfactuals.actionable_features.split(',')
-    case_codes = [int(c) for c in str(config.counterfactuals.case_studies).split(',')]
 
     binary_features = [f for f in actionable_features if f != 'HBA1C']
     hba1c_col = actionable_features.index('HBA1C')
@@ -425,10 +425,10 @@ def plot_case_study_counterfactuals(config, config_path, outputdir):
     # legend -- scaling the whole figure by the row count instead would leave a short
     # panel's labels overlapping and a tall one's rows absurdly far apart.
     heights = [len(c['changes']) for c in cases]
-    fig_height = 0.055 * sum(heights) + 0.78 * len(cases) + 0.45
+    fig_height = row_height * sum(heights) + panel_pad * len(cases) + 0.45
     fig = plt.figure(figsize=(6.5, fig_height))
     gs = fig.add_gridspec(len(cases), 2, height_ratios=heights,
-                          width_ratios=[1.15, 1], hspace=0.55, wspace=0.14)
+                          width_ratios=[1.15, 1], hspace=hspace, wspace=0.14)
 
     for i, case in enumerate(cases):
         changes = case['changes']
@@ -490,11 +490,48 @@ def plot_case_study_counterfactuals(config, config_path, outputdir):
 
     cf_out_dir = outputdir / 'counterfactuals'
     cf_out_dir.mkdir(parents=True, exist_ok=True)
-    path = cf_out_dir / 'case_study_counterfactuals.png'
+    path = cf_out_dir / filename
     fig.savefig(path, dpi=300, bbox_inches='tight')
     plt.close(fig)
     print(f'Wrote {path} (patients {", ".join(str(c) for c in case_codes)})')
     return path
+
+
+def _case_study_codes(config):
+    return [int(c) for c in str(config.counterfactuals.case_studies).split(',')]
+
+
+def plot_case_study_counterfactuals(config, config_path, outputdir):
+    """The manuscript figure: the patients the main text discusses individually."""
+    return _cf_panel_figure(config, config_path, outputdir, _case_study_codes(config),
+                            'case_study_counterfactuals.png')
+
+
+def plot_remaining_counterfactuals(config, config_path, outputdir, instance_table):
+    """The same figure for the successful instances the main text does not discuss.
+
+    The appendix companion to `plot_case_study_counterfactuals`: every instance that
+    produced counterfactuals but was not selected as a case study, so between the two
+    figures the manuscript shows all of them. The membership is derived from the
+    instance table rather than listed in the config, so selecting a different case
+    study moves that patient between the two figures instead of dropping it from both
+    or showing it twice.
+
+    Panels here share their own HbA1c axis, not the case-study figure's: the two
+    figures are read separately, and a scale stretched to cover both would flatten the
+    differences within each.
+    """
+    case_codes = _case_study_codes(config)
+    remaining = [int(c) for c in instance_table['Patient Code'] if c not in case_codes]
+    # Five panels rather than three, and the manuscript places this one on a page of
+    # its own, so the rows are drawn tighter to keep the figure plus its caption within
+    # a single text height. `hspace` is raised to compensate: it is a fraction of the
+    # mean panel height, so shorter panels would otherwise shrink the gap between them
+    # below what a panel's x-axis label and the next panel's title need, while the
+    # space those two need does not shrink with the panels.
+    return _cf_panel_figure(config, config_path, outputdir, remaining,
+                            'remaining_counterfactuals.png',
+                            row_height=0.048, hspace=0.75)
 
 
 def main():
@@ -516,8 +553,9 @@ def main():
     shutil.copy(config_path / config_filename, outputdir / config_filename)
 
     consolidate_selection(config, config_path, outputdir)
-    consolidate_counterfactuals(config, config_path, outputdir)
+    instance_table, _, _ = consolidate_counterfactuals(config, config_path, outputdir)
     plot_case_study_counterfactuals(config, config_path, outputdir)
+    plot_remaining_counterfactuals(config, config_path, outputdir, instance_table)
 
 
 if __name__ == "__main__":

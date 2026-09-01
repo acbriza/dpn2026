@@ -985,7 +985,7 @@ This low yield is a direct, documented consequence of how DiCE's genetic search 
 \subsubsection{Instance Level Counterfactual Analysis}
 %=====================================================
 \label{sec:instance-level-cf}
-In this section we examine three of the eight successful instances individually, chosen to span the three clinically distinct scenarios a screening tool can produce: a borderline false positive, a borderline true positive, and a confident false negative. Unlike the model's decision threshold or feature importances, these are patient-specific, so we deliberately draw the three cases from three different fold models (3, 0, and 1 respectively) rather than confining the discussion to a single fold. The counterfactuals generated for these instances are shown together in Figure~\ref{fig:localcf-cases}. The remaining five successful instances (Patients 29, 76, 125, 23, 172; Table~\ref{tab:localcf-listing}) are covered only at the aggregate level in Section~\ref{sec:aggregate-cf} below.
+In this section we examine three of the eight successful instances individually, chosen to span the three clinically distinct scenarios a screening tool can produce: a borderline false positive, a borderline true positive, and a confident false negative. Unlike the model's decision threshold or feature importances, these are patient-specific, so we deliberately draw the three cases from three different fold models (3, 0, and 1 respectively) rather than confining the discussion to a single fold. The counterfactuals generated for these instances are shown together in Figure~\ref{fig:localcf-cases}. The remaining five successful instances (Patients 29, 76, 125, 23, 172; Table~\ref{tab:localcf-listing}) are not discussed individually here; their counterfactuals are shown in Figure~\ref{fig:s5} (Appendix) and enter the aggregate analysis in Section~\ref{sec:aggregate-cf} below.
 
 Before turning to the individual cases, it is worth stating explicitly how a counterfactual for this task should be read, because these three cases differ along two independent axes and conflating them is the likeliest source of misinterpretation.
 
@@ -1095,7 +1095,7 @@ At this point we analyze counterfactuals for all models on the aggregate level. 
 \begin{figure}
     \centering
     \includegraphics[width=0.6\textwidth]{references/postreport/counterfactuals/global_cf_counts.png}
-    \caption{Counts of counterfactual feature changes, broken down by feature and by the model (fold) that produced them. Models 0 and 3 both show HbA1c as the most frequently changed feature (69 and 51 changes respectively), with insulin and dyslipidemia as substantial secondary contributors in Model 0 (43 and 41) and insulin the clear second driver in Model 3 (31). Model 1---contributing only Patient 123's 25 counterfactuals---shows a markedly different pattern, with hypertension (15) and PAOD (11) changed more often than insulin (7), reflecting that single patient's specific profile rather than a general property of that fold. Model 2 is absent because it produced zero successful counterfactuals (Section~\ref{sec:cf-plausibility}). We include this per-model breakdown, rather than omitting it, precisely because the differences between models are informative: they show that the ``most actionable feature'' answer is not fixed across the pipeline but depends on which patients happen to need correcting in a given fold, which is itself a caveat readers should weigh against any single-number summary of counterfactual feature importance.}
+    \caption{Counts of counterfactual feature changes, broken down by feature and by the model (fold) that produced them. Models 0 and 3 both show HbA1c as the most frequently changed feature (69 and 51 changes respectively), with insulin and dyslipidemia as substantial secondary contributors in Model 0 (43 and 41) and insulin the clear second driver in Model 3 (31). Model 1---contributing only Patient 123's 24 counterfactuals---shows a markedly different pattern, with hypertension (15) and PAOD (11) changed more often than insulin (7), reflecting that single patient's specific profile rather than a general property of that fold. Model 2 is absent because it produced zero successful counterfactuals (Section~\ref{sec:cf-plausibility}). We include this per-model breakdown, rather than omitting it, precisely because the differences between models are informative: they show that the ``most actionable feature'' answer is not fixed across the pipeline but depends on which patients happen to need correcting in a given fold, which is itself a caveat readers should weigh against any single-number summary of counterfactual feature importance.}
     \label{fig:globalcf}
 \end{figure}
 
@@ -1222,6 +1222,8 @@ binary candidate predictors, respectively. Figure~\ref{fig:s3} examines redundan
 multicollinearity among the 22 candidate predictors. Table~\ref{tab:s1_provenance} documents the
 provenance and completeness of the analyzed dataset. Figure~\ref{fig:s4} shows the distributions
 of the six counterfactual-actionable features discussed alongside Figure~\ref{fig:univariable_discrimination}.
+Figure~\ref{fig:s5} shows the counterfactuals generated for the five successful instances that
+the main text does not examine individually.
 
 % ===================== Figure S1 =====================
 \begin{figure}[!ht]
@@ -1355,6 +1357,27 @@ of the six counterfactual-actionable features discussed alongside Figure~\ref{fi
     counterfactual results: the actionable feature with genuine univariable signal would be
     expected to appear among the most frequently altered features in the generated counterfactuals.}
     \label{fig:s4}
+\end{figure}
+
+\clearpage
+
+% ===================== Figure S5 =====================
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.83\textwidth]{references/postreport/counterfactuals/remaining_counterfactuals.png}
+    \caption{\textbf{Counterfactuals for the five successful instances not examined
+    individually in the main text.} \textbf{a} Patient 29 (Model 0), \textbf{b} Patient 76
+    (Model 0), \textbf{c} Patient 125 (Model 0), \textbf{d} Patient 23 (Model 3),
+    \textbf{e} Patient 172 (Model 3). All five lie within 0.07 of their fold's decision
+    threshold, and all are correctly classified except Patient 125, a false positive. The
+    panels are constructed and read exactly as in Figure~\ref{fig:localcf-cases}, whose
+    caption gives the full reading conventions; the HbA1c axis is shared by these five
+    panels but is not the axis of that figure, so magnitudes should be compared within a
+    figure rather than across the two. HbA1c is changed in every counterfactual for four of
+    the five patients, the exception being Patient 76 (13 of 21), whose set is dominated
+    instead by dyslipidemia (20 of 21); insulin is changed in all 17 counterfactuals for
+    Patient 29 and in none at all for Patients 125 and 172.}
+    \label{fig:s5}
 \end{figure}
 
 \end{appendices}

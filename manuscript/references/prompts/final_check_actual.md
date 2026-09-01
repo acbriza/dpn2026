@@ -1371,14 +1371,21 @@ Do not read manuscript/archived_versions/. Those are superseded drafts kept for 
 reference and form no part of the submission.
 
 FIRST, FETCH THE GUIDELINES. Work from the live pages, not from memory — BMC's
-requirements change, and a stale requirement is worse than no requirement. Fetch at least:
-  - the journal's submission guidelines, including the "Preparing your manuscript" page
-    for the Research article type
-    (https://bmcmedinformdecismak.biomedcentral.com/submission-guidelines)
-  - BMC's editorial policies (https://www.biomedcentral.com/getpublished/editorial-policies)
-  - the journal's aims-and-scope page
-Quote the guideline text for every item you check, with its URL. If a page will not fetch,
-mark the items depending on it UNVERIFIED rather than filling the gap from memory.
+requirements change, and a stale requirement is worse than no requirement.
+
+Be aware that the journal has migrated onto SpringerLink: the old
+bmcmedinformdecismak.biomedcentral.com and www.biomedcentral.com author pages now return
+301s to link.springer.com (journal 12911), and an unauthenticated automated fetch of
+link.springer.com/journal/12911/submission-guidelines is bounced to an idp.springer.com
+authorize endpoint. So attempt, in order:
+  - https://link.springer.com/journal/12911/submission-guidelines
+  - https://link.springer.com/journal/12911 (aims and scope, article types)
+  - https://link.springer.com/brands/bmc (BMC-wide policies and author guidance)
+  - the journal's editorial policies page, wherever it now lives
+If those are all blocked, say so plainly, ask the author to open the guidelines in a
+browser and paste them in, and mark every journal-specific item UNVERIFIED in the
+meantime. Do not fill the gap from memory — that is exactly the failure this prompt
+exists to prevent. Quote the guideline text for every item you check, with its URL.
 
 The notes below record what the guidelines said when this prompt was written. Treat each
 as a claim to confirm or correct, and say explicitly wherever the live guidelines differ
@@ -1397,14 +1404,38 @@ A. SCOPE AND ARTICLE TYPE. Confirm "Research article" is the right type, and che
    so if scope fit is fine, say so plainly rather than manufacturing a concern. Note
    whether the journal is running an article collection or thematic series this paper
    should be submitted to, and whether that changes any requirement or deadline.
-B. LENGTH AND FLOAT COUNT. BMC Research articles have no limit on words, figures, tables,
-   or references — verify that this still holds. If it does, do NOT report the 16 figures,
-   13 tables, or 57 references as a compliance violation. Report them instead as an
-   editorial-judgment item: which floats earn their place in the main text and which serve
-   the reader better as Additional files, ranked by how little the argument loses. Check
-   BMC's rule on large tables belonging in Additional files against each of the 13. The one
-   hard limit is the abstract at 350 words: the current abstract is ~349 words by rough
-   count, so count it exactly under the journal's own counting rule and report the margin.
+B. LENGTH AND FLOAT COUNT. BMC Research articles are understood to have no limit on words,
+   figures, tables, or references — verify that this still holds. If it does, do NOT report
+   the 16 figures, 13 tables, or 57 references as a compliance violation. Judge them
+   against what the journal actually publishes instead.
+
+   Reference distribution, measured from 18 Research articles published in this journal
+   between June 2025 and September 2026 (Europe PMC full text; body words exclude figures,
+   tables, and captions):
+
+   | Metric | Median | IQR | Range |
+   | --- | --- | --- | --- |
+   | Body words | 5,584 | 4,500-8,530 | 2,671-11,639 |
+   | Figures | 6 | 3-7 | 2-15 |
+   | Tables | 3 | 1-5 | 0-15 |
+   | References | 42 | 30-68 | 28-79 |
+   | Abstract words | 288 | 264-351 | 165-411 |
+
+   Published PDF length for eight of those articles ran 9-26 pages, median ~15.5. A
+   least-squares fit over those eight gives roughly 4 pages of fixed overhead, 1 page per
+   1,330 body words, 0.7 page per figure, 0.33 page per table, and 0.14 page per 10
+   references — accurate to under a page on all eight, and good enough to project a target.
+
+   This manuscript currently carries ~16,101 body words, 3,275 words of captions across 26
+   floats, 16 figures, 13 tables, and 57 references, which projects to roughly 32 published
+   pages — above every article in the sample. Report the overage against the distribution,
+   not against a limit, and rank the floats by how little the main argument loses if they
+   move to Additional files. Check BMC's rule on large tables belonging in Additional files
+   against each of the 13. Re-measure all of this rather than trusting these numbers.
+
+   The one hard limit is the abstract at 350 words. The current abstract is ~349 words by
+   rough count, so count it exactly under the journal's own counting rule and report the
+   margin.
 C. STRUCTURE. BMC prescribes the section order for a Research article: Title page;
    Abstract; Keywords; Background; Methods; Results; Discussion; Conclusions; List of
    abbreviations; Declarations; References; then figure legends, tables, and descriptions

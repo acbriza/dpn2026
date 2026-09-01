@@ -570,23 +570,17 @@ This section reports the findings of the four modeling stages in the order the p
 %*******************************************************
 \label{sec:results-selection}
 
-\subsubsection{Model Performance}
-%================================
 Across all 40 runs on the full feature set, ensemble tree-based methods consistently outperformed other model families (Additional file~1, Table~\ref{tab:selection_metrics}). Random Forest attained the highest mean AUPRC (0.892 $\pm$ 0.039), narrowly ahead of CatBoost (0.889 $\pm$ 0.044) and Extra Trees (0.885 $\pm$ 0.042); the three are statistically indistinguishable, with all three means falling well within one standard deviation of one another. Naive Bayes (0.884), Logistic Regression (0.880), RBF SVM (0.878), and LDA (0.878) followed closely behind, underscoring that the full feature set carries strong, model-agnostic signal for DPN status rather than favoring any single learning paradigm.
 
 Random Forest and CatBoost occupy essentially the same operating point: sensitivity of 0.916 and 0.913, and specificity of 0.529 and 0.512, respectively. RBF SVM achieved the highest sensitivity overall (0.938), but at the cost of the lowest specificity among the top models (0.453).
 
-\subsubsection{Feature Set Ablation}
-%===================================
-The heatmap of average AUPRC across feature sets (Figure~\ref{fig:auprc_heatmaps}) shows three patterns. First, the top models (Random Forest, CatBoost, Extra Trees) are remarkably robust to the removal of most feature groups: ablating Clinical Profile (NoProf), Comorbidities (NoCom), or MNSI (NoMsi) produced negligible or no AUPRC change for these models (all within 0.01 of the full-feature-set value). The exception is Neurological Examination features (NoNeuro), whose removal produced the largest drop observed for any ablation among the top models (Random Forest and CatBoost both fall to 0.86), suggesting these bedside signs are the least redundant predictors in the set.
+Turning from models to feature groups, the heatmap of average AUPRC across feature sets (Figure~\ref{fig:auprc_heatmaps}) shows three patterns. First, the top models (Random Forest, CatBoost, Extra Trees) are remarkably robust to the removal of most feature groups: ablating Clinical Profile (NoProf), Comorbidities (NoCom), or MNSI (NoMsi) produced negligible or no AUPRC change for these models (all within 0.01 of the full-feature-set value). The exception is Neurological Examination features (NoNeuro), whose removal produced the largest drop observed for any ablation among the top models (Random Forest and CatBoost both fall to 0.86), suggesting these bedside signs are the least redundant predictors in the set.
 
 The Sudoscan-only feature set (Sudo) understandably lowered performance for every model (Random Forest 0.82, CatBoost 0.83), while the additive Sudoscan-anchored feature sets (SudoProf, SudoCom, SudoNeuro, SudoMnsi) demonstrated modest but inconsistent improvements over Sudoscan-only, suggesting diminishing returns from adding other feature groups once Sudoscan data are available. One exception worth noting is that the SudoNeuro combination (Sudoscan with Neurological Examination findings) recovered to within 0.01 of full-feature-set performance for both top models (0.89 Random Forest, 0.90 CatBoost).
 
 We note that since these metrics are based on default hyperparameters, a more complete picture of feature importance will be explored during the hyperparameter optimization and explainability analysis that follow.
 
-\subsubsection{Stability of the Baseline Estimates}
-%==================================================
-The violin plot distributions (Additional file~1, Figure~\ref{fig:auprc_violins}) show that the top models maintain elevated, largely overlapping AUPRC distributions. Random Forest shows the highest median and a comparatively tight interquartile range; CatBoost's median and box are close behind, but with a longer lower tail reaching toward 0.75, indicating an occasional weaker fold rather than a systematically less stable ranking.
+Beyond the mean values, the spread of these estimates matters. The violin plot distributions (Additional file~1, Figure~\ref{fig:auprc_violins}) show that the top models maintain elevated, largely overlapping AUPRC distributions. Random Forest shows the highest median and a comparatively tight interquartile range; CatBoost's median and box are close behind, but with a longer lower tail reaching toward 0.75, indicating an occasional weaker fold rather than a systematically less stable ranking.
 
 % selection Stage - All Metrics Table
 % -----------------------------------
@@ -609,10 +603,6 @@ drop, and Sudoscan combined with those features (SudoNeuro) recovers to within 0
 %*************************************************
 \label{sec:results-optimization}
 This subsection reports the results of the nested cross-validation hyperparameter optimization procedure for CatBoost on the full feature set, whose design---the 4-fold $\times$ 10-repeat train/test scheme, the 3-fold Optuna TPE search run inside each training set, and the out-of-fold threshold selection that keeps each test set untouched until it is scored exactly once---is described in full in Section~\ref{sec:hpo}. We first report CatBoost's overall performance across the pipeline's 4-fold structure using the full repeated cross-validation scheme (Table~\ref{tab:optimization_metrics_40repeats}, pooling all 40 train/test splits), then the four individually-tuned fold models from the first of the ten repeats (Additional file~1, Table~\ref{tab:catboost_metrics_firstrepeat}) that are saved for reuse, without refitting, by the explainability and counterfactual analyses below.
-
-\subsubsection{Repeated Cross-Validation Performance}
-%====================================================
-We first report CatBoost's overall performance across the pipeline's 4-fold structure at the level of the whole repeated cross-validation scheme: 10 independent repetitions of the 4-fold split, yielding 40 total evaluation runs, with aggregate estimates presented in Table~\ref{tab:optimization_metrics_40repeats}.
 
 The mean AUPRC across all 40 runs was 0.886 (95\% CI: 0.871--0.902, STD = 0.049), with a confidence interval spanning just 3.1 percentage points, indicating that model performance is highly reproducible across varying data splits, an important criterion for clinical tool reliability \cite{steyerberg2010assessing}.
 
@@ -649,9 +639,8 @@ interval. AUPRC should be read against the no-skill baseline of 0.695.}
     \label{tab:optimization_metrics_40repeats}
 \end{table}
 
-\subsubsection{Per-Fold Model Performance}
-%=========================================
-The four fold models of the first repeat, fixed by the pipeline's random seed
+Turning from the pooled estimates to the individual fold models, the four fold models of the first
+repeat, fixed by the pipeline's random seed
 (Section~\ref{sec:hpo}), are the concrete models retained without refitting for the explainability
 and counterfactual stages; the rationale for representing the pipeline by this repeat is set out in
 Section~\ref{sec:foldchoice}. Their tuned parameters and per-fold metrics are given in Additional
@@ -708,9 +697,8 @@ In contrast, the comorbidities hypertension (HPN) and chronic kidney disease (CK
     \caption{Feature attributions for the 22 predictors across the four fold models: (a) CatBoost
     built-in importances, normalized to sum to 100; (b) mean absolute SHAP values, on the predicted
     probability scale. Each panel is ordered independently by its own cross-fold mean. Feature labels
-    are colored by clinical domain: \textcolor[HTML]{F28E2B}{Sudoscan},
-    \textcolor[HTML]{4E79A7}{profile}, \textcolor[HTML]{59A14F}{comorbidity},
-    \textcolor[HTML]{E15759}{neurological examination}, \textcolor[HTML]{B07AA1}{MNSI}.}
+    are colored by clinical domain: Sudoscan (orange), profile (blue), comorbidity (green),
+    neurological examination (red), MNSI (purple).}
     \label{fig:explainability}
 \end{figure}
 
@@ -720,9 +708,6 @@ In contrast, the comorbidities hypertension (HPN) and chronic kidney disease (CK
 \label{sec:results-counterfactuals}
 Counterfactual explanations were generated with DiCE for candidate patients drawn from each fold's held-out test set, under the configuration given in Section~\ref{sec:generalsetup} and restricted to the six actionable features of Table~\ref{tab:cf_features}.
 
-\subsubsection{Candidate Instances and Generation Yield}
-%=======================================================
-\label{sec:results-cf-yield}
 We identified misclassified instances (incorrect predictions) and borderline instances (prediction probability within 0.08 of the fold's own decision threshold) as candidate instances for counterfactual generation. A total of 61 candidates were identified across the four folds (42 misclassified, 19 borderline), but only 8 yielded a usable counterfactual within the 1-hour search budget allowed per patient---none of them from Model 2, whose 12 candidates all failed to converge. Additional file~1 summarizes the counterfactuals generated per model (Table~\ref{tab:localcf-model-level}) and details the 8 candidates that succeeded (Table~\ref{tab:localcf-listing}).
 
 % Local CF Summary Across Models
@@ -731,10 +716,10 @@ We identified misclassified instances (incorrect predictions) and borderline ins
 % Local CF Details Across Models
 % -------------------------------
 
-\subsubsection{Instance-Level Counterfactuals}
-%=============================================
+\subsection{Instance-Level Counterfactuals}
+%******************************************
 \label{sec:results-cf-cases}
-Three of the eight successful instances are reported individually below, chosen to span the three clinically distinct scenarios a screening tool can produce: a borderline false positive, a borderline true positive, and a confident false negative. Because these are patient-specific rather than properties of the model as a whole, the three cases are drawn from three different fold models (3, 0, and 1 respectively) rather than confined to a single fold. Their counterfactuals are shown together in Figure~\ref{fig:localcf-cases}, and the framework under which each proposed change should be read---summarized in Table~\ref{tab:cf-direction-reading}---is set out in Section~\ref{sec:instance-level-cf}. The remaining five successful instances (Patients 29, 76, 125, 23, 172; Additional file~1, Table~\ref{tab:localcf-listing}) are not reported individually here; their counterfactuals are shown in Additional file~1, Figure~\ref{fig:s5}  and enter the aggregate analysis in Section~\ref{sec:results-cf-aggregate} below.
+Three of the eight successful instances are reported individually below, chosen to span the three clinically distinct scenarios a screening tool can produce: a borderline false positive (Patient 20, Model 3), a borderline true positive (Patient 40, Model 0), and a confident false negative (Patient 123, Model 1). Because these are patient-specific rather than properties of the model as a whole, the three cases are drawn from three different fold models (3, 0, and 1 respectively) rather than confined to a single fold. Their counterfactuals are shown together in Figure~\ref{fig:localcf-cases}, and the framework under which each proposed change should be read---summarized in Table~\ref{tab:cf-direction-reading}---is set out in Section~\ref{sec:instance-level-cf}. The remaining five successful instances (Patients 29, 76, 125, 23, 172; Additional file~1, Table~\ref{tab:localcf-listing}) are not reported individually here; their counterfactuals are shown in Additional file~1, Figure~\ref{fig:s5}  and enter the aggregate analysis in Section~\ref{sec:results-cf-aggregate} below.
 
 \begin{figure}[!tbp]
     \centering
@@ -751,26 +736,20 @@ commensurable.}
     \label{fig:localcf-cases}
 \end{figure}
 
-\paragraph{Patient 20---Borderline False Positive (Model 3)}
-%-------------------------------------------------------------
-\textit{Patient Profile}: Female, 51 years old; diabetes duration 1 year; HbA1c 10.3\%; on insulin; no hypertension or PAOD; dyslipidemia present; no CKD. Predicted as Confirmed DPN at a probability of 0.498, a hair above Model 3's threshold of 0.492 (margin = 0.006)---essentially a coin flip---despite an unconfirmed clinical diagnosis. Her counterfactuals are shown in Figure~\ref{fig:localcf-cases}a.
+The first case, Patient 20 under Model 3, is a borderline false positive. She is female, 51 years old; diabetes duration 1 year; HbA1c 10.3\%; on insulin; no hypertension or PAOD; dyslipidemia present; no CKD. Predicted as Confirmed DPN at a probability of 0.498, a hair above Model 3's threshold of 0.492 (margin = 0.006)---essentially a coin flip---despite an unconfirmed clinical diagnosis. Her counterfactuals are shown in Figure~\ref{fig:localcf-cases}a.
 
 With a margin of only 0.006, Patient 20 sits closer to her fold's decision boundary than any other candidate in this study, and the 22 counterfactuals generated for her reflect that: this is the most parsimonious case in the dataset, with a mean sparsity of 1.82 features (Additional file~1, Table~\ref{tab:localcf-listing}). Several counterfactuals require changing only a single actionable feature: stopping insulin alone (INSULIN: 1$\to$0), managing dyslipidemia alone (DSLPDMIA: 1$\to$0), or reducing HbA1c alone by as little as 2.3--2.7 points. Two-feature combinations are similarly small---for example, stopping insulin together with a 0.2--0.3 point HbA1c reduction. Across all 22 counterfactuals, HbA1c is the most frequently changed feature (16 of 22), followed by insulin (11 of 22) and dyslipidemia (7 of 22); hypertension, PAOD, and CKD changes are rare (2, 1, and 3 instances respectively). One counterfactual moves the immutable feature DM\_DUR alongside HbA1c and was filtered out as unactionable (Section~\ref{sec:cf-plausibility}) rather than reported as a valid recommendation.
 
-\paragraph{Patient 40---Borderline True Positive (Model 0)}
-%------------------------------------------------------------
-\textit{Patient Profile}: Female, 62 years old; diabetes duration 5 years; HbA1c 7.5\%; on insulin; hypertension, PAOD, and dyslipidemia present; no CKD. Correctly predicted as Confirmed DPN at a probability of 0.513, just above Model 0's threshold of 0.499 (margin = 0.014), matching the confirmed clinical diagnosis. Her counterfactuals are shown in Figure~\ref{fig:localcf-cases}b.
+The second case, Patient 40 under Model 0, is a borderline true positive. She is female, 62 years old; diabetes duration 5 years; HbA1c 7.5\%; on insulin; hypertension, PAOD, and dyslipidemia present; no CKD. Correctly predicted as Confirmed DPN at a probability of 0.513, just above Model 0's threshold of 0.499 (margin = 0.014), matching the confirmed clinical diagnosis. Her counterfactuals are shown in Figure~\ref{fig:localcf-cases}b.
 
 The 24 generated counterfactuals show what it would take to move her below the threshold. HbA1c is changed in every single one of the 24 counterfactuals, the only patient in this study for which that is true, and the single most parsimonious counterfactual overall is a 0.5-point HbA1c reduction (7.5\% $\to$ 7.0\%) with no other change---the smallest single-feature perturbation observed for any patient (L1 = 0.5). Two-feature combinations largely pair a similar HbA1c reduction with stopping insulin (18 of 24 counterfactuals touch insulin) or resolving PAOD (6 of 24); hypertension and CKD are altered less often (4 and 2 instances). Two counterfactuals instead moved the immutable SUBJ feature alongside a larger HbA1c reduction and were filtered out as unactionable.
 
-\paragraph{Patient 123---Confident False Negative (Model 1)}
-%-------------------------------------------------------------
-\textit{Patient Profile}: Female, 68 years old; diabetes duration 3 years; HbA1c 7.18\%; not on insulin; hypertension present; no PAOD, dyslipidemia, or CKD. Incorrectly predicted as Unconfirmed DPN at a probability of 0.269, well below Model 1's threshold of 0.5 (margin = 0.231), despite a confirmed clinical diagnosis. Her counterfactuals are shown in Figure~\ref{fig:localcf-cases}c.
+The third case, Patient 123 under Model 1, is a confident false negative. She is female, 68 years old; diabetes duration 3 years; HbA1c 7.18\%; not on insulin; hypertension present; no PAOD, dyslipidemia, or CKD. Incorrectly predicted as Unconfirmed DPN at a probability of 0.269, well below Model 1's threshold of 0.5 (margin = 0.231), despite a confirmed clinical diagnosis. Her counterfactuals are shown in Figure~\ref{fig:localcf-cases}c.
 
 She is the only false negative among the eight successful instances and, at a margin of 0.231, the least borderline case in this study---Model 1 places her confidently in the wrong class. The 24 counterfactuals generated for her describe what would need to be different for the model to correctly flag her as Confirmed DPN, and every one of them changes HbA1c downward (typically by 1.2--2.2 points, e.g., 7.18\% $\to$ 5.0\%), the largest and most consistent single driver of any patient in this study; hypertension is the second most frequent change (removed in 15 of 24), followed by PAOD (introduced in 11 of 24), insulin (started in 7 of 24), dyslipidemia (introduced in 2 of 24), and CKD (introduced in 1 of 24).
 
-\subsubsection{Aggregate Counterfactual Feature Changes}
-%=======================================================
+\subsection{Aggregate Counterfactual Feature Changes}
+%****************************************************
 \label{sec:results-cf-aggregate}
 Table~\ref{tab:localcf-changed} shows the feature-level frequency of changes across all 158 counterfactuals generated by the 8 successful instances from 3 models (Model 2 contributed none, Section~\ref{sec:cf-plausibility}).
 
@@ -836,13 +815,14 @@ the study's limitations.
 
 \subsection{Feature Set and Model Selection}
 %*******************************************
+\label{sec:catboost_vs_rf}
 
 The naive baseline predicting the majority class achieved an AUPRC of 0.695---essentially the
 empirical prevalence---despite perfect sensitivity and 69.5\% accuracy, illustrating why accuracy and
 sensitivity alone are insufficient criteria in an imbalanced screening task. Against that baseline
 the top three ensemble methods are statistically indistinguishable, so the choice between Random
-Forest and CatBoost cannot rest on the baseline ranking; Section~\ref{sec:catboost_vs_rf} makes the
-case on grounds that matter downstream. The full feature set was retained for all subsequent stages.
+Forest and CatBoost cannot rest on the baseline ranking alone; the grounds that decided it are set
+out at the end of this subsection. The full feature set was retained for all subsequent stages.
 
 The robustness of the top models to most feature-group ablations (Figure~\ref{fig:auprc_heatmaps})
 implies that no single group is indispensable and that redundancy across the feature space is
@@ -854,10 +834,7 @@ where a complete profile, comorbidity and MNSI workup is impractical. That these
 40 partitions rather than one matters here: with a single k-fold split, estimates on a cohort this
 size can vary substantially with the partition drawn \cite{kim2009estimating}.
 
-\subsubsection{CatBoost versus Random Forest: Methodological Justification}
-%==========================================================================
-\label{sec:catboost_vs_rf}
-Two considerations the baseline table cannot capture favor CatBoost. First, small-sample
+Two considerations the baseline table cannot capture favor CatBoost over Random Forest. First, small-sample
 regularization: with roughly 140 patients per training set, CatBoost's ordered boosting computes each
 tree's residuals on a permutation-restricted subset excluding the point being scored, guarding
 against the target leakage plain gradient boosting is prone to, and its symmetric tree structure
@@ -874,6 +851,7 @@ sufficient change'' logic of a clinically usable counterfactual depends on.
 
 \subsection{CatBoost Model Training and Optimization}
 %****************************************************
+\label{sec:foldchoice}
 
 That sensitivity is comparatively robust to partition variability is of direct clinical relevance:
 where the consequence of a missed case includes delayed intervention, progressive nerve damage, and
@@ -886,10 +864,8 @@ of fold models avoids drawing conclusions from a fold-specific artifact, but it 
 evidence of readiness for deployment, which would additionally require external validation
 (Section~\ref{sec:limitations}).
 
-\subsubsection{Choice of Representative Fold Models}
-%===================================================
-\label{sec:foldchoice}
-SHAP attributions and counterfactuals must be computed against concrete fitted models, and no
+That leaves the question of which concrete models to carry into the stages that follow. SHAP
+attributions and counterfactuals must be computed against fitted models, and no
 meaningful ``average model'' can be built by averaging 40 independently grown ensembles with 40
 different tuned configurations, so one repeat's four fold models must be selected and reused. We use
 the first repeat, fixed by the pipeline's random seed rather than chosen after comparing outcomes, so
@@ -922,7 +898,7 @@ rank features identically. Counterfactual analysis exists in this study to close
 
 \subsection{Counterfactual Analysis}
 %***********************************
-\label{sec:counterfactual}
+\label{sec:counterfactual}\label{sec:cf-plausibility}
 Counterfactual explanations ask what minimal change to a patient's features would produce a different
 prediction. Unlike global methods such as SHAP, which describe average model behavior, they are
 patient-specific and action-oriented, which suits clinical decision support \cite{wachter2017}. A
@@ -934,9 +910,6 @@ list is necessary but not sufficient, however: DiCE is free to propose \textit{i
 comorbidity such as PAOD or CKD, since an actionable feature can move in either direction, even
 though inducing a new disease is never an intervention.
 
-\paragraph{Why the Counterfactual Yield Was Low}
-%-----------------------------------------------
-\label{sec:cf-plausibility}
 That only 8 of 61 candidates yielded a counterfactual is a documented consequence of how the genetic
 search behaves on this dataset, not an arbitrary failure. Separately, the search has an independently
 documented tendency to violate the immutability constraint---proposing a change to a feature marked
@@ -950,8 +923,8 @@ eliminate this fragility. The 8 patients below are therefore not a representativ
 DPN cases; they are the subset the search could solve, and the absence of a counterfactual for any
 other candidate is evidence of search difficulty, not evidence that none exists.
 
-\subsubsection{Instance Level Counterfactual Analysis}
-%=====================================================
+\subsection{Instance-Level Counterfactual Analysis}
+%**************************************************
 \label{sec:instance-level-cf}
 Before turning to the cases, it is worth stating how a counterfactual for this task should be read,
 because the three differ along two independent axes and conflating them is the likeliest source of
@@ -1001,9 +974,7 @@ sufficient, and a multi-feature counterfactual is gated by its weakest element.}
 \label{tab:cf-direction-reading}
 \end{table}
 
-\paragraph{Patient 20---Borderline False Positive (Model 3)}
-%-------------------------------------------------------------
-Because Patient 20 is a false positive, her counterfactuals flip \emph{toward} the correct label:
+Because Patient 20 (Model 3) is a borderline false positive, her counterfactuals flip \emph{toward} the correct label:
 they describe what the model would have needed to see in order not to raise a false alarm, and are
 read as a diagnosis of its error rather than as advice. With so small a margin and such sparse
 counterfactuals, the case shows exactly which evidence tipped the model over: a markedly elevated
@@ -1016,9 +987,7 @@ consequence of her being a false positive, not a warrant carried by the counterf
 changes for a correctly flagged patient carry the opposite implication. What the counterfactual
 contributes is transparency about why the tool flagged her.
 
-\paragraph{Patient 40---Borderline True Positive (Model 0)}
-%------------------------------------------------------------
-Patient 40 inverts the situation: as a true positive, her counterfactuals flip \emph{away} from the
+Patient 40 (Model 0) inverts the situation: as a borderline true positive, her counterfactuals flip \emph{away} from the
 correct label, so they cannot be read as a route to a better outcome. What they measure is how much
 supporting evidence would have to be withdrawn before the model changed its mind. Her set makes the
 two axes visibly independent. Eighteen of 24 counterfactuals involve stopping insulin---enactable but
@@ -1031,9 +1000,7 @@ care plan: a 0.5-point reduction would not reverse a confirmed diagnosis, but it
 flagged to unflagged, so correct positives this close to the boundary should be treated as provisional
 and confirmed by examination.
 
-\paragraph{Patient 123---Confident False Negative (Model 1)}
-%-------------------------------------------------------------
-Patient 123 is a false negative, so her counterfactuals flip \emph{toward} the correct label and
+Patient 123 (Model 1) is a confident false negative, so her counterfactuals flip \emph{toward} the correct label and
 describe a model deficit---the evidence it would have needed to catch a patient it missed. Because
 this flip targets Confirmed DPN, none is an intervention proposal; the only question is whether the
 implied association is plausible, and her set divides. The comorbidity introductions fall on the
@@ -1051,10 +1018,7 @@ her on the unconfirmed side. This is the case that most directly illustrates the
 negative: a patient with confirmed DPN, comfortably below the referral threshold, for whom the
 counterfactual exposes where the model's learned associations diverge from clinical ones.
 
-\paragraph{Synthesis}
-%--------------------
-\label{sec:cf-synthesis}
-Across all three cases HbA1c is the feature the model is most sensitive to, echoing its role in the
+Taken together, the three cases show a common structure. Across all three, HbA1c is the feature the model is most sensitive to, echoing its role in the
 aggregate analysis below; insulin and, for Patient 123, hypertension follow. The artifacts a human
 reader must filter recur in three kinds: changes that cannot be enacted at all (introducing a
 comorbidity, or moving an immutable feature), changes that could be enacted but should not be
@@ -1064,8 +1028,8 @@ single member of any of these kinds disqualifies the whole counterfactual rather
 feature alone. A generated counterfactual is a candidate explanation for clinical review, not an
 automatic prescription.
 
-\subsubsection{Aggregate-level Counterfactual Analysis}
-%======================================================
+\subsection{Aggregate-Level Counterfactual Analysis}
+%***************************************************
 \label{sec:aggregate-cf}
 The dominance of HbA1c across the aggregate set is clinically coherent and well supported: chronic
 hyperglycemia drives the oxidative and metabolic mechanisms underlying peripheral nerve damage, and

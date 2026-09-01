@@ -719,7 +719,7 @@ We identified misclassified instances (incorrect predictions) and borderline ins
 \subsection{Instance-Level Counterfactuals}
 %******************************************
 \label{sec:results-cf-cases}
-Three of the eight successful instances are reported individually below, chosen to span the three clinically distinct scenarios a screening tool can produce: a borderline false positive (Patient 20, Model 3), a borderline true positive (Patient 40, Model 0), and a confident false negative (Patient 123, Model 1). Because these are patient-specific rather than properties of the model as a whole, the three cases are drawn from three different fold models (3, 0, and 1 respectively) rather than confined to a single fold. Their counterfactuals are shown together in Figure~\ref{fig:localcf-cases}, and the framework under which each proposed change should be read---summarized in Table~\ref{tab:cf-direction-reading}---is set out in Section~\ref{sec:instance-level-cf}. The remaining five successful instances (Patients 29, 76, 125, 23, 172; Additional file~1, Table~\ref{tab:localcf-listing}) are not reported individually here; their counterfactuals are shown in Additional file~1, Figure~\ref{fig:s5}  and enter the aggregate analysis in Section~\ref{sec:results-cf-aggregate} below.
+Three of the eight successful instances are reported individually below, in the order they are discussed throughout the remainder of this paper, chosen to span the three clinically distinct scenarios a screening tool can produce: a borderline false positive (Patient 20, Model 3), a borderline true positive (Patient 40, Model 0), and a confident false negative (Patient 123, Model 1). Because these are patient-specific rather than properties of the model as a whole, the three cases are drawn from three different fold models (3, 0, and 1 respectively) rather than confined to a single fold. Their counterfactuals are shown together in Figure~\ref{fig:localcf-cases}, and the framework under which each proposed change should be read---summarized in Table~\ref{tab:cf-direction-reading}---is set out in Section~\ref{sec:instance-level-cf}. The remaining five successful instances (Patients 29, 76, 125, 23, 172; Additional file~1, Table~\ref{tab:localcf-listing}) are not reported individually here; their counterfactuals are shown in Additional file~1, Figure~\ref{fig:s5}  and enter the aggregate analysis in Section~\ref{sec:results-cf-aggregate} below.
 
 \begin{figure}[!tbp]
     \centering
@@ -834,7 +834,7 @@ where a complete profile, comorbidity and MNSI workup is impractical. That these
 40 partitions rather than one matters here: with a single k-fold split, estimates on a cohort this
 size can vary substantially with the partition drawn \cite{kim2009estimating}.
 
-Two considerations the baseline table cannot capture favor CatBoost over Random Forest. First, small-sample
+Two considerations the baseline table cannot capture then favor CatBoost over Random Forest. First, small-sample
 regularization: with roughly 140 patients per training set, CatBoost's ordered boosting computes each
 tree's residuals on a permutation-restricted subset excluding the point being scored, guarding
 against the target leakage plain gradient boosting is prone to, and its symmetric tree structure
@@ -1166,7 +1166,7 @@ in the main text.
 
 \bmhead{Acknowledgements}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+The authors would like to thank Josiah Raziel S. Lluch of Mindanao State University -- Iligan Institute of Technology for his initial assistance with software implementation. 
 
 \section*{Declarations}
 %%%%%%%%%%%%%%%%%%%%%%%
@@ -1175,13 +1175,21 @@ in the main text.
 
 \begin{itemize}
 \item Funding
-\item Conflict of interest/Competing interests (check journal-specific guidelines for which heading to use)
+This work is funded and monitored by the Department of Science and Technology (DOST) -- Philippine Council for Industry, Energy, and Emerging Technology Research and Development (PCIEERD) with Project No. 1213385.
+\item Conflict of interest/Competing interests
+Nothing to declare.
 \item Ethics approval and consent to participate
+Ethics approval and consent to participate: This study was approved by the local Institutional Ethics Review Board and all subjects gave their written consent prior to participating.
 \item Consent for publication
+To follow upon acceptance.
 \item Data availability 
+The data underlying the findings of this study are not publicly available due to institutional restrictions, but a minimal, fully anonymized dataset is are available from the corresponding author on reasonable request.
 \item Materials availability
+Not applicable.
 \item Code availability 
+Not applicable.
 \item Author contribution
+ A.C.B. conducted the AI modeling and counterfactual generations and wrote the draft. E.M.M. and N.F. co-wrote portions of the draft. D.A.J., E.O.C., R.R.F., D.A.B., L.S.R., and M.T.O. designed and implemented the data collection process. N.F., L.D., and M.T.O. provided medical interpretations and insights. M.T.O. and C.P.M. provided research supervision. All authors reviewed the manuscript.
 \end{itemize}
 
 % \noindent

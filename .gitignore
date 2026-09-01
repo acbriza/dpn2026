@@ -115,6 +115,7 @@ manuscript/*.out
 manuscript/*.synctex.gz
 manuscript/main.pdf
 manuscript/main-claude.pdf
+manuscript/archived_versions/
 
 # -----------------------------------
 # old configs

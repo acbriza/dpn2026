@@ -7,9 +7,65 @@ context needed by the next one.
 
 ---
 
-## 0. How to use this pack
+## Part A — Running the pack
 
-**Target journal: *BMC Medical Informatics and Decision Making*** (BMC, part of Springer
+### Suggested order
+Structure first, then content correctness, then polish; the editor's
+eye last. [P26](#p26--adherence-to-bmc-medical-informatics-and-decision-makings-guidelines) moved to the front once the target journal was fixed: *BMC Medical
+Informatics and Decision Making* requires section renames, a new List of abbreviations
+section, a rebuilt Declarations block, supplementary material moved out into Additional
+files, and possibly a template conversion. All of that reorders and renames text, and
+every language check run before it would have to be run again after.
+
+### Prompt Preamble
+Ground rules: read section "B How to use this pack" in manuscript/references/prompts/final_check_actual.md and follow it.
+
+| Wave | Prompts | Rationale |
+| --- | --- | --- |
+| 0. Journal fit | [P26](#p26--adherence-to-bmc-medical-informatics-and-decision-makings-guidelines) | Establish what BMC actually requires before anything else moves. Its structural demands change what the later checks are aiming at. Apply the structural rework it finds before running wave 5. |
+| 1. Ground truth | [P14](#p14--methodological-validity-and-leakage-audit-manuscript-vs-code), [P2](#p2--integrity-of-the-figures-reported), [P15](#p15--traceability-of-every-reported-number-to-a-pipeline-artifact), [P11](#p11--internal-arithmetic-and-unit-audit) | Establish that the numbers and figures are real and current. Everything downstream is worthless if they are not. |
+| 2. Internal consistency | [P3](#p3--coherence-among-figures-tables-and-prose), [P10](#p10--abstract-to-body-numerical-consistency), [P18](#p18--cross-reference-numbering-and-float-placement-integrity) | Make the manuscript agree with itself. |
+| 3. Evidence and sources | [P4](#p4--fidelity-of-citations-to-their-sources), [P13](#p13--statistical-reporting-rigor), [P12](#p12--tripodai--reporting-guideline-compliance), [P21](#p21--limitations-completeness-and-negative-result-honesty) | Make the manuscript agree with its sources and its own limits. |
+| 4. Argument | [P5](#p5--important-strong-and-possibly-over-reaching-claims), [P23](#p23--novelty-and-literature-positioning), [P22](#p22--adversarial-reviewer-simulation) | Size the claims; position them; then attack them. |
+| 5. Language | [P7](#p7--language-and-grammar), [P6](#p6--american-english-spelling-and-construction), [P8](#p8--repetition-within-a-section), [P17](#p17--terminology-acronym-first-use-and-abbreviation-consistency), [P1](#p1--no-coding-specific-language), [P25](#p25--voice-uniformity-and-machine-writing-tells) | Polish only after the content stops moving. |
+| 6. Presentation | [P20](#p20--figure-and-table-presentation-quality), [P19](#p19--latex-build-and-springer-template-compliance), [P24](#p24--title-abstract-and-keywords-fit) | Floats, build, front matter. |
+| 7. Compliance | [P26](#p26--adherence-to-bmc-medical-informatics-and-decision-makings-guidelines) (re-run), [P27](#p27--adherence-to-generative-ai--llm-use-policy) | Re-run [P26](#p26--adherence-to-bmc-medical-informatics-and-decision-makings-guidelines) as a verification pass once its findings have been applied, then check AI-use policy. |
+| 8. Gate | [P16](#p16--patient-privacy-and-de-identification), [P9](#p9--desk-rejection-sweep) | Privacy and the desk-rejection sweep, re-run after all edits are applied. |
+
+### Notes on execution
+
+- Run one prompt per fresh session. [P2](#p2--integrity-of-the-figures-reported), [P14](#p14--methodological-validity-and-leakage-audit-manuscript-vs-code), and [P15](#p15--traceability-of-every-reported-number-to-a-pipeline-artifact) are the expensive ones (they read the
+  pipeline and open images); give them room.
+- [P9](#p9--desk-rejection-sweep) must be re-run after edits are applied — it is a gate, not a one-time check.
+- Apply fixes in batches by check, and re-run [P19](#p19--latex-build-and-springer-template-compliance) (build) after each batch so a LaTeX
+  breakage is caught next to the edit that caused it.
+- Keep every findings file. When a finding is dismissed rather than fixed, record why in
+  the same file — that record is what you will want when a reviewer raises the same point.
+- [P26](#p26--adherence-to-bmc-medical-informatics-and-decision-makings-guidelines) and [P27](#p27--adherence-to-generative-ai--llm-use-policy) are both written against *BMC Medical Informatics and Decision Making* and
+  need no input from you. Both instruct fetching the live guidelines rather than trusting
+  the requirements recorded in this pack; if a session cannot reach the web, its
+  journal-specific findings are UNVERIFIED and should be treated that way.
+- Nothing in `manuscript/archived_versions/` is part of the review. It holds superseded
+  drafts kept for personal reference. If a check cites one, the finding is invalid — the
+  current `main.tex` is the only text under review.
+- The BMC-specific facts seeded through this pack (no length limits, the prescribed section
+  order, the mandatory List of abbreviations, the 350-word abstract, BMC's own template)
+  were written down at one point in time. Each prompt that uses one says to confirm it.
+  When a session finds the live guidelines say otherwise, fix this pack too.
+- [P27](#p27--adherence-to-generative-ai--llm-use-policy) is only truthful once [P4](#p4--fidelity-of-citations-to-their-sources) has passed — you cannot attest that citations were
+  human-verified before verifying them. Run [P4](#p4--fidelity-of-citations-to-their-sources) first.
+- The acronym first-use audit lives inside [P17](#p17--terminology-acronym-first-use-and-abbreviation-consistency), item 1; there is no separate prompt for
+  it. Run [P17](#p17--terminology-acronym-first-use-and-abbreviation-consistency) late, after the text has stopped being reordered, since reordering is what
+  creates used-before-defined errors in the first place.
+- If any check disagrees with an earlier one, the pipeline artifact wins over the
+  manuscript, and the manuscript wins over a previous findings file.
+
+
+## Part B How to use this pack
+
+### Target journal
+
+***BMC Medical Informatics and Decision Making*** (BMC, part of Springer
 Nature; fully open access, APC-funded, MEDLINE-indexed). Several prompts here are written
 against BMC's requirements rather than a generic journal's — P26 above all, but also P9,
 P10, P12, P16, P17, P19, P20 and P24. Four BMC features drive them, and each differs from
@@ -29,12 +85,16 @@ what a typical clinical journal asks for:
 Treat all four as strong priors to be re-verified against the live guidelines, not as
 settled fact; every prompt that leans on one says so and tells you to confirm it.
 
-**Authoritative sources.** The manuscript is `manuscript/main.tex` (single file, currently
+### Authoritative sources
+
+The manuscript is `manuscript/main.tex` (single file, currently
 Springer Nature `sn-jnl` class with the `sn-mathphys-num` reference style — both are
 problems against this target; see P19 and P26). Bibliography is `manuscript/bibfile.bib`
 (`manuscript/sn-bibliography.bib` is template sample data).
 
-**Off limits.** Do not read, quote, diff against, or draw any conclusion from
+### Off limits
+
+Do not read, quote, diff against, or draw any conclusion from
 `manuscript/archived_versions/`. It holds superseded drafts (`main-claude.tex`,
 `main-disc.tex`, and their build artifacts), kept for the authors' personal reference only
 and forming no part of the submission. A finding sourced from an archived draft is a false
@@ -43,7 +103,7 @@ about it. `manuscript/sn-article.tex` is the unmodified Springer sample and is l
 not part of the manuscript. Where a prompt below tells you to search the manuscript
 directory, exclude `archived_versions/` from that search.
 
-**Two rules that apply to every prompt below:**
+### Two rules that apply to every prompt
 
 1. **Read-only by default.** Report findings; do not edit `main.tex` unless the prompt
    says to, or I ask in a follow-up. A review that silently rewrites is a review I cannot audit.
@@ -51,7 +111,9 @@ directory, exclude `archived_versions/` from that search.
    present in the repo, say so explicitly and mark the item `UNVERIFIED` rather than
    inferring. This applies with particular force to citation content and to numbers.
 
-**Severity scale** (use these exact labels):
+### Severity scale
+
+Use these exact labels:
 
 | Label | Meaning |
 | --- | --- |
@@ -60,7 +122,9 @@ directory, exclude `archived_versions/` from that search.
 | `MINOR` | Should be fixed before submission but would not sink the paper. |
 | `NIT` | Style or polish; optional. |
 
-**Output convention.** Every prompt should end by writing its findings to
+### Output convention
+
+Every prompt should end by writing its findings to
 `manuscript/references/prompts/findings/<check-name>.md`, one row per finding:
 
 ```
@@ -76,7 +140,9 @@ Findings must be ordered most-severe first, and the file must open with a one-pa
 summary plus counts per severity. If a check finds nothing, say so plainly — do not
 manufacture findings to look productive.
 
-**Manuscript map** (accurate as of this writing; the file moves often, so re-derive the
+### Manuscript map
+
+Accurate as of this writing; the file moves often, so re-derive the
 line numbers before relying on them — the structure is the part that matters):
 
 - Front matter: title 106, 11 authors, 4 affiliations, template placeholder `\abstract` 152, real structured abstract 165 (~349 words), keywords ~173 (ten)
@@ -103,7 +169,9 @@ Two structural facts that earlier findings may contradict — both are deliberat
   either section; Methods is the one section where depth 2 is within journal norm and it
   keeps its `\subsubsection`s.
 
-**Where the numbers come from.** Every quantitative claim should trace to a generated
+### Where the numbers come from
+
+Every quantitative claim should trace to a generated
 artifact under `manuscript/references/`, which mirrors the pipeline outputs in
 `module/experiments/binary/<stage>/<model_code>/<tag>/`:
 
@@ -118,15 +186,20 @@ artifact under `manuscript/references/`, which mirrors the pipeline outputs in
 
 ---
 
-# Part A — The checks you asked for
+
+## Part C — The checks you asked for
 
 ---
 
-## P1 — No coding-specific language
+### P1 — No coding-specific language
 
-**Purpose:** the manuscript must read as clinical/scientific writing, not as documentation
+#### Purpose
+
+The manuscript must read as clinical/scientific writing, not as documentation
 of a codebase. A reviewer who sees `n_estimators` or `sklearn` in the prose concludes the
 methods were written by transcribing a script.
+
+#### Prompt
 
 ```text
 You are copy-editing a clinical machine-learning manuscript for a medical journal
@@ -177,11 +250,15 @@ pack's severity scale and finding format.
 
 ---
 
-## P2 — Integrity of the figures reported
+### P2 — Integrity of the figures reported
 
-**Purpose:** a figure that no longer matches the run that produced it is the single most
+#### Purpose
+
+A figure that no longer matches the run that produced it is the single most
 damaging error class in this manuscript, because the pipeline has been re-run and outputs
 were copied by hand into `manuscript/references/`.
+
+#### Prompt
 
 ```text
 You are auditing the integrity of every figure in the manuscript manuscript/main.tex
@@ -236,10 +313,14 @@ full PASS/FAIL matrix table (one row per figure).
 
 ---
 
-## P3 — Coherence among figures, tables, and prose
+### P3 — Coherence among figures, tables, and prose
 
-**Purpose:** the numbers in the running text, the numbers in the captions, and the numbers
+#### Purpose
+
+The numbers in the running text, the numbers in the captions, and the numbers
 in the tables must be one story. This is the check reviewers actually perform.
+
+#### Prompt
 
 ```text
 You are checking numerical and narrative coherence across manuscript/main.tex. Do not
@@ -295,10 +376,14 @@ disagreement in a headline number is a BLOCKER.
 
 ---
 
-## P4 — Fidelity of citations to their sources
+### P4 — Fidelity of citations to their sources
 
-**Purpose:** a citation that does not say what the sentence claims it says is a research
+#### Purpose
+
+A citation that does not say what the sentence claims it says is a research
 integrity problem, not a typo.
+
+#### Prompt
 
 ```text
 You are verifying that every citation in manuscript/main.tex faithfully supports the claim
@@ -351,10 +436,14 @@ Any NOT SUPPORTED or CONTRADICTED finding is a BLOCKER.
 
 ---
 
-## P5 — Important, strong, and possibly over-reaching claims
+### P5 — Important, strong, and possibly over-reaching claims
 
-**Purpose:** this is a 187-patient single-center study with a 8/61 counterfactual yield.
+#### Purpose
+
+This is a 187-patient single-center study with a 8/61 counterfactual yield.
 The gap between what was shown and what is claimed is where reviewers will concentrate.
+
+#### Prompt
 
 ```text
 You are stress-testing the claims in manuscript/main.tex for over-reach. Do not edit —
@@ -420,7 +509,9 @@ full claim ledger table, then the detailed findings.
 
 ---
 
-## P6 — American English spelling and construction
+### P6 — American English spelling and construction
+
+#### Prompt
 
 ```text
 You are enforcing US English throughout manuscript/main.tex. Do not edit — report only,
@@ -459,7 +550,9 @@ Write to manuscript/references/prompts/findings/p6-american-english.md.
 
 ---
 
-## P7 — Language and grammar
+### P7 — Language and grammar
+
+#### Prompt
 
 ```text
 You are line-editing manuscript/main.tex for language and grammar at the standard of
@@ -512,7 +605,9 @@ section, with a per-section error count table at the top.
 
 ---
 
-## P8 — Repetition within a section
+### P8 — Repetition within a section
+
+#### Prompt
 
 ```text
 You are checking manuscript/main.tex for redundancy WITHIN each main section. Do not edit
@@ -560,10 +655,14 @@ point inventory first, then the redundancy findings, then the motif occurrence t
 
 ---
 
-## P9 — Desk-rejection sweep
+### P9 — Desk-rejection sweep
 
-**Purpose:** editors reject before review for completeness and compliance failures, not for
+#### Purpose
+
+Editors reject before review for completeness and compliance failures, not for
 science. Run this one **last** and re-run it after every batch of edits.
+
+#### Prompt
 
 ```text
 You are the handling editor at BMC Medical Informatics and Decision Making doing the
@@ -651,17 +750,21 @@ list as a numbered pre-submission checklist at the very top.
 
 ---
 
-# Part B — Further checks
+## Part D — Further checks
 
 P10-P25 are checks I proposed; P26 and P27 were requested. The acronym first-use
 audit is folded into P17 rather than given its own prompt.
 
 ---
 
-## P10 — Abstract-to-body numerical consistency
+### P10 — Abstract-to-body numerical consistency
 
-**Why:** the abstract is the most-read and most-checked text in the paper, and it currently
+#### Purpose
+
+The abstract is the most-read and most-checked text in the paper, and it currently
 carries a dozen numbers that must each match the body exactly.
+
+#### Prompt
 
 ```text
 Check every factual and numerical claim in the abstract of manuscript/main.tex (the
@@ -696,10 +799,14 @@ Write to manuscript/references/prompts/findings/p10-abstract-consistency.md.
 
 ---
 
-## P11 — Internal arithmetic and unit audit
+### P11 — Internal arithmetic and unit audit
 
-**Why:** percentages, sums, and derived quantities are cheap to check mechanically and
+#### Purpose
+
+Percentages, sums, and derived quantities are cheap to check mechanically and
 embarrassing to get wrong in print.
+
+#### Prompt
 
 ```text
 Recompute, from first principles, every derived number in manuscript/main.tex. Do not
@@ -735,10 +842,14 @@ checked quantity with computed vs stated values, then findings for the mismatche
 
 ---
 
-## P12 — TRIPOD+AI / reporting-guideline compliance
+### P12 — TRIPOD+AI / reporting-guideline compliance
 
-**Why:** clinical prediction-model journals increasingly require it, and working through
+#### Purpose
+
+Clinical prediction-model journals increasingly require it, and working through
 the checklist surfaces genuine methodological omissions rather than cosmetic ones.
+
+#### Prompt
 
 ```text
 Assess manuscript/main.tex against the TRIPOD+AI reporting guideline for prediction-model
@@ -788,7 +899,9 @@ Write to manuscript/references/prompts/findings/p12-tripod-ai.md.
 
 ---
 
-## P13 — Statistical reporting rigor
+### P13 — Statistical reporting rigor
+
+#### Prompt
 
 ```text
 Audit the statistical reporting in manuscript/main.tex. Do not edit — report only.
@@ -832,10 +945,14 @@ Write to manuscript/references/prompts/findings/p13-statistics.md.
 
 ---
 
-## P14 — Methodological validity and leakage audit (manuscript vs code)
+### P14 — Methodological validity and leakage audit (manuscript vs code)
 
-**Why:** the manuscript's Methods must describe what the code actually does. This is the
+#### Purpose
+
+The manuscript's Methods must describe what the code actually does. This is the
 one check that must read the pipeline, not just the prose.
+
+#### Prompt
 
 ```text
 Verify that the Methods section of manuscript/main.tex faithfully and completely describes
@@ -890,7 +1007,9 @@ category 1 or 2 is a BLOCKER.
 
 ---
 
-## P15 — Traceability of every reported number to a pipeline artifact
+### P15 — Traceability of every reported number to a pipeline artifact
+
+#### Prompt
 
 ```text
 Build a complete traceability matrix for manuscript/main.tex. Do not edit — report only.
@@ -920,7 +1039,9 @@ Write to manuscript/references/prompts/findings/p15-traceability.md.
 
 ---
 
-## P16 — Patient privacy and de-identification
+### P16 — Patient privacy and de-identification
+
+#### Prompt
 
 ```text
 Review manuscript/main.tex for patient-privacy risk. Do not edit — report only.
@@ -960,7 +1081,9 @@ Write to manuscript/references/prompts/findings/p16-privacy.md.
 
 ---
 
-## P17 — Terminology, acronym first-use, and abbreviation consistency
+### P17 — Terminology, acronym first-use, and abbreviation consistency
+
+#### Prompt
 
 ```text
 Audit terminology, abbreviations, and naming consistency across all of
@@ -1037,7 +1160,9 @@ acronym register table and closing with the drafted List of abbreviations sectio
 
 ---
 
-## P18 — Cross-reference, numbering, and float-placement integrity
+### P18 — Cross-reference, numbering, and float-placement integrity
+
+#### Prompt
 
 ```text
 Check the reference machinery of manuscript/main.tex. Do not edit — report only.
@@ -1071,7 +1196,9 @@ and dangling-ref lists first.
 
 ---
 
-## P19 — LaTeX build and Springer template compliance
+### P19 — LaTeX build and Springer template compliance
+
+#### Prompt
 
 ```text
 Compile manuscript/main.tex and audit both the build and the template compliance. You may
@@ -1114,7 +1241,9 @@ inventory as an appendix to the findings.
 
 ---
 
-## P20 — Figure and table presentation quality
+### P20 — Figure and table presentation quality
+
+#### Prompt
 
 ```text
 Review the visual quality and accessibility of every figure and table in
@@ -1169,7 +1298,9 @@ float.
 
 ---
 
-## P21 — Limitations completeness and negative-result honesty
+### P21 — Limitations completeness and negative-result honesty
+
+#### Prompt
 
 ```text
 Audit the Limitations subsection of manuscript/main.tex (and any limitation stated
@@ -1217,9 +1348,13 @@ limitations as drafted sentences ready to insert.
 
 ---
 
-## P22 — Adversarial reviewer simulation
+### P22 — Adversarial reviewer simulation
 
-**Why:** the cheapest way to find what Reviewer 2 will say is to be Reviewer 2 first.
+#### Purpose
+
+The cheapest way to find what Reviewer 2 will say is to be Reviewer 2 first.
+
+#### Prompt
 
 ```text
 You are Reviewer 2 for BMC Medical Informatics and Decision Making, assigned
@@ -1261,7 +1396,9 @@ Write to manuscript/references/prompts/findings/p22-reviewer-simulation.md.
 
 ---
 
-## P23 — Novelty and literature positioning
+### P23 — Novelty and literature positioning
+
+#### Prompt
 
 ```text
 Assess how manuscript/main.tex positions itself against the literature it cites. Do not
@@ -1301,7 +1438,9 @@ table as a ready-to-insert LaTeX table.
 
 ---
 
-## P24 — Title, abstract, and keywords fit
+### P24 — Title, abstract, and keywords fit
+
+#### Prompt
 
 ```text
 Evaluate the front matter of manuscript/main.tex for discoverability and fit. Do not edit
@@ -1337,11 +1476,15 @@ Write to manuscript/references/prompts/findings/p24-front-matter.md.
 
 ---
 
-## P25 — Voice uniformity and machine-writing tells
+### P25 — Voice uniformity and machine-writing tells
 
-**Why:** the manuscript was assembled over many sessions and several sections were
+#### Purpose
+
+The manuscript was assembled over many sessions and several sections were
 rewritten wholesale; a reviewer noticing a register shift mid-paper reads it as carelessness,
 and many journals now ask directly about AI assistance.
+
+#### Prompt
 
 ```text
 Read manuscript/main.tex for voice consistency and for stylistic tells that mark a text as
@@ -1373,14 +1516,18 @@ Write to manuscript/references/prompts/findings/p25-voice.md.
 
 ---
 
-## P26 — Adherence to BMC Medical Informatics and Decision Making's guidelines
+### P26 — Adherence to BMC Medical Informatics and Decision Making's guidelines
 
-**Why:** P9 asks whether an editor would return the paper; this one checks it line by line
+#### Purpose
+
+P9 asks whether an editor would return the paper; this one checks it line by line
 against the journal's actual Instructions for Authors. The target is fixed — *BMC Medical
 Informatics and Decision Making* — so this prompt needs no input from you, and it is worth
 running **early**. BMC's requirements here are structural (a prescribed section order, a
 List of abbreviations, a fixed Declarations block, its own LaTeX template), and reworking
 structure after the prose has been polished throws the polish away.
+
+#### Prompt
 
 ```text
 You are checking manuscript/main.tex for compliance with the submission guidelines of
@@ -1589,13 +1736,17 @@ the list of places where the live guidelines differed from the notes in this pro
 
 ---
 
-## P27 — Adherence to generative-AI / LLM use policy
+### P27 — Adherence to generative-AI / LLM use policy
 
-**Why:** this manuscript and its pipeline were developed with substantial AI assistance —
+#### Purpose
+
+This manuscript and its pipeline were developed with substantial AI assistance —
 the repo carries a `CLAUDE.md`, five `*_refactor.md` session records, a prompts directory,
 and 29 of 458 commits attributed to Claude. Publisher policies require that use to be
 disclosed accurately, and if the code is released the git history will show it. An
 inaccurate or missing disclosure is a research-integrity finding, not a formatting one.
+
+#### Prompt
 
 ```text
 You are checking manuscript/main.tex against publisher policy on the use of large language
@@ -1691,54 +1842,3 @@ Mark clearly which factual slots the authors must fill or confirm rather than yo
 Write to manuscript/references/prompts/findings/p27-ai-policy.md, leading with the Step 1
 inventory table, then the compliance matrix, then the three drafted statements.
 ```
-
----
-
-# Part C — Running the pack
-
-**Suggested order.** Structure first, then content correctness, then polish; the editor's
-eye last. P26 moved to the front once the target journal was fixed: *BMC Medical
-Informatics and Decision Making* requires section renames, a new List of abbreviations
-section, a rebuilt Declarations block, supplementary material moved out into Additional
-files, and possibly a template conversion. All of that reorders and renames text, and
-every language check run before it would have to be run again after.
-
-| Wave | Prompts | Rationale |
-| --- | --- | --- |
-| 0. Journal fit | P26 | Establish what BMC actually requires before anything else moves. Its structural demands change what the later checks are aiming at. Apply the structural rework it finds before running wave 5. |
-| 1. Ground truth | P14, P2, P15, P11 | Establish that the numbers and figures are real and current. Everything downstream is worthless if they are not. |
-| 2. Internal consistency | P3, P10, P18 | Make the manuscript agree with itself. |
-| 3. Evidence and sources | P4, P13, P12, P21 | Make the manuscript agree with its sources and its own limits. |
-| 4. Argument | P5, P23, P22 | Size the claims; position them; then attack them. |
-| 5. Language | P7, P6, P8, P17, P1, P25 | Polish only after the content stops moving. |
-| 6. Presentation | P20, P19, P24 | Floats, build, front matter. |
-| 7. Compliance | P26 (re-run), P27 | Re-run P26 as a verification pass once its findings have been applied, then check AI-use policy. |
-| 8. Gate | P16, P9 | Privacy and the desk-rejection sweep, re-run after all edits are applied. |
-
-**Notes on execution:**
-
-- Run one prompt per fresh session. P2, P14, and P15 are the expensive ones (they read the
-  pipeline and open images); give them room.
-- P9 must be re-run after edits are applied — it is a gate, not a one-time check.
-- Apply fixes in batches by check, and re-run P19 (build) after each batch so a LaTeX
-  breakage is caught next to the edit that caused it.
-- Keep every findings file. When a finding is dismissed rather than fixed, record why in
-  the same file — that record is what you will want when a reviewer raises the same point.
-- P26 and P27 are both written against *BMC Medical Informatics and Decision Making* and
-  need no input from you. Both instruct fetching the live guidelines rather than trusting
-  the requirements recorded in this pack; if a session cannot reach the web, its
-  journal-specific findings are UNVERIFIED and should be treated that way.
-- Nothing in `manuscript/archived_versions/` is part of the review. It holds superseded
-  drafts kept for personal reference. If a check cites one, the finding is invalid — the
-  current `main.tex` is the only text under review.
-- The BMC-specific facts seeded through this pack (no length limits, the prescribed section
-  order, the mandatory List of abbreviations, the 350-word abstract, BMC's own template)
-  were written down at one point in time. Each prompt that uses one says to confirm it.
-  When a session finds the live guidelines say otherwise, fix this pack too.
-- P27 is only truthful once P4 has passed — you cannot attest that citations were
-  human-verified before verifying them. Run P4 first.
-- The acronym first-use audit lives inside P17, item 1; there is no separate prompt for
-  it. Run P17 late, after the text has stopped being reordered, since reordering is what
-  creates used-before-defined errors in the first place.
-- If any check disagrees with an earlier one, the pipeline artifact wins over the
-  manuscript, and the manuscript wins over a previous findings file.
